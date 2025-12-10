@@ -40,17 +40,17 @@ namespace TurnBasedGame.UI
 
         private void SubscribeToEvents()
         {
-            if (MPManager.Instance != null)
+            if (GameMediator.Instance != null)
             {
-                MPManager.Instance.OnMPChanged += HandleMPChanged;
+                GameMediator.Instance.OnMPChanged += HandleMPChanged;
             }
         }
 
         private void UnsubscribeFromEvents()
         {
-            if (MPManager.Instance != null)
+            if (GameMediator.Instance != null)
             {
-                MPManager.Instance.OnMPChanged -= HandleMPChanged;
+                GameMediator.Instance.OnMPChanged -= HandleMPChanged;
             }
         }
 

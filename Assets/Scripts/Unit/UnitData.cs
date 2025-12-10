@@ -32,10 +32,6 @@ namespace TurnBasedGame.Unit
         [Range(1f, 10f)]
         public float moveSpeed = 5f;
 
-        [Header("Visual")]
-        [Tooltip("Prefab của unit (model 3D hoặc sprite)")]
-        public GameObject unitPrefab;
-        
         [Tooltip("Icon hiển thị trên UI")]
         public Sprite icon;
     }

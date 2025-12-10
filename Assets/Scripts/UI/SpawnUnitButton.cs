@@ -4,6 +4,7 @@ using TMPro;
 using TurnBasedGame.Unit;
 using TurnBasedGame.Core;
 using TurnBasedGame.Resources;
+using RedBjorn.ProtoTiles.Example;
 
 namespace TurnBasedGame.UI
 {
@@ -14,7 +15,7 @@ namespace TurnBasedGame.UI
     public class SpawnUnitButton : MonoBehaviour
     {
         [Header("Unit Configuration")]
-        [SerializeField] private UnitData unitData;
+        [SerializeField] private UnitMove unit;
 
         [Header("UI References")]
         [SerializeField] private Button spawnButton;
@@ -37,17 +38,17 @@ namespace TurnBasedGame.UI
             UpdateButtonState();
             
             // Lắng nghe sự kiện MP thay đổi
-            if (MPManager.Instance != null)
+            if (GameMediator.Instance != null)
             {
-                MPManager.Instance.OnMPChanged += OnMPChanged;
+                GameMediator.Instance.OnMPChanged += OnMPChanged;
             }
         }
 
         private void OnDestroy()
         {
-            if (MPManager.Instance != null)
+            if (GameMediator.Instance != null)
             {
-                MPManager.Instance.OnMPChanged -= OnMPChanged;
+                GameMediator.Instance.OnMPChanged -= OnMPChanged;
             }
         }
 
@@ -69,37 +70,37 @@ namespace TurnBasedGame.UI
         /// <summary>
         /// Set unit data cho button này
         /// </summary>
-        public void SetUnitData(UnitData data)
+        public void SetUnitData(UnitMove unitMove)
         {
-            unitData = data;
+            unit = unitMove;
             UpdateUI();
             UpdateButtonState();
         }
 
         private void UpdateUI()
         {
-            if (unitData == null) return;
+            if (unit == null) return;
 
             if (unitNameText != null)
             {
-                unitNameText.text = unitData.unitName;
+                unitNameText.text = unit.UnitData.unitName;
             }
 
             if (costText != null)
             {
-                costText.text = $"{unitData.spawnCost} MP";
+                costText.text = $"{unit.UnitData.spawnCost} MP";
             }
 
-            if (unitIcon != null && unitData.icon != null)
+            if (unitIcon != null && unit.UnitData.icon != null)
             {
-                unitIcon.sprite = unitData.icon;
+                unitIcon.sprite = unit.UnitData.icon;
                 unitIcon.enabled = true;
             }
         }
 
         private void OnSpawnButtonClicked()
         {
-            if (unitData == null)
+            if (unit == null)
             {
                 Debug.LogWarning("Cannot spawn: No unit data assigned");
                 return;
@@ -120,24 +121,24 @@ namespace TurnBasedGame.UI
             PlayerID currentPlayer = TurnManager.Instance.CurrentPlayer;
 
             // Kiểm tra có đủ MP không
-            if (MPManager.Instance != null && !MPManager.Instance.HasEnoughMP(currentPlayer, unitData.spawnCost))
+            if (MPManager.Instance != null && !MPManager.Instance.HasEnoughMP(currentPlayer, unit.UnitData.spawnCost))
             {
-                Debug.LogWarning($"Not enough MP to spawn {unitData.unitName}");
+                Debug.LogWarning($"Not enough MP to spawn {unit.UnitData.unitName}");
                 ShowNotEnoughMPFeedback();
                 return;
             }
 
             // Thử spawn unit
-            bool success = UnitSpawner.Instance.SpawnUnit(unitData, currentPlayer);
+            bool success = UnitSpawner.Instance.SpawnUnit(unit, currentPlayer);
 
             if (success)
             {
-                Debug.Log($"Successfully spawned {unitData.unitName}");
+                Debug.Log($"Successfully spawned {unit.UnitData.unitName}");
                 OnSpawnSuccess();
             }
             else
             {
-                Debug.LogWarning($"Failed to spawn {unitData.unitName}");
+                Debug.LogWarning($"Failed to spawn {unit.UnitData.unitName}");
                 OnSpawnFailed();
             }
         }
@@ -153,7 +154,7 @@ namespace TurnBasedGame.UI
 
         private void UpdateButtonState()
         {
-            if (unitData == null || spawnButton == null) return;
+            if (unit == null || spawnButton == null) return;
 
             bool canAfford = CanAffordUnit();
             bool hasSpawnPoint = HasAvailableSpawnPoint();
@@ -177,7 +178,7 @@ namespace TurnBasedGame.UI
                 return false;
 
             PlayerID currentPlayer = TurnManager.Instance.CurrentPlayer;
-            return MPManager.Instance.HasEnoughMP(currentPlayer, unitData.spawnCost);
+            return MPManager.Instance.HasEnoughMP(currentPlayer, unit.UnitData.spawnCost);
         }
 
         private bool HasAvailableSpawnPoint()

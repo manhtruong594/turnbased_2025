@@ -69,10 +69,7 @@ public class UIManager : MonoBehaviour
         
     }
     
-    private void OnUnitSpawned(TurnBasedGame.Unit.Unit unit)
-    {
-        Log($"Unit spawned: {unit.Data.unitName} for Player {(int)unit.Owner}");
-    }
+    
 
     void PopulateHand(List<CardData> cards)
     {

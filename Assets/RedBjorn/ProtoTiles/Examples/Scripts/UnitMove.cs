@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TurnBasedGame.Core;
 using TurnBasedGame.Unit;
 using UnityEngine;
 
@@ -12,8 +13,6 @@ namespace RedBjorn.ProtoTiles.Example
         public float Speed = 5;
         public float Range = 10f;
         public Transform RotationNode;
-        public AreaOutline AreaPrefab;
-        public PathDrawer PathPrefab;
         public bool IsSelected;
         public bool IsMoveCompleted;
         public bool IsActionCompleted;
@@ -26,32 +25,37 @@ namespace RedBjorn.ProtoTiles.Example
         public Action SelectAction;
         public Action DeselectAction;
         Vector3Int currentGridPosition;
-        private Unit _thisUnit;
 
+        [Header("Other Components")]
+        [SerializeField] private UnitData unitData;
+        [SerializeField] private UnitAttack _attackComponent;
+        private PlayerID ownerID;
+        public PlayerID Owner => ownerID;
+        
         private void Awake()
         {
-            _thisUnit = GetComponent<Unit>();
+            _attackComponent = GetComponent<UnitAttack>();
         }
 
         void Update()
         {
             if (IsActionCompleted)
                 return;
-            if (MyInput.GetOnWorldUp(_cachedMap.Settings.Plane()))
-            {
-                HandleWorldClick();
-            }
-            PathUpdate();
+            // if (MyInput.GetOnWorldUp(_cachedMap.Settings.Plane()))
+            // {
+            //     HandleWorldClick();
+            // }
+            //PathUpdate();
         }
 
-        public void Init(MapEntity map, Vector3Int startGridPos)
+        public void Init(PlayerID owner, Vector3Int startGridPos)
         {
             currentGridPosition = startGridPos;
-            _cachedMap = map;
-            Area = Spawner.Spawn(AreaPrefab, Vector3.zero, Quaternion.identity);
+            ownerID = owner;
+            _cachedMap = MapManager.Instance.MapEntity;
             UpdateGridPosition(startGridPos);
-            // AreaShow();
-            PathCreate();
+            //PathCreate();
+            _attackComponent.Init(_cachedMap);
         }
 
         public void ResetMove()
@@ -67,6 +71,7 @@ namespace RedBjorn.ProtoTiles.Example
             if (tile == null)
                 return;
             var clickedUnit = MapManager.Instance?.GetUnitAtTile(tile.Position);
+            
             if (clickedUnit != null && clickedUnit == this)
             {
                 if (IsSelected)
@@ -166,7 +171,6 @@ namespace RedBjorn.ProtoTiles.Example
         {
             if (!Path)
             {
-                Path = Spawner.Spawn(PathPrefab, Vector3.zero, Quaternion.identity);
                 Path.Show(new List<Vector3>() { }, _cachedMap);
                 Path.InactiveState();
                 Path.IsEnabled = false;
@@ -220,15 +224,18 @@ namespace RedBjorn.ProtoTiles.Example
             MapManager.Instance.RegisterUnit(newGridPos, this);
         }
 
-        public Unit GetUnit()
-        {
-            return _thisUnit;
-        }
-
         public void MoveTowardsTarget(Vector3Int targetGridPos)
         {
             var pathTiles = _cachedMap.PathTiles(transform.position, targetGridPos, Range);
             Move(pathTiles);
         }
+
+        public UnitAttack AttackComponent => _attackComponent;
+
+        public void ResetComponents()
+        {
+            ResetMove();
+        }
+        public UnitData UnitData => unitData;
     }
 }

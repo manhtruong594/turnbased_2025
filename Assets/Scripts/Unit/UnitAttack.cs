@@ -29,7 +29,6 @@ namespace TurnBasedGame.Unit
         private MapEntity cachedMap;
         private AreaOutline attackArea;
         private bool isAttackMode = false;
-        private UnitMove unitMove;
 
         public float AttackRange => attackRange;
         public int AttackDamage => attackDamage;
@@ -38,10 +37,9 @@ namespace TurnBasedGame.Unit
         /// <summary>
         /// Khởi tạo component attack
         /// </summary>
-        public void Init(MapEntity map, UnitMove moveComponent)
+        public void Init(MapEntity map)
         {
             cachedMap = map;
-            unitMove = moveComponent;
             
             if (attackAreaPrefab != null)
             {
@@ -67,7 +65,6 @@ namespace TurnBasedGame.Unit
         public void ExitAttackMode()
         {
             if (!isAttackMode) return;
-            unitMove.IsActionCompleted = true; 
             isAttackMode = false;
             HideAttackRange();
         }
@@ -85,10 +82,10 @@ namespace TurnBasedGame.Unit
             if (targetUnit == null) return false;
 
             // Không thể tấn công chính mình hoặc đồng đội
-            var myUnit = GetComponent<Unit>();
-            if (myUnit != null && targetUnit.GetComponent<Unit>() != null)
+            var myUnit = GetComponent<UnitMove>();
+            if (myUnit != null && targetUnit.GetComponent<UnitMove>() != null)
             {
-                var target = targetUnit.GetComponent<Unit>();
+                var target = targetUnit.GetComponent<UnitMove>();
                 if (target.Owner == myUnit.Owner) return false;
             }
 
@@ -112,26 +109,26 @@ namespace TurnBasedGame.Unit
             var targetUnitMove = MapManager.Instance?.GetUnitAtTile(targetGridPos);
             if (targetUnitMove == null) return;
 
-            var target = targetUnitMove.GetUnit();
-            if (target == null) return;
+            // var target = targetUnitMove.GetUnit();
+            // if (target == null) return;
 
-            // TODO: Thêm animation tấn công
-            // TODO: Thêm sound effect
+            // // TODO: Thêm animation tấn công
+            // // TODO: Thêm sound effect
 
-            // Gây sát thương
-            DealDamage(target);
+            // // Gây sát thương
+            // DealDamage(target);
 
-            // Kết thúc chế độ tấn công
-            ExitAttackMode();
+            // // Kết thúc chế độ tấn công
+            // ExitAttackMode();
         }
 
         /// <summary>
         /// Lấy danh sách các unit có thể tấn công trong phạm vi
         /// </summary>
-        public List<Unit> GetAttackableTargets()
+        public List<UnitMove> GetAttackableTargets()
         {
-            var targets = new List<Unit>();
-            var myUnit = GetComponent<Unit>();
+            var targets = new List<UnitMove>();
+            var myUnit = GetComponent<UnitMove>();
             if (myUnit == null) return targets;
 
             var tilesInRange = GetTilesInAttackRange();
@@ -141,7 +138,7 @@ namespace TurnBasedGame.Unit
                 var unitAtTile = MapManager.Instance?.GetUnitAtTile(tile.Position);
                 if (unitAtTile == null) continue;
 
-                var targetUnit = unitAtTile.GetComponent<Unit>();
+                var targetUnit = unitAtTile.GetComponent<UnitMove>();
                 if (targetUnit == null) continue;
                 if (targetUnit.Owner == myUnit.Owner) continue;
 
@@ -199,7 +196,7 @@ namespace TurnBasedGame.Unit
             return true;
         }
 
-        private void DealDamage(Unit target)
+        private void DealDamage(UnitMove target)
         {
             // TODO: Implement proper health/damage system
             // Hiện tại chỉ log để test

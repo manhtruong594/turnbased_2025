@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using TurnBasedGame.Unit;
+using RedBjorn.ProtoTiles.Example;
 
 namespace TurnBasedGame.UI
 {
@@ -12,7 +13,7 @@ namespace TurnBasedGame.UI
     {
         [Header("Configuration")]
         [Tooltip("Danh sách các unit có thể spawn")]
-        [SerializeField] private List<UnitData> availableUnits = new List<UnitData>();
+        [SerializeField] private List<UnitMove> availableUnits = new List<UnitMove>();
 
         [Header("UI References")]
         [SerializeField] private Transform buttonContainer;
@@ -58,7 +59,7 @@ namespace TurnBasedGame.UI
         /// <summary>
         /// Tạo một spawn button cho unit
         /// </summary>
-        private void CreateSpawnButton(UnitData unitData)
+        private void CreateSpawnButton(UnitMove unit)
         {
             if (spawnButtonPrefab == null || buttonContainer == null)
             {
@@ -71,7 +72,7 @@ namespace TurnBasedGame.UI
 
             if (button != null)
             {
-                button.SetUnitData(unitData);
+                button.SetUnitData(unit);
                 spawnButtons.Add(button);
             }
             else
@@ -83,33 +84,33 @@ namespace TurnBasedGame.UI
         /// <summary>
         /// Thêm unit vào danh sách có thể spawn
         /// </summary>
-        public void AddAvailableUnit(UnitData unitData)
+        public void AddAvailableUnit(UnitMove unit)
         {
-            if (unitData == null || availableUnits.Contains(unitData))
+            if (unit == null || availableUnits.Contains(unit))
                 return;
 
-            availableUnits.Add(unitData);
-            CreateSpawnButton(unitData);
+            availableUnits.Add(unit);
+            CreateSpawnButton(unit);
         }
 
         /// <summary>
         /// Xóa unit khỏi danh sách có thể spawn
         /// </summary>
-        public void RemoveAvailableUnit(UnitData unitData)
+        public void RemoveAvailableUnit(UnitMove unit)
         {
-            if (unitData == null || !availableUnits.Contains(unitData))
+            if (unit == null || !availableUnits.Contains(unit))
                 return;
 
-            availableUnits.Remove(unitData);
+            availableUnits.Remove(unit);
             GenerateSpawnButtons(); // Regenerate all buttons
         }
 
         /// <summary>
         /// Set danh sách units có thể spawn
         /// </summary>
-        public void SetAvailableUnits(List<UnitData> units)
+        public void SetAvailableUnits(List<UnitMove> units)
         {
-            availableUnits = new List<UnitData>(units);
+            availableUnits = new List<UnitMove>(units);
             GenerateSpawnButtons();
         }
 

@@ -5,6 +5,7 @@ using System.Collections;
 using System;
 using System.Collections.Generic;
 using TurnBasedGame.Unit;
+using RedBjorn.ProtoTiles.Example;
 
 namespace TurnBasedGame.Core
 {
@@ -22,8 +23,7 @@ namespace TurnBasedGame.Core
         [SerializeField] private GameObject turnIndicator;
         [SerializeField] private PlayerUI _myUI;
         private bool _isMyTurn;
-        //private float _currentTimeLimit;
-        private List<Unit.Unit> _myUnits = new List<Unit.Unit>();
+        private List<UnitMove> _myUnits = new List<UnitMove>();
 
         private void Start()
         {
@@ -43,10 +43,10 @@ namespace TurnBasedGame.Core
         /// </summary>
         private void SubscribeToEvents()
         {
-            if (TurnManager.Instance != null)
+            if (GameMediator.Instance != null)
             {
-                TurnManager.Instance.OnPlayerTurnStarted += HandleTurnStarted;
-                TurnManager.Instance.OnPlayerTurnEnded += HandleTurnEnded;
+                GameMediator.Instance.OnPlayerTurnStarted += HandleTurnStarted;
+                GameMediator.Instance.OnPlayerTurnEnded += HandleTurnEnded;
             }
         }
 
@@ -55,10 +55,10 @@ namespace TurnBasedGame.Core
         /// </summary>
         private void UnsubscribeFromEvents()
         {
-            if (TurnManager.Instance != null)
+            if (GameMediator.Instance != null)
             {
-                TurnManager.Instance.OnPlayerTurnStarted -= HandleTurnStarted;
-                TurnManager.Instance.OnPlayerTurnEnded -= HandleTurnEnded;
+                GameMediator.Instance.OnPlayerTurnStarted -= HandleTurnStarted;
+                GameMediator.Instance.OnPlayerTurnEnded -= HandleTurnEnded;
             }
         }
 
@@ -122,7 +122,7 @@ namespace TurnBasedGame.Core
             {
                 unit.ResetComponents();
             }
-            TurnManager.Instance.CalculateTimeLimitInTurn(playerID);
+            TurnManager.Instance.CalculateTimeLimitInTurn(_myUnits.Count);
             // yield return new WaitForSeconds(_currentTimeLimit); 
             // yield return null;
             // TurnManager.Instance.EndCurrentTurn();

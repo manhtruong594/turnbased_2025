@@ -6,11 +6,7 @@ using TMPro;
 
 namespace TurnBasedGame.Core
 {
-    /// <summary>
-    /// Quản lý hệ thống chuyển lượt giữa 2 người chơi
-    /// Singleton pattern để đảm bảo chỉ có 1 instance
-    /// </summary>
-    public class TurnManager : MonoBehaviour
+    public class TurnManager : BaseManager
     {
         public static TurnManager Instance { get; private set; }
 
@@ -18,10 +14,6 @@ namespace TurnBasedGame.Core
         public PlayerID StartingPlayer = PlayerID.Player1;
         public float TurnTransitionDelay = 0.5f;
         [SerializeField] private float _flatTimeLimit = 20f;
-        // Events để các script khác subscribe
-        public event Action<TurnState> OnTurnStateChanged;
-        public event Action<PlayerID> OnPlayerTurnStarted;
-        public event Action<PlayerID> OnPlayerTurnEnded;
 
         private TurnState currentState;
         private PlayerID currentPlayer;
@@ -46,12 +38,16 @@ namespace TurnBasedGame.Core
             Instance = this;
         }
 
-        IEnumerator Start()
+        public override void Initialize(GameMediator mediator)
         {
-            yield return null;
-            yield return new WaitForEndOfFrame();
-            InitializeGame();
+            base.Initialize(mediator);
+            turnCount = 0;
+            currentPlayer = StartingPlayer;
+            ChangeState(TurnState.Initialization);
+
+            Invoke(nameof(StartFirstTurn), TurnTransitionDelay);
         }
+
         void Update()
         {
             if (!_isTriggerTimer)
@@ -62,17 +58,6 @@ namespace TurnBasedGame.Core
             {
                 EndCurrentTurn();
             }
-        }
-        /// <summary>
-        /// Khởi tạo game và bắt đầu lượt đầu tiên
-        /// </summary>
-        public void InitializeGame()
-        {
-            turnCount = 0;
-            currentPlayer = StartingPlayer;
-            ChangeState(TurnState.Initialization);
-
-            Invoke(nameof(StartFirstTurn), TurnTransitionDelay);
         }
 
         private void StartFirstTurn()
@@ -92,7 +77,6 @@ namespace TurnBasedGame.Core
             if (currentState == newState) return;
 
             currentState = newState;
-            OnTurnStateChanged?.Invoke(currentState);
             Timer = 0;
             HandleStateChange(newState);
         }
@@ -131,7 +115,7 @@ namespace TurnBasedGame.Core
             turnCount++;
 
             Debug.Log($"=== Turn {turnCount}: Player {(int)player}'s Turn Started ===");
-            OnPlayerTurnStarted?.Invoke(currentPlayer);
+            _gameMediator.NotifyPlayerTurnStarted(currentPlayer);
         }
 
         /// <summary>
@@ -147,7 +131,7 @@ namespace TurnBasedGame.Core
             }
 
             Debug.Log($"=== Player {(int)currentPlayer}'s Turn Ended ===");
-            OnPlayerTurnEnded?.Invoke(currentPlayer);
+            _gameMediator.NotifyPlayerTurnEnded(currentPlayer);
 
             // Chuyển lượt sau delay ngắn
             Invoke(nameof(SwitchToNextPlayer), TurnTransitionDelay);
@@ -186,20 +170,11 @@ namespace TurnBasedGame.Core
             Debug.Log("Game has ended!");
         }
 
-        /// <summary>
-        /// Kiểm tra xem có phải lượt của player này không
-        /// </summary>
-        public bool IsPlayerTurn(PlayerID player)
-        {
-            return currentPlayer == player &&
-                   (currentState == TurnState.Player1Turn || currentState == TurnState.Player2Turn);
-        }
-
-        public void CalculateTimeLimitInTurn(PlayerID player)
+        public void CalculateTimeLimitInTurn(int unitCount)
         {
             try
             {
-                Timer = _flatTimeLimit + UnitSpawner.Instance.GetUnitCount(player) * 10;
+                Timer = _flatTimeLimit + unitCount * 10;
             }
             catch
             {

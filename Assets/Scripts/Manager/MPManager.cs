@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using TurnBasedGame.Core;
+using System.Buffers.Text;
 
 namespace TurnBasedGame.Resources
 {
@@ -8,16 +9,13 @@ namespace TurnBasedGame.Resources
     /// Quản lý hệ thống MP (Mana Points) cho cả 2 người chơi
     /// Xử lý việc cộng/trừ MP và kiểm tra điều kiện tiêu tốn
     /// </summary>
-    public class MPManager : MonoBehaviour
+    public class MPManager : BaseManager
     {
         public static MPManager Instance { get; private set; }
 
         [Header("MP Settings")]
         [SerializeField] private int maxMP = 20;
         [SerializeField] private int startingMP = 0;
-
-        // Events
-        public event Action<PlayerID, int, int> OnMPChanged; // (player, currentMP, maxMP)
 
         // MP cho mỗi người chơi
         private int player1MP;
@@ -35,23 +33,16 @@ namespace TurnBasedGame.Resources
             Instance = this;
         }
 
-        private void Start()
+        public override void Initialize(GameMediator mediator)
         {
-            InitializeMP();
-        }
-
-        /// <summary>
-        /// Khởi tạo MP ban đầu cho cả 2 người chơi
-        /// </summary>
-        private void InitializeMP()
-        {
+            base.Initialize(mediator);
             player1MP = startingMP;
             player2MP = startingMP;
 
-            OnMPChanged?.Invoke(PlayerID.Player1, player1MP, maxMP);
-            OnMPChanged?.Invoke(PlayerID.Player2, player2MP, maxMP);
+            _gameMediator.NotifyMPChanged(PlayerID.Player1, player1MP, maxMP);
+            _gameMediator.NotifyMPChanged(PlayerID.Player2, player2MP, maxMP);
         }
-
+         
         /// <summary>
         /// Cộng MP cho người chơi
         /// </summary>
@@ -62,13 +53,13 @@ namespace TurnBasedGame.Resources
             if (player == PlayerID.Player1)
             {
                 player1MP = Mathf.Min(player1MP + amount, maxMP);
-                OnMPChanged?.Invoke(PlayerID.Player1, player1MP, maxMP);
+                _gameMediator.NotifyMPChanged(PlayerID.Player1, player1MP, maxMP);
                 Debug.Log($"Player 1 gained {amount} MP. Current MP: {player1MP}/{maxMP}");
             }
             else
             {
                 player2MP = Mathf.Min(player2MP + amount, maxMP);
-                OnMPChanged?.Invoke(PlayerID.Player2, player2MP, maxMP);
+                _gameMediator.NotifyMPChanged(PlayerID.Player2, player2MP, maxMP);
                 Debug.Log($"Player 2 gained {amount} MP. Current MP: {player2MP}/{maxMP}");
             }
         }
@@ -84,13 +75,13 @@ namespace TurnBasedGame.Resources
             if (player == PlayerID.Player1)
             {
                 player1MP -= amount;
-                OnMPChanged?.Invoke(PlayerID.Player1, player1MP, maxMP);
+                _gameMediator.NotifyMPChanged(PlayerID.Player1, player1MP, maxMP);
                 Debug.Log($"Player 1 spent {amount} MP. Current MP: {player1MP}/{maxMP}");
             }
             else
             {
                 player2MP -= amount;
-                OnMPChanged?.Invoke(PlayerID.Player2, player2MP, maxMP);
+                _gameMediator.NotifyMPChanged(PlayerID.Player2, player2MP, maxMP);
                 Debug.Log($"Player 2 spent {amount} MP. Current MP: {player2MP}/{maxMP}");
             }
 
@@ -111,14 +102,6 @@ namespace TurnBasedGame.Resources
         public int GetCurrentMP(PlayerID player)
         {
             return player == PlayerID.Player1 ? player1MP : player2MP;
-        }
-
-        /// <summary>
-        /// Reset MP về giá trị ban đầu (dùng khi bắt đầu trận mới)
-        /// </summary>
-        public void ResetMP()
-        {
-            InitializeMP();
         }
     }
 }

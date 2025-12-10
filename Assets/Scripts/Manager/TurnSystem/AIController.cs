@@ -16,7 +16,7 @@ namespace TurnBasedGame.Core
     public class AIController : MonoBehaviour
     {
         [Header("AI Settings")]
-        [SerializeField] private List<UnitData> availableUnits = new List<UnitData>();
+        [SerializeField] private List<UnitMove> availableUnits = new List<UnitMove>();
         [SerializeField] private float actionDelay = 1f;
 
         private PlayerID aiPlayerID;
@@ -79,7 +79,7 @@ namespace TurnBasedGame.Core
 
             if (success)
             {
-                Debug.Log($"AI đã spawn {randomUnit.unitName}");
+                Debug.Log($"AI đã spawn {randomUnit.UnitData.unitName}");
             }
             else
             {
@@ -92,9 +92,9 @@ namespace TurnBasedGame.Core
         /// <summary>
         /// Thực hiện hành động cho 1 unit
         /// </summary>
-        private IEnumerator ExecuteUnitAction(Unit.Unit unit)
+        private IEnumerator ExecuteUnitAction(UnitMove unit)
         {
-            if (unit == null || unit.MoveComponent == null) yield break;
+            if (unit == null) yield break;
 
             // Tìm unit gần nhất của đối thủ
             var targetUnit = FindNearestOpponentUnit(unit);
@@ -127,14 +127,14 @@ namespace TurnBasedGame.Core
         /// <summary>
         /// Tìm unit gần nhất của đối thủ
         /// </summary>
-        private Unit.Unit FindNearestOpponentUnit(Unit.Unit myUnit)
+        private UnitMove FindNearestOpponentUnit(UnitMove myUnit)
         {
             var opponentUnits = UnitSpawner.Instance.GetPlayerUnits(opponentOfAI);
 
             if (opponentUnits == null || opponentUnits.Count == 0)
                 return null;
 
-            Unit.Unit nearest = null;
+            UnitMove nearest = null;
             float minDistance = float.MaxValue;
 
             foreach (var opponent in opponentUnits)
@@ -156,23 +156,21 @@ namespace TurnBasedGame.Core
         /// <summary>
         /// Kiểm tra có thể tấn công target không
         /// </summary>
-        private bool CanAttackTarget(Unit.Unit attacker, Unit.Unit target)
+        private bool CanAttackTarget(UnitMove attacker, UnitMove target)
         {
             var targetGridPos = MapManager.Instance.MapEntity.Tile(target.transform.position)?.Position;
 
             if (!targetGridPos.HasValue)
                 return false;
 
-            return attacker.CheckAttackPossible(targetGridPos.Value);
+            return attacker.AttackComponent.CanAttack(targetGridPos.Value);
         }
 
         /// <summary>
         /// Di chuyển về phía target
         /// </summary>
-        private IEnumerator MoveTowardsTarget(Unit.Unit myUnit, Unit.Unit target)
+        private IEnumerator MoveTowardsTarget(UnitMove myUnit, UnitMove target)
         {
-            if (myUnit.MoveComponent == null) yield break;
-
             var map = MapManager.Instance.MapEntity;
             var myPos = myUnit.transform.position;
             var targetPos = target.transform.position;
@@ -187,7 +185,7 @@ namespace TurnBasedGame.Core
             var targetGridPos = targetTile.Position;
 
             // Lấy các tile có thể đi được
-            var walkableTiles = map.WalkableTiles(map.Tile(myPos).Position, myUnit.MoveComponent.Range);
+            var walkableTiles = map.WalkableTiles(map.Tile(myPos).Position, myUnit.Range);
 
             if (walkableTiles == null || walkableTiles.Count == 0)
             {
@@ -220,13 +218,13 @@ namespace TurnBasedGame.Core
             if (bestTile != null)
             {
                 // Tính đường đi
-                var path = map.PathTiles(myPos, map.WorldPosition(bestTile.Position), myUnit.MoveComponent.Range);
+                var path = map.PathTiles(myPos, map.WorldPosition(bestTile.Position), myUnit.Range);
 
                 if (path != null && path.Count > 0)
                 {
                     Debug.Log($"AI di chuyển {myUnit.name} đến gần {target.name}");
-                    myUnit.MoveComponent.Move(path);
-                    while (!myUnit.MoveComponent.IsMoveCompleted)
+                    myUnit.Move(path);
+                    while (!myUnit.IsMoveCompleted)
                     {
                         yield return null;
                     }
@@ -241,11 +239,11 @@ namespace TurnBasedGame.Core
         /// <summary>
         /// Tấn công target
         /// </summary>
-        private IEnumerator AttackTarget(Unit.Unit attacker, Unit.Unit target)
+        private IEnumerator AttackTarget(UnitMove attacker, UnitMove target)
         {
             var targetGridPos = MapManager.Instance.MapEntity.Tile(target.transform.position)?.Position;
             Debug.Log($"AI tấn công: {attacker.name} -> {target.name}");
-            attacker.AttackImmidiate(targetGridPos.Value);
+            //attacker.AttackImmidiate(targetGridPos.Value);
             yield return new WaitForSeconds(0.5f);
         }
     }

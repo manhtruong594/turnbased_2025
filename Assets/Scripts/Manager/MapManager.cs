@@ -5,7 +5,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using TurnBasedGame.Unit;
 
-public class MapManager : MonoBehaviour
+public class MapManager : BaseManager
 {
     public static MapManager Instance { get; private set; }
     public MapSettings Map;

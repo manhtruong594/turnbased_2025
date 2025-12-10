@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TurnBasedGame.Core;
 using TurnBasedGame.Resources;
+using RedBjorn.ProtoTiles.Example;
 
 namespace TurnBasedGame.Unit
 {
@@ -10,7 +11,7 @@ namespace TurnBasedGame.Unit
     /// Quản lý việc spawn unit trong game
     /// Xử lý logic: kiểm tra MP, tìm spawn point hợp lệ, tạo unit
     /// </summary>
-    public class UnitSpawner : MonoBehaviour
+    public class UnitSpawner : BaseManager
     {
         public static UnitSpawner Instance { get; private set; }
 
@@ -24,10 +25,7 @@ namespace TurnBasedGame.Unit
 
         private Dictionary<PlayerID, List<SpawnPoint>> playerSpawnPoints = new Dictionary<PlayerID, List<SpawnPoint>>();
         
-        private Dictionary<PlayerID, List<Unit>> playerUnits = new Dictionary<PlayerID, List<Unit>>();
-
-        // Events
-        public System.Action<Unit> OnUnitDestroyed;
+        private Dictionary<PlayerID, List<UnitMove>> playerUnits = new Dictionary<PlayerID, List<UnitMove>>();
 
         private void Awake()
         {
@@ -43,9 +41,9 @@ namespace TurnBasedGame.Unit
                 unitsContainer = transform;
             }
         }
-
-        private void Start()
+        override public void Initialize(GameMediator mediator)
         {
+            base.Initialize(mediator);
             InitializeSpawnPoints();
             InitializePlayerUnits();
         }
@@ -56,8 +54,8 @@ namespace TurnBasedGame.Unit
         private void InitializePlayerUnits()
         {
             playerUnits.Clear();
-            playerUnits[PlayerID.Player1] = new List<Unit>();
-            playerUnits[PlayerID.Player2] = new List<Unit>();
+            playerUnits[PlayerID.Player1] = new List<UnitMove>();
+            playerUnits[PlayerID.Player2] = new List<UnitMove>();
         }
 
         /// <summary>
@@ -94,21 +92,8 @@ namespace TurnBasedGame.Unit
         /// Spawn unit tại vị trí spawn point
         /// Kiểm tra MP và spawn point hợp lệ
         /// </summary>
-        public bool SpawnUnit(UnitData unitData, PlayerID owner, SpawnPoint spawnPoint = null)
-        {
-            if (unitData == null || unitData.unitPrefab == null)
-            {
-                return false;
-            }
-
-            // Kiểm tra MP
-            if (!CheckAndSpendMP(owner, unitData.spawnCost))
-            {
-                Debug.LogWarning($"Not enough MP to spawn {unitData.unitName}. Cost: {unitData.spawnCost}");
-                return false;
-            }
-
-            // Tìm spawn point nếu chưa được chỉ định
+        public bool SpawnUnit(UnitMove unit, PlayerID owner, SpawnPoint spawnPoint = null)
+        { 
             if (spawnPoint == null)
             {
                 spawnPoint = GetAvailableSpawnPoint(owner);
@@ -117,8 +102,6 @@ namespace TurnBasedGame.Unit
             if (spawnPoint == null)
             {
                 Debug.LogWarning($"No available spawn point for {owner}");
-                // Hoàn lại MP vì không spawn được
-                MPManager.Instance?.AddMP(owner, unitData.spawnCost);
                 return false;
             }
 
@@ -126,51 +109,25 @@ namespace TurnBasedGame.Unit
             if (!spawnPoint.BelongsTo(owner) || !spawnPoint.IsAvailable)
             {
                 Debug.LogWarning("Spawn point is not valid");
-                MPManager.Instance?.AddMP(owner, unitData.spawnCost);
                 return false;
             }
 
             // Spawn unit
-            GameObject unitObj = Instantiate(unitData.unitPrefab, spawnPoint.transform.position, Quaternion.identity, unitsContainer);
-            Unit unit = unitObj.GetComponent<Unit>();
-
-            if (unit == null)
-            {
-                unit = unitObj.AddComponent<Unit>();
-            }
-
-            // Initialize unit
-            unit.Initialize(unitData, owner, spawnPoint.GridPosition);
-
-            // Đánh dấu spawn point đã sử dụng
+            var unitClone = Instantiate(unit, spawnPoint.transform.position, Quaternion.identity, unitsContainer);
+            
+            unitClone.Init(owner, spawnPoint.GridPosition);
             spawnPoint.MarkAsOccupied();
 
             // Lưu trữ unit vào dictionary theo owner
             if (!playerUnits.ContainsKey(owner))
             {
-                playerUnits[owner] = new List<Unit>();
+                playerUnits[owner] = new List<UnitMove>();
             }
-            playerUnits[owner].Add(unit);
+            playerUnits[owner].Add(unitClone);
+            _gameMediator.NotifySpawnUnit(unitClone, unitClone.UnitData.spawnCost);
 
-            // Trigger event
-            //OnUnitSpawned?.Invoke(unit);
-
-            Debug.Log($"Successfully spawned {unitData.unitName} for {owner} at {spawnPoint.GridPosition}");
+            Debug.Log($"Successfully spawned {unitClone.UnitData.unitName} for {owner} at {spawnPoint.GridPosition}");
             return true;
-        }
-
-        /// <summary>
-        /// Kiểm tra và tiêu tốn MP
-        /// </summary>
-        private bool CheckAndSpendMP(PlayerID player, int cost)
-        {
-            if (MPManager.Instance == null)
-            {
-                Debug.LogWarning("MPManager not found!");
-                return false;
-            }
-
-            return MPManager.Instance.SpendMP(player, cost);
         }
 
         /// <summary>
@@ -211,79 +168,13 @@ namespace TurnBasedGame.Unit
                 .ToList();
         }
 
-        /// <summary>
-        /// Lấy tất cả units của một người chơi
-        /// </summary>
-        public List<Unit> GetPlayerUnits(PlayerID player)
+        public List<UnitMove> GetPlayerUnits(PlayerID player)
         {
             if (!playerUnits.ContainsKey(player))
             {
-                return new List<Unit>();
+                return new List<UnitMove>();
             }
             return playerUnits[player];
-        }
-
-        /// <summary>
-        /// Hủy unit (khi bị tiêu diệt hoặc game end)
-        /// </summary>
-        public void DestroyUnit(Unit unit)
-        {
-            if (unit == null) return;
-
-            // Xóa unit khỏi dictionary của owner
-            if (playerUnits.ContainsKey(unit.Owner))
-            {
-                playerUnits[unit.Owner].Remove(unit);
-            }
-
-            OnUnitDestroyed?.Invoke(unit);
-
-            // Có thể giải phóng spawn point nếu cần
-            // (tùy game design - có thể spawn lại hay không)
-
-            Destroy(unit.gameObject);
-        }
-
-        /// <summary>
-        /// Xóa tất cả units (reset game)
-        /// </summary>
-        public void ClearAllUnits()
-        {
-            // Xóa tất cả units của mỗi player
-            foreach (var kvp in playerUnits)
-            {
-                foreach (var unit in kvp.Value.ToList())
-                {
-                    if (unit != null)
-                    {
-                        Destroy(unit.gameObject);
-                    }
-                }
-            }
-
-            // Clear dictionary
-            foreach (var player in playerUnits.Keys.ToList())
-            {
-                playerUnits[player].Clear();
-            }
-
-            // Reset spawn points
-            foreach (var point in spawnPoints)
-            {
-                point.MarkAsAvailable();
-            }
-        }
-
-        /// <summary>
-        /// Đếm số lượng units của người chơi
-        /// </summary>
-        public int GetUnitCount(PlayerID player)
-        {
-            if (!playerUnits.ContainsKey(player))
-            {
-                return 0;
-            }
-            return playerUnits[player].Count;
         }
     }
 }
