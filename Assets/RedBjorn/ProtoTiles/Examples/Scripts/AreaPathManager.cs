@@ -6,8 +6,8 @@ using UnityEngine;
 namespace RedBjorn.ProtoTiles.Example
 {
     /// <summary>
-    /// Singleton manager để tạo và quản lý một instance chung của
-    /// `AreaOutline` và `PathDrawer` nhằm tái sử dụng giữa các unit.
+    /// Singleton manager để tạo và quản lý visualize Area và Path cho Unit
+    /// gửi reqquest cho Unit thông báo di chuyển khi đủ điều kiện
     /// </summary>
     public class AreaPathManager : BaseManager
     {
@@ -27,6 +27,7 @@ namespace RedBjorn.ProtoTiles.Example
         private UnitMove previousSelectedUnit;
         TileEntity _tileClicked;
 
+        #region  Unity Core and Initialization
         void Awake()
         {
             if (Instance != null && Instance != this)
@@ -37,76 +38,10 @@ namespace RedBjorn.ProtoTiles.Example
             Instance = this;
         }
 
-        private void Update()
+        public override void Initialize(GameMediator mediator)
         {
-            var clickPos = MyInput.GroundPosition(_cachedMap.Settings.Plane());
-            _tileClicked = _cachedMap.Tile(clickPos);
-            if (_tileClicked == null)
-                return;
-
-            HandleWorldClick();
-
-            if (selectedUnit == null)
-                return;
-
-            if (_tileClicked.Vacant)
-            {
-                // handle move
-                HideArea();
-                SetPathEnabled(false);
-                HidePath();
-                var path = _cachedMap.PathTiles(selectedUnit.transform.position, clickPos, selectedUnit.Range);
-                selectedUnit.Move(path);
-            }
-
-            PathUpdate();
-        }
-
-        void HandleWorldClick()
-        {
-            var clickedUnit = MapManager.Instance?.GetUnitAtTile(_tileClicked.Position);
-
-            if (clickedUnit != null)
-            {
-                if (clickedUnit.IsSelected)
-                {
-                    selectedUnit = null;
-                    previousSelectedUnit = selectedUnit;
-                    HideArea();
-                    HidePath();
-                    _gameMediator.NotifyUnitDeselected(clickedUnit);
-                }
-                else
-                {
-                    clickedUnit.IsSelected = true;
-                    selectedUnit = clickedUnit;
-                    ShowArea(_cachedMap.WalkableBorder(selectedUnit.transform.position, selectedUnit.Range));
-                    SetPathEnabled(true);
-                    _gameMediator.NotifyUnitSelected(clickedUnit);
-                }
-                Debug.Log($"Clicked on unit: {clickedUnit.name}");
-                return;
-            }
-        }
-
-        void PathUpdate()
-        {
-            if (_path && _path.IsEnabled)
-            {
-                var tile = _cachedMap.Tile(MyInput.GroundPosition(_cachedMap.Settings.Plane()));
-                if (tile != null && tile.Vacant)
-                {
-                    var path = _cachedMap.PathPoints(selectedUnit.transform.position, _cachedMap.WorldPosition(tile.Position), selectedUnit.Range);
-                    _path.Show(path, _cachedMap);
-                    _path.ActiveState();
-                    _area.ActiveState();
-                }
-                else
-                {
-                    _path.InactiveState();
-                    _area.InactiveState();
-                }
-            }
+            base.Initialize(mediator);
+            EnsureCreated();
         }
 
         void EnsureCreated()
@@ -135,12 +70,97 @@ namespace RedBjorn.ProtoTiles.Example
             }
         }
 
-        public override void Initialize(GameMediator mediator)
+
+        private void Update()
         {
-            base.Initialize(mediator);
-            EnsureCreated();
+            var mousePos = MyInput.GroundPosition(_cachedMap.Settings.Plane());
+            if (MyInput.GetOnWorldUp(_cachedMap.Settings.Plane()))
+            {
+                _tileClicked = _cachedMap.Tile(mousePos);
+                if (_tileClicked == null)
+                    return;
+
+                HandleWorldClickAndMove(mousePos);
+            }
+
+            if (_path && _path.IsEnabled)
+            {
+                var tile = _cachedMap.Tile(mousePos);
+                if (tile != null && tile.Vacant)
+                {
+                    var path = _cachedMap.PathPoints(selectedUnit.transform.position, _cachedMap.WorldPosition(tile.Position), selectedUnit.Range);
+                    _path.Show(path, _cachedMap);
+                    _path.ActiveState();
+                    _area.ActiveState();
+                }
+                else
+                {
+                    _path.InactiveState();
+                    _area.InactiveState();
+                }
+            }
         }
 
+        #endregion
+
+        #region  Core Methods
+        void HandleWorldClickAndMove(Vector3 clickPos)
+        {
+            var clickedUnit = MapManager.Instance?.GetUnitAtTile(_tileClicked.Position);
+
+            if (clickedUnit != null)
+            {
+                if (clickedUnit.IsSelected)
+                {
+                    clickedUnit.ChangeSelected(false);
+                    selectedUnit = null;
+                    previousSelectedUnit = selectedUnit;
+                    HideArea();
+                    HidePath();
+                    _gameMediator.NotifyUnitDeselected(clickedUnit);
+                }
+                else
+                {
+                    clickedUnit.ChangeSelected(true);
+                    selectedUnit = clickedUnit;
+                    ShowArea(_cachedMap.WalkableBorder(selectedUnit.transform.position, selectedUnit.Range));
+                    SetPathEnabled(true);
+                    _gameMediator.NotifyUnitSelected(clickedUnit);
+                }
+                Debug.Log($"Clicked on unit: {clickedUnit.name}");
+                return;
+            }
+
+            if (selectedUnit == null)
+                return;
+
+            if (_tileClicked.Vacant)
+            {
+                // handle move
+                HideArea();
+                SetPathEnabled(false);
+                HidePath();
+                var path = _cachedMap.PathTiles(selectedUnit.transform.position, clickPos, selectedUnit.Range);
+                selectedUnit.Move(path, OnCompleteMove);
+            }
+        }
+
+        void OnCompleteMove()
+        {
+            HideArea();
+            HidePath();
+            if (selectedUnit == null)
+            {
+                return;
+            }
+            selectedUnit.ChangeSelected(false);
+            _gameMediator.NotifyUnitDeselected(selectedUnit);
+            selectedUnit = null;
+        }
+
+        #endregion
+
+        #region  Support Methods
         public void ShowArea(List<Vector3> border, MapEntity map = null)
         {
             if (_area != null)
@@ -182,4 +202,5 @@ namespace RedBjorn.ProtoTiles.Example
             _cachedMap = map;
         }
     }
+    #endregion
 }

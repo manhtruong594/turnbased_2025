@@ -13,17 +13,12 @@ namespace RedBjorn.ProtoTiles.Example
         public float Speed = 5;
         public float Range = 10f;
         public Transform RotationNode;
-        public bool IsSelected;
+        public bool IsSelected { get; private set; }
         public bool IsMoveCompleted;
         public bool IsActionCompleted;
 
         MapEntity _cachedMap;
-        AreaOutline Area;
-        PathDrawer Path;
         Coroutine MovingCoroutine;
-
-        public Action SelectAction;
-        public Action DeselectAction;
         Vector3Int currentGridPosition;
 
         [Header("Other Components")]
@@ -37,24 +32,13 @@ namespace RedBjorn.ProtoTiles.Example
             _attackComponent = GetComponent<UnitAttack>();
         }
 
-        void Update()
-        {
-            if (IsActionCompleted)
-                return;
-            // if (MyInput.GetOnWorldUp(_cachedMap.Settings.Plane()))
-            // {
-            //     HandleWorldClick();
-            // }
-            //PathUpdate();
-        }
-
         public void Init(PlayerID owner, Vector3Int startGridPos)
         {
+            IsSelected = false;
             currentGridPosition = startGridPos;
             ownerID = owner;
             _cachedMap = MapManager.Instance.MapEntity;
             UpdateGridPosition(startGridPos);
-            //PathCreate();
             _attackComponent.Init(_cachedMap);
         }
 
@@ -64,48 +48,7 @@ namespace RedBjorn.ProtoTiles.Example
             IsActionCompleted = false;
         }
 
-        void HandleWorldClick()
-        {
-            var clickPos = MyInput.GroundPosition(_cachedMap.Settings.Plane());
-            var tile = _cachedMap.Tile(clickPos);
-            if (tile == null)
-                return;
-            var clickedUnit = MapManager.Instance?.GetUnitAtTile(tile.Position);
-            
-            if (clickedUnit != null && clickedUnit == this)
-            {
-                if (IsSelected)
-                {
-                    ChangeDeselected();
-                }
-                else
-                {
-                    IsSelected = true;
-                    SelectAction?.Invoke();
-                    AreaShow();
-                    Path.IsEnabled = true;
-                }
-                Debug.Log($"Clicked on unit: {clickedUnit.name}");
-                return;
-            }
-
-            if (!IsSelected)
-            {
-                return;
-            }
-
-            if (tile.Vacant)
-            {
-                AreaHide();
-                Path.IsEnabled = false;
-                PathHide();
-                var path = _cachedMap.PathTiles(transform.position, clickPos, Range);
-
-                Move(path);
-            }
-        }
-
-        public void Move(List<TileEntity> path)
+        public void Move(List<TileEntity> path, Action onComplete = null)
         {
             if (path != null)
             {
@@ -119,11 +62,11 @@ namespace RedBjorn.ProtoTiles.Example
             {
                 IsMoveCompleted = true;
                 IsActionCompleted = true; // temp test
-                ChangeDeselected();
+                onComplete?.Invoke();
             }
         }
 
-        IEnumerator Moving(List<TileEntity> path)
+        IEnumerator Moving(List<TileEntity> path, Action onComplete = null)
         {
             var nextIndex = 0;
             transform.position = _cachedMap.Settings.Projection(transform.position);
@@ -153,65 +96,12 @@ namespace RedBjorn.ProtoTiles.Example
             }
             UpdateGridPosition(path[path.Count - 1].Position);
             IsMoveCompleted = true;
-            ChangeDeselected();
+            onComplete?.Invoke();
         }
-
-        void AreaShow()
+  
+        public void ChangeSelected(bool select)
         {
-            AreaHide();
-            Area.Show(_cachedMap.WalkableBorder(transform.position, Range), _cachedMap);
-        }
-
-        void AreaHide()
-        {
-            Area.Hide();
-        }
-
-        void PathCreate()
-        {
-            if (!Path)
-            {
-                Path.Show(new List<Vector3>() { }, _cachedMap);
-                Path.InactiveState();
-                Path.IsEnabled = false;
-            }
-        }
-
-        void PathHide()
-        {
-            if (Path)
-            {
-                Path.Hide();
-            }
-        }
-
-        void ChangeDeselected()
-        {
-            DeselectAction?.Invoke();
-            AreaHide();
-            Path.IsEnabled = false;
-            PathHide();
-            IsSelected = false;
-        }
-
-        void PathUpdate()
-        {
-            if (Path && Path.IsEnabled)
-            {
-                var tile = _cachedMap.Tile(MyInput.GroundPosition(_cachedMap.Settings.Plane()));
-                if (tile != null && tile.Vacant)
-                {
-                    var path = _cachedMap.PathPoints(transform.position, _cachedMap.WorldPosition(tile.Position), Range);
-                    Path.Show(path, _cachedMap);
-                    Path.ActiveState();
-                    Area.ActiveState();
-                }
-                else
-                {
-                    Path.InactiveState();
-                    Area.InactiveState();
-                }
-            }
+            IsSelected = select;
         }
 
         /// <summary>
@@ -223,13 +113,7 @@ namespace RedBjorn.ProtoTiles.Example
             currentGridPosition = newGridPos;
             MapManager.Instance.RegisterUnit(newGridPos, this);
         }
-
-        public void MoveTowardsTarget(Vector3Int targetGridPos)
-        {
-            var pathTiles = _cachedMap.PathTiles(transform.position, targetGridPos, Range);
-            Move(pathTiles);
-        }
-
+ 
         public UnitAttack AttackComponent => _attackComponent;
 
         public void ResetComponents()
