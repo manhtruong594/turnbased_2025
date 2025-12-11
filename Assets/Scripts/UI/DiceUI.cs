@@ -16,7 +16,7 @@ public class DiceUI : MonoBehaviour
     [Header("UI References")]
     [SerializeField] private TextMeshProUGUI dice1Text;
     [SerializeField] private TextMeshProUGUI dice2Text;
-    [SerializeField] private TextMeshProUGUI totalText;
+   // [SerializeField] private TextMeshProUGUI totalText;
     [SerializeField] private GameObject dicePanel;
 
     [Header("Action Buttons")]
@@ -109,17 +109,14 @@ public class DiceUI : MonoBehaviour
             if (dice2Text) dice2Text.text = diceValue.ToString();
         }
 
-        if (totalText) totalText.text = $"Total: {diceValue}";
-
         Debug.Log($"Rolled dice {indexOfDice}: {diceValue}");
 
         // Thêm MP cho người chơi hiện tại
         AddMPToCurrentPlayer(diceValue);
- 
-        _actionsLeft.Value--;
-        // Ẩn button vừa được sử dụng
-        HideUsedButton(indexOfDice);
 
+        EnableButtons();
+        HideUsedButton(indexOfDice);
+        _actionsLeft.Value--;
         yield return new WaitForSeconds(0.5f);
         isRolling = false;
     }
@@ -157,7 +154,6 @@ public class DiceUI : MonoBehaviour
     {
         if (dice1Text) dice1Text.text = "?";
         if (dice2Text) dice2Text.text = "?";
-        if (totalText) totalText.text = "Total: 0";
     }
 
     /// <summary>

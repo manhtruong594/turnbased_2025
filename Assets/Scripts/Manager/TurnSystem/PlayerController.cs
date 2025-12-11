@@ -38,9 +38,6 @@ namespace TurnBasedGame.Core
             UnsubscribeFromEvents();
         }
 
-        /// <summary>
-        /// Subscribe vào events của TurnManager
-        /// </summary>
         private void SubscribeToEvents()
         {
             if (GameMediator.Instance != null)
@@ -50,9 +47,6 @@ namespace TurnBasedGame.Core
             }
         }
 
-        /// <summary>
-        /// Unsubscribe khỏi events
-        /// </summary>
         private void UnsubscribeFromEvents()
         {
             if (GameMediator.Instance != null)

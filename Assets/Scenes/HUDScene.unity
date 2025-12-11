@@ -2483,6 +2483,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4630977518428742, guid: 4e97802ac99905343ba67f01d63fdd63, type: 3}
   m_PrefabInstance: {fileID: 159890943}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &160735128 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7961987742474213013, guid: f0d673f5525eb644c8e3821a0f2fad2a, type: 3}
+  m_PrefabInstance: {fileID: 5845869749242781541}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
 --- !u!1001 &161174717
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -22905,6 +22916,17 @@ MonoBehaviour:
   visualIndicator: {fileID: 0}
   availableColor: {r: 0, g: 1, b: 0, a: 0.3}
   unavailableColor: {r: 1, g: 0, b: 0, a: 0.3}
+--- !u!114 &1972493102 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7834806404565709719, guid: f0d673f5525eb644c8e3821a0f2fad2a, type: 3}
+  m_PrefabInstance: {fileID: 5845869749242781541}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
 --- !u!1001 &1973221975
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -26467,6 +26489,14 @@ PrefabInstance:
       propertyPath: m_SizeDelta.x
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6791134213171528533, guid: f0d673f5525eb644c8e3821a0f2fad2a, type: 3}
+      propertyPath: rollDiceButton1
+      value: 
+      objectReference: {fileID: 1972493102}
+    - target: {fileID: 6791134213171528533, guid: f0d673f5525eb644c8e3821a0f2fad2a, type: 3}
+      propertyPath: rollDiceButton2
+      value: 
+      objectReference: {fileID: 160735128}
     - target: {fileID: 7476201923946487060, guid: f0d673f5525eb644c8e3821a0f2fad2a, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0
@@ -26476,7 +26506,8 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 4803889789986083328, guid: f0d673f5525eb644c8e3821a0f2fad2a, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f0d673f5525eb644c8e3821a0f2fad2a, type: 3}
@@ -27013,7 +27044,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DiceUI
   dice1Text: {fileID: 830018584672016639}
   dice2Text: {fileID: 4972770692042322569}
-  totalText: {fileID: 6637078864068460855}
   dicePanel: {fileID: 5942290628407304297}
   rollDiceButton2: {fileID: 7834806404967990489}
   rollDiceButton1: {fileID: 7961987742609056219}
