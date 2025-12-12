@@ -8,16 +8,12 @@ using System;
 
 /// <summary>
 /// Quản lý UI và logic tung xúc xắc
-/// - Lượt 1: Tung 2 xúc xắc bắt buộc
-/// - Lượt 2+: Chọn tung 1 xúc xắc, 2 xúc xắc, hoặc không tung
 /// </summary>
 public class DiceUI : MonoBehaviour
 {
     [Header("UI References")]
     [SerializeField] private TextMeshProUGUI dice1Text;
     [SerializeField] private TextMeshProUGUI dice2Text;
-   // [SerializeField] private TextMeshProUGUI totalText;
-    [SerializeField] private GameObject dicePanel;
 
     [Header("Action Buttons")]
     [SerializeField] private Button rollDiceButton2;
@@ -117,7 +113,7 @@ public class DiceUI : MonoBehaviour
         EnableButtons();
         HideUsedButton(indexOfDice);
         _actionsLeft.Value--;
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(0.2f);
         isRolling = false;
     }
 
@@ -170,13 +166,7 @@ public class DiceUI : MonoBehaviour
     /// </summary>
     private void EnableButtons()
     {
-        if (rollDiceButton2)
-        {
-            rollDiceButton2.interactable = true;
-        }
-        if (rollDiceButton1)
-        {
-            rollDiceButton1.interactable = true;
-        }
+        if (rollDiceButton2) rollDiceButton2.interactable = true;
+        if (rollDiceButton1) rollDiceButton1.interactable = true;
     }
 }

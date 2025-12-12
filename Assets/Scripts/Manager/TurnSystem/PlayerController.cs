@@ -95,12 +95,17 @@ namespace TurnBasedGame.Core
                 StartCoroutine(OnMyTurnEnded());
                 UpdateUI(false);
             }
-            //UpdateUI(_isMyTurn);
+             
         }
 
         private IEnumerator OnMyTurnEnded()
         {
-            Debug.Log($"Player {(int)playerID}: My turn ended!");
+            if(_myUnits.Count == 0)
+                yield break;
+            foreach (var unit in _myUnits)
+            {
+                unit.FinishTurnActions();
+            }
             yield return null;
         }
 

@@ -11,26 +11,25 @@ namespace TurnBasedGame.Unit
     public class UnitData : ScriptableObject
     {
         [Header("Basic Info")]
-        [Tooltip("Tên hiển thị của unit")]
         public string unitName = "Unit";
-        
-        [Tooltip("Mô tả về unit")]
         [TextArea(2, 4)]
         public string description;
+        public int Health = 100;
 
-        [Header("Cost")]
-        [Tooltip("Chi phí MP để spawn unit này")]
         [Range(1, 20)]
         public int spawnCost = 3;
 
         [Header("Movement")]
-        [Tooltip("Phạm vi di chuyển của unit (số ô)")]
         [Range(1, 10)]
-        public float moveRange = 3f;
-        
-        [Tooltip("Tốc độ di chuyển")]
+        public int moveRange = 3;
         [Range(1f, 10f)]
         public float moveSpeed = 5f;
+
+        [Header("Attack")]
+        [Range(1, 10)]
+        public int attackRange = 2;
+        [Range(1, 100)]
+        public float attackDamage = 10;
 
         [Tooltip("Icon hiển thị trên UI")]
         public Sprite icon;

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using RedBjorn.ProtoTiles;
 using RedBjorn.ProtoTiles.Example;
+using UnityEngine.UI;
 
 namespace TurnBasedGame.Unit
 {
@@ -12,40 +13,60 @@ namespace TurnBasedGame.Unit
     /// </summary>
     public class UnitAttack : MonoBehaviour
     {
+        UnitRuntimeStats runtimeStats;
         [Header("Attack Settings")]
-        [Tooltip("Phạm vi tấn công (số ô)")]
-        [SerializeField] private float attackRange = 2f;
-        
-        [Tooltip("Sát thương gây ra")]
-        [SerializeField] private int attackDamage = 10;
-        
-        [Tooltip("Có thể tấn công xuyên qua chướng ngại vật không")]
         [SerializeField] private bool canAttackThroughObstacles = false;
 
-        [Header("Visual")]
-        [Tooltip("Prefab hiển thị vùng tấn công")]
-        [SerializeField] private AreaOutline attackAreaPrefab;
+        [Header("Attack State Button")]
+        [SerializeField] Button AttackModeButton;
+        [SerializeField] Button FinishAttackButton;
+        [SerializeField] CanvasGroup _actionCanvasGroup;
+        MapEntity _cachedMap;
 
-        private MapEntity cachedMap;
-        private AreaOutline attackArea;
-        private bool isAttackMode = false;
+        private bool isInAttackMode = false;
 
-        public float AttackRange => attackRange;
-        public int AttackDamage => attackDamage;
-        public bool IsAttackMode => isAttackMode;
-
-        /// <summary>
-        /// Khởi tạo component attack
-        /// </summary>
-        public void Init(MapEntity map)
+        #region  Unity Methods and Initialization
+        public void Init(UnitRuntimeStats runtimeStats)
         {
-            cachedMap = map;
-            
-            if (attackAreaPrefab != null)
+            this.runtimeStats = runtimeStats;
+            _cachedMap = runtimeStats.MapEntity;
+            AttackModeButton.onClick.AddListener(EnterAttackMode);
+            FinishAttackButton.onClick.AddListener(FinishAttack);
+        }
+
+        void OnDisable()
+        {
+            AttackModeButton.onClick.RemoveListener(EnterAttackMode);
+            FinishAttackButton.onClick.RemoveListener(FinishAttack);
+        }
+
+        void Update()
+        {
+            if (!isInAttackMode)
+                return;
+
+            var mousePos = MyInput.GroundPosition(_cachedMap.Settings.Plane());
+            if (MyInput.GetOnWorldUp(_cachedMap.Settings.Plane()))
             {
-                attackArea = Instantiate(attackAreaPrefab, Vector3.zero, Quaternion.identity);
-                attackArea.Hide();
+                var tileClicked = _cachedMap.Tile(mousePos);
+                if (tileClicked == null)
+                    return;
+                var unitAtTile = MapManager.Instance?.GetUnitAtTile(tileClicked.Position);
+                if (unitAtTile == null)
+                    return;
+                if (CanAttack(unitAtTile))
+                {
+                    ExecuteAttack(unitAtTile, true);
+                }
             }
+        }
+        #endregion
+
+        #region  Attack Logic
+        private void FinishAttack()
+        {
+            ExitAttackMode();
+            runtimeStats.OnFinishTurn?.Invoke();
         }
 
         /// <summary>
@@ -53,10 +74,28 @@ namespace TurnBasedGame.Unit
         /// </summary>
         public void EnterAttackMode()
         {
-            if (isAttackMode) return;
+            if (isInAttackMode) return;
+            isInAttackMode = true;
+            _actionCanvasGroup.alpha = 0;
+            AreaPathManager.Instance.ShowAttackArea(
+                _cachedMap.WalkableBorder(
+                    _cachedMap.Tile(transform.position).Position,
+                    runtimeStats.AttackRange));
+        }
 
-            isAttackMode = true;
-            ShowAttackRange();
+        /// <summary>
+        /// Thực hiện tấn công vào target
+        /// </summary>
+        public void ExecuteAttack(UnitMove targetUnit, bool immidiate = false)
+        {
+            if (immidiate && !CanAttack(targetUnit))
+                return;
+
+            // Gây sát thương
+            DealDamage(targetUnit);
+
+            // Kết thúc chế độ tấn công
+            FinishAttack();
         }
 
         /// <summary>
@@ -64,62 +103,31 @@ namespace TurnBasedGame.Unit
         /// </summary>
         public void ExitAttackMode()
         {
-            if (!isAttackMode) return;
-            isAttackMode = false;
-            HideAttackRange();
+            if (!isInAttackMode) return;
+            isInAttackMode = false;
+            _actionCanvasGroup.alpha = 1;
+            AreaPathManager.Instance.HideAttackArea();
         }
+        #endregion
 
-        /// <summary>
-        /// Kiểm tra có thể tấn công target tại vị trí này không
-        /// </summary>
-        public bool CanAttack(Vector3Int targetGridPos)
+        #region  Helper Methods
+        public bool CanAttack(UnitMove targetUnit)
         {
-            var distance = GetDistanceToTarget(targetGridPos);
-            if (distance > attackRange) return false;
+            if (targetUnit == null || targetUnit.IsDead)
+                return false;
 
-            // Kiểm tra có target tại vị trí này không
-            var targetUnit = MapManager.Instance?.GetUnitAtTile(targetGridPos);
-            if (targetUnit == null) return false;
+            if (targetUnit.GetOwner() == runtimeStats.Owner)
+                return false;
 
-            // Không thể tấn công chính mình hoặc đồng đội
-            var myUnit = GetComponent<UnitMove>();
-            if (myUnit != null && targetUnit.GetComponent<UnitMove>() != null)
-            {
-                var target = targetUnit.GetComponent<UnitMove>();
-                if (target.Owner == myUnit.Owner) return false;
-            }
+            if (GetDistanceToTarget(targetUnit.currentGridPosition) > runtimeStats.AttackRange)
+                return false;
 
             // Kiểm tra line of sight nếu cần
             if (!canAttackThroughObstacles)
             {
-                return HasLineOfSight(targetGridPos);
+                return HasLineOfSight(targetUnit.currentGridPosition);
             }
-
             return true;
-        }
-
-        /// <summary>
-        /// Thực hiện tấn công vào target
-        /// </summary>
-        public void ExecuteAttack(Vector3Int targetGridPos, bool immidiate = false)
-        {
-            if (immidiate && !CanAttack(targetGridPos)) 
-                return;
-
-            var targetUnitMove = MapManager.Instance?.GetUnitAtTile(targetGridPos);
-            if (targetUnitMove == null) return;
-
-            // var target = targetUnitMove.GetUnit();
-            // if (target == null) return;
-
-            // // TODO: Thêm animation tấn công
-            // // TODO: Thêm sound effect
-
-            // // Gây sát thương
-            // DealDamage(target);
-
-            // // Kết thúc chế độ tấn công
-            // ExitAttackMode();
         }
 
         /// <summary>
@@ -128,59 +136,38 @@ namespace TurnBasedGame.Unit
         public List<UnitMove> GetAttackableTargets()
         {
             var targets = new List<UnitMove>();
-            var myUnit = GetComponent<UnitMove>();
-            if (myUnit == null) return targets;
-
             var tilesInRange = GetTilesInAttackRange();
-            
+
             foreach (var tile in tilesInRange)
             {
                 var unitAtTile = MapManager.Instance?.GetUnitAtTile(tile.Position);
                 if (unitAtTile == null) continue;
 
-                var targetUnit = unitAtTile.GetComponent<UnitMove>();
-                if (targetUnit == null) continue;
-                if (targetUnit.Owner == myUnit.Owner) continue;
+                if (unitAtTile.GetOwner() == runtimeStats.Owner) continue;
 
                 if (canAttackThroughObstacles || HasLineOfSight(tile.Position))
                 {
-                    targets.Add(targetUnit);
+                    targets.Add(unitAtTile);
                 }
             }
 
             return targets;
         }
 
-        private void ShowAttackRange()
-        {
-            if (attackArea == null || cachedMap == null) return;
-
-            var borderPoints = cachedMap.WalkableBorder(transform.position, attackRange);
-            attackArea.Show(borderPoints, cachedMap);
-            attackArea.ActiveState();
-        }
-
-        private void HideAttackRange()
-        {
-            if (attackArea == null) return;
-            attackArea.Hide();
-            attackArea.InactiveState();
-        }
-
         private List<TileEntity> GetTilesInAttackRange()
         {
-            if (cachedMap == null) return new List<TileEntity>();
-            
-            var myTile = cachedMap.Tile(transform.position);
+            if (_cachedMap == null) return new List<TileEntity>();
+
+            var myTile = _cachedMap.Tile(transform.position);
             if (myTile == null) return new List<TileEntity>();
-            
-            var walkableTiles = cachedMap.WalkableTiles(myTile.Position, attackRange);
+
+            var walkableTiles = _cachedMap.WalkableTiles(myTile.Position, runtimeStats.AttackRange);
             return new List<TileEntity>(walkableTiles);
         }
 
         private float GetDistanceToTarget(Vector3Int targetGridPos)
         {
-            var myTile = cachedMap.Tile(transform.position);
+            var myTile = _cachedMap.Tile(transform.position);
             if (myTile == null) return float.MaxValue;
 
             // Tính khoảng cách Manhattan (grid-based)
@@ -200,18 +187,9 @@ namespace TurnBasedGame.Unit
         {
             // TODO: Implement proper health/damage system
             // Hiện tại chỉ log để test
-            Debug.Log($"{gameObject.name} tấn công {target.name} gây {attackDamage} sát thương!");
-            
-            // Placeholder - sẽ thay bằng health system sau
-            Destroy(target.gameObject);
-        }
-
-        private void OnDestroy()
-        {
-            if (attackArea != null)
-            {
-                Destroy(attackArea.gameObject);
-            }
+            Debug.Log($"{gameObject.name} tấn công {target.name} gây {runtimeStats.AttackDamage} sát thương!");
+            target.TakeDamage(runtimeStats.AttackDamage);
         }
     }
+    #endregion
 }

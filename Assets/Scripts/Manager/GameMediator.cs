@@ -73,7 +73,7 @@ public class GameMediator : MonoBehaviour
 
     public void NotifySpawnUnit(UnitMove unit, int mpSpent)
     {
-        mpManager.SpendMP(unit.Owner, mpSpent);
+        mpManager.SpendMP(unit.GetOwner(), mpSpent);
     }
 
     public void NotifyUnitSelected(UnitMove unit)

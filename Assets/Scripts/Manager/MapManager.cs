@@ -81,16 +81,6 @@ public class MapManager : BaseManager
     }
 
     /// <summary>
-    /// Di chuyển unit từ vị trí cũ sang vị trí mới
-    /// </summary>
-    public void MoveUnit(UnitMove unit, Vector3Int fromPos, Vector3Int toPos)
-    {
-        UnregisterUnit(fromPos);
-        RegisterUnit(toPos, unit);
-        //unit.UpdateGridPosition(toPos);
-    }
-
-    /// <summary>
     /// Kiểm tra tile có unit hay không
     /// </summary>
     public bool HasUnitAtTile(Vector3Int gridPos)

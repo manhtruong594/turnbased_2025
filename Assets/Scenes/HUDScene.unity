@@ -27044,7 +27044,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DiceUI
   dice1Text: {fileID: 830018584672016639}
   dice2Text: {fileID: 4972770692042322569}
-  dicePanel: {fileID: 5942290628407304297}
   rollDiceButton2: {fileID: 7834806404967990489}
   rollDiceButton1: {fileID: 7961987742609056219}
   rollDuration: 0.8

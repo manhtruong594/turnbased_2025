@@ -153,15 +153,6 @@ namespace TurnBasedGame.Core
         }
 
         /// <summary>
-        /// Kết thúc game với người chơi thắng cuộc
-        /// </summary>
-        public void EndGame(PlayerID winner)
-        {
-            Debug.Log($"=== Game End: Player {(int)winner} Wins! ===");
-            ChangeState(TurnState.GameEnd);
-        }
-
-        /// <summary>
         /// Xử lý khi game kết thúc
         /// </summary>
         private void HandleGameEnd()

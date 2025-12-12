@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace RedBjorn.ProtoTiles.Example
 {
@@ -18,8 +19,7 @@ namespace RedBjorn.ProtoTiles.Example
             if (LastFrame.Frame != Time.frameCount)
             {
                 LastFrame.Frame = Time.frameCount;
-                RaycastHit hit;
-                if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit, 100f))
+                if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out var hit, 100f))
                 {
                     LastFrame.OverObject = hit.collider.gameObject;
                 }
@@ -27,11 +27,11 @@ namespace RedBjorn.ProtoTiles.Example
                 {
                     LastFrame.OverObject = null;
                 }
-                var screemCenterRay = Camera.main.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
+                var screenCenterRay = Camera.main.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
                 float enter = 0f;
-                if (plane.Raycast(screemCenterRay, out enter))
+                if (plane.Raycast(screenCenterRay, out enter))
                 {
-                    LastFrame.CameraGroundPosition = screemCenterRay.GetPoint(enter);
+                    LastFrame.CameraGroundPosition = screenCenterRay.GetPoint(enter);
                 }
                 else
                 {
@@ -55,7 +55,7 @@ namespace RedBjorn.ProtoTiles.Example
         public static bool GetOnWorldUp(Plane plane)
         {
             Validate(plane);
-            return GetOnWorldUpFree(plane) && !CameraController.IsMovingByPlayer;
+            return !IsPointerOverUI() && Input.GetMouseButtonUp(0) && !CameraController.IsMovingByPlayer;
         }
 
         public static bool GetOnWorldFree(Plane plane)
@@ -70,6 +70,11 @@ namespace RedBjorn.ProtoTiles.Example
             return LastFrame.CameraGroundPosition;
         }
 
+        public static bool IsPointerOverUI()
+        {
+            return EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
+        }
+        
         public static Vector3 GroundPosition(Plane plane)
         {
             var mouseRay = Camera.main.ScreenPointToRay(Input.mousePosition);

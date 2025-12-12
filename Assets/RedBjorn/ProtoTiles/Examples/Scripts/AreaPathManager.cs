@@ -70,7 +70,6 @@ namespace RedBjorn.ProtoTiles.Example
             }
         }
 
-
         private void Update()
         {
             var mousePos = MyInput.GroundPosition(_cachedMap.Settings.Plane());
@@ -88,7 +87,7 @@ namespace RedBjorn.ProtoTiles.Example
                 var tile = _cachedMap.Tile(mousePos);
                 if (tile != null && tile.Vacant)
                 {
-                    var path = _cachedMap.PathPoints(selectedUnit.transform.position, _cachedMap.WorldPosition(tile.Position), selectedUnit.Range);
+                    var path = _cachedMap.PathPoints(selectedUnit.transform.position, _cachedMap.WorldPosition(tile.Position), selectedUnit.GetMoveRange());
                     _path.Show(path, _cachedMap);
                     _path.ActiveState();
                     _area.ActiveState();
@@ -108,66 +107,71 @@ namespace RedBjorn.ProtoTiles.Example
         {
             var clickedUnit = MapManager.Instance?.GetUnitAtTile(_tileClicked.Position);
 
-            if (clickedUnit != null)
+            if (clickedUnit != null && !clickedUnit.IsActionCompleted)
             {
                 if (clickedUnit.IsSelected)
                 {
                     clickedUnit.ChangeSelected(false);
                     selectedUnit = null;
                     previousSelectedUnit = selectedUnit;
-                    HideArea();
+                    HideMoveArea();
                     HidePath();
                     _gameMediator.NotifyUnitDeselected(clickedUnit);
                 }
                 else
                 {
                     clickedUnit.ChangeSelected(true);
+                    if (selectedUnit != null)
+                    {
+                        selectedUnit.ChangeSelected(false);
+                        previousSelectedUnit = selectedUnit;
+                    }
                     selectedUnit = clickedUnit;
-                    ShowArea(_cachedMap.WalkableBorder(selectedUnit.transform.position, selectedUnit.Range));
-                    SetPathEnabled(true);
+                    if (!selectedUnit.IsMoveCompleted)
+                    {
+                        ShowMoveArea(_cachedMap.WalkableBorder(selectedUnit.transform.position, selectedUnit.GetMoveRange()));
+                        SetPathEnabled(true);
+                    }
                     _gameMediator.NotifyUnitSelected(clickedUnit);
                 }
                 Debug.Log($"Clicked on unit: {clickedUnit.name}");
                 return;
             }
 
-            if (selectedUnit == null)
+            if (selectedUnit == null || selectedUnit.IsMoveCompleted)
                 return;
 
             if (_tileClicked.Vacant)
             {
                 // handle move
-                HideArea();
+                HideMoveArea();
                 SetPathEnabled(false);
                 HidePath();
-                var path = _cachedMap.PathTiles(selectedUnit.transform.position, clickPos, selectedUnit.Range);
+                var path = _cachedMap.PathTiles(selectedUnit.transform.position, clickPos, selectedUnit.GetMoveRange());
                 selectedUnit.Move(path, OnCompleteMove);
             }
         }
 
         void OnCompleteMove()
         {
-            HideArea();
+            HideMoveArea();
             HidePath();
             if (selectedUnit == null)
             {
                 return;
             }
-            selectedUnit.ChangeSelected(false);
-            _gameMediator.NotifyUnitDeselected(selectedUnit);
-            selectedUnit = null;
         }
 
         #endregion
 
         #region  Support Methods
-        public void ShowArea(List<Vector3> border, MapEntity map = null)
+        public void ShowMoveArea(List<Vector3> border, MapEntity map = null)
         {
             if (_area != null)
                 _area.Show(border, _cachedMap);
         }
 
-        public void HideArea()
+        public void HideMoveArea()
         {
             if (_area != null)
                 _area.Hide();
@@ -188,12 +192,31 @@ namespace RedBjorn.ProtoTiles.Example
                 _path.IsEnabled = enabled;
         }
 
-        public void ResetAll()
+        public void ShowAttackArea(List<Vector3> border)
         {
-            HideArea();
+            if (_attackArea != null)
+                _attackArea.Show(border, _cachedMap);
+            HideMoveArea();
             HidePath();
+        }
+        
+        public void HideAttackArea()
+        {
+            if (_attackArea != null)
+                _attackArea.Hide();
+        }
+
+        public void ResetAll(UnitMove unit)
+        {
+            if (selectedUnit != unit)
+                return;
+            selectedUnit = null;
+            HideMoveArea();
+            HidePath();
+            HideAttackArea();
             if (_area != null) _area.InactiveState();
             if (_path != null) _path.InactiveState();
+            if (_attackArea != null) _attackArea.InactiveState();
             if (_path != null) _path.IsEnabled = false;
         }
 

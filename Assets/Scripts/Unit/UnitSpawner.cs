@@ -101,7 +101,6 @@ namespace TurnBasedGame.Unit
 
             if (spawnPoint == null)
             {
-                Debug.LogWarning($"No available spawn point for {owner}");
                 return false;
             }
 

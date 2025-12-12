@@ -14,9 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   unitName: Archer
   description: 
+  Health: 100
   spawnCost: 3
-  moveRange: 2
+  moveRange: 5
   moveSpeed: 5
-  unitPrefab: {fileID: 5204393105807402248, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}
+  attackRange: 2
+  attackDamage: 10
   icon: {fileID: 0}
-  owner: 1

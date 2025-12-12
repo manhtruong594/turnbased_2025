@@ -158,12 +158,7 @@ namespace TurnBasedGame.Core
         /// </summary>
         private bool CanAttackTarget(UnitMove attacker, UnitMove target)
         {
-            var targetGridPos = MapManager.Instance.MapEntity.Tile(target.transform.position)?.Position;
-
-            if (!targetGridPos.HasValue)
-                return false;
-
-            return attacker.AttackComponent.CanAttack(targetGridPos.Value);
+            return attacker.AttackComponent.CanAttack(target);
         }
 
         /// <summary>
@@ -185,7 +180,7 @@ namespace TurnBasedGame.Core
             var targetGridPos = targetTile.Position;
 
             // Lấy các tile có thể đi được
-            var walkableTiles = map.WalkableTiles(map.Tile(myPos).Position, myUnit.Range);
+            var walkableTiles = map.WalkableTiles(map.Tile(myPos).Position, myUnit.GetMoveRange());
 
             if (walkableTiles == null || walkableTiles.Count == 0)
             {
@@ -193,7 +188,7 @@ namespace TurnBasedGame.Core
                 yield break;
             }
 
-            // Tìm tile gần target nhất, nhưng KHÔNG phải tile của target
+            // Tìm tile gần target nhất
             TileEntity bestTile = null;
             float minDistance = float.MaxValue;
 
@@ -202,8 +197,8 @@ namespace TurnBasedGame.Core
                 // Bỏ qua tile không trống
                 if (!tile.Vacant) continue;
 
-                // Bỏ qua tile của target (quan trọng!)
-                if (tile.Position == targetGridPos) continue;
+                if (MapManager.Instance.HasUnitAtTile(tile.Position))
+                    continue;
 
                 var tileWorldPos = map.WorldPosition(tile.Position);
                 float distance = Vector3.Distance(tileWorldPos, targetPos);
@@ -218,7 +213,7 @@ namespace TurnBasedGame.Core
             if (bestTile != null)
             {
                 // Tính đường đi
-                var path = map.PathTiles(myPos, map.WorldPosition(bestTile.Position), myUnit.Range);
+                var path = map.PathTiles(myPos, map.WorldPosition(bestTile.Position), myUnit.GetMoveRange());
 
                 if (path != null && path.Count > 0)
                 {
@@ -241,9 +236,8 @@ namespace TurnBasedGame.Core
         /// </summary>
         private IEnumerator AttackTarget(UnitMove attacker, UnitMove target)
         {
-            var targetGridPos = MapManager.Instance.MapEntity.Tile(target.transform.position)?.Position;
             Debug.Log($"AI tấn công: {attacker.name} -> {target.name}");
-            //attacker.AttackImmidiate(targetGridPos.Value);
+            attacker.AttackComponent.ExecuteAttack(target, true);
             yield return new WaitForSeconds(0.5f);
         }
     }
