@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using TurnBasedGame.Unit;
 using RedBjorn.ProtoTiles.Example;
+using TurnBasedGame.UI;
 
 namespace TurnBasedGame.Core
 {
@@ -17,11 +18,13 @@ namespace TurnBasedGame.Core
     {
         [Header("Player Info")]
         [SerializeField] private PlayerID playerID;
+        [SerializeField] private PlayerDataSO _playerData;
         [SerializeField] private IntReference _actionLefts;
         [SerializeField] private AIController _aiOpponent;
         [Header("UI References (Optional)")]
         [SerializeField] private GameObject turnIndicator;
         [SerializeField] private PlayerUI _myUI;
+        [SerializeField] private SpawnPanel _spawnPanel;
         private bool _isMyTurn;
         private List<UnitMove> _myUnits = new List<UnitMove>();
 
@@ -61,6 +64,7 @@ namespace TurnBasedGame.Core
         /// </summary>
         private void SetupUI()
         {
+            _spawnPanel.Initialize(_playerData.AvalailableUnits);
             _myUI.Setup(playerID.ToString());
             UpdateUI(false);
         }

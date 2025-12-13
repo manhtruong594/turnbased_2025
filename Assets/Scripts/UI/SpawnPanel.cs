@@ -26,12 +26,14 @@ namespace TurnBasedGame.UI
 
         private void Start()
         {
-            GenerateSpawnButtons();
-            
             if (!showOnStart)
             {
                 Hide();
             }
+        }
+        public void Initialize(List<UnitMove> units)
+        {
+            SetAvailableUnits(units);
         }
 
         /// <summary>

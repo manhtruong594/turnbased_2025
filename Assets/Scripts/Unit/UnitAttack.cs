@@ -23,7 +23,7 @@ namespace TurnBasedGame.Unit
         [SerializeField] CanvasGroup _actionCanvasGroup;
         MapEntity _cachedMap;
 
-        private bool isInAttackMode = false;
+        //private bool isInAttackMode = false;
 
         #region  Unity Methods and Initialization
         public void Init(UnitRuntimeStats runtimeStats)
@@ -42,7 +42,7 @@ namespace TurnBasedGame.Unit
 
         void Update()
         {
-            if (!isInAttackMode)
+            if (!runtimeStats.IsInAttackMode)
                 return;
 
             var mousePos = MyInput.GroundPosition(_cachedMap.Settings.Plane());
@@ -74,8 +74,8 @@ namespace TurnBasedGame.Unit
         /// </summary>
         public void EnterAttackMode()
         {
-            if (isInAttackMode) return;
-            isInAttackMode = true;
+            if (runtimeStats.IsInAttackMode) return;
+            runtimeStats.IsInAttackMode = true;
             _actionCanvasGroup.alpha = 0;
             AreaPathManager.Instance.ShowAttackArea(
                 _cachedMap.WalkableBorder(
@@ -93,8 +93,6 @@ namespace TurnBasedGame.Unit
 
             // Gây sát thương
             DealDamage(targetUnit);
-
-            // Kết thúc chế độ tấn công
             FinishAttack();
         }
 
@@ -103,8 +101,8 @@ namespace TurnBasedGame.Unit
         /// </summary>
         public void ExitAttackMode()
         {
-            if (!isInAttackMode) return;
-            isInAttackMode = false;
+            if (!runtimeStats.IsInAttackMode) return;
+            runtimeStats.IsInAttackMode = false;
             _actionCanvasGroup.alpha = 1;
             AreaPathManager.Instance.HideAttackArea();
         }
@@ -113,7 +111,7 @@ namespace TurnBasedGame.Unit
         #region  Helper Methods
         public bool CanAttack(UnitMove targetUnit)
         {
-            if (targetUnit == null || targetUnit.IsDead)
+            if (targetUnit == null || targetUnit.IsDead())
                 return false;
 
             if (targetUnit.GetOwner() == runtimeStats.Owner)

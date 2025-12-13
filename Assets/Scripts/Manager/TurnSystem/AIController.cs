@@ -57,6 +57,10 @@ namespace TurnBasedGame.Core
 
             // Kết thúc lượt
             yield return new WaitForSeconds(actionDelay);
+            foreach (var unit in myUnits)
+            {
+                unit.FinishTurnActions();
+            }
             TurnManager.Instance.EndCurrentTurn();
         }
 
@@ -219,7 +223,7 @@ namespace TurnBasedGame.Core
                 {
                     Debug.Log($"AI di chuyển {myUnit.name} đến gần {target.name}");
                     myUnit.Move(path);
-                    while (!myUnit.IsMoveCompleted)
+                    while (!myUnit.IsMoveDone())
                     {
                         yield return null;
                     }

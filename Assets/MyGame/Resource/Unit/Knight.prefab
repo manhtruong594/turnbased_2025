@@ -95,6 +95,8 @@ MeshRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -116,6 +118,7 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
@@ -194,6 +197,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Speed: 5
   RotationNode: {fileID: 9103775379906749871}
+  _cancelMoveButton: {fileID: 1518436795271210985}
   unitData: {fileID: 11400000, guid: 705fcc605289b944192c93d9d79b7282, type: 2}
   _attackComponent: {fileID: 3018651406716325837}
   _healthBar: {fileID: 4583369972198294531}
@@ -288,6 +292,8 @@ MeshRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -309,6 +315,7 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
@@ -501,6 +508,17 @@ RectTransform:
 --- !u!114 &1370413831883480577 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7770353629008008393, guid: 3fc8a414e7149ea468e5e6450c42da8e, type: 3}
+  m_PrefabInstance: {fileID: 8705853260998822600}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
+--- !u!114 &1518436795271210985 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7909435104010120481, guid: 3fc8a414e7149ea468e5e6450c42da8e, type: 3}
   m_PrefabInstance: {fileID: 8705853260998822600}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}

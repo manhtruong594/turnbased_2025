@@ -107,7 +107,7 @@ namespace RedBjorn.ProtoTiles.Example
         {
             var clickedUnit = MapManager.Instance?.GetUnitAtTile(_tileClicked.Position);
 
-            if (clickedUnit != null && !clickedUnit.IsActionCompleted)
+            if (clickedUnit != null && !clickedUnit.IsActionFinished())
             {
                 if (clickedUnit.IsSelected)
                 {
@@ -127,7 +127,7 @@ namespace RedBjorn.ProtoTiles.Example
                         previousSelectedUnit = selectedUnit;
                     }
                     selectedUnit = clickedUnit;
-                    if (!selectedUnit.IsMoveCompleted)
+                    if (!selectedUnit.IsMoveDone())
                     {
                         ShowMoveArea(_cachedMap.WalkableBorder(selectedUnit.transform.position, selectedUnit.GetMoveRange()));
                         SetPathEnabled(true);
@@ -138,7 +138,7 @@ namespace RedBjorn.ProtoTiles.Example
                 return;
             }
 
-            if (selectedUnit == null || selectedUnit.IsMoveCompleted)
+            if (selectedUnit == null || !selectedUnit.CanMove())
                 return;
 
             if (_tileClicked.Vacant)
@@ -156,10 +156,6 @@ namespace RedBjorn.ProtoTiles.Example
         {
             HideMoveArea();
             HidePath();
-            if (selectedUnit == null)
-            {
-                return;
-            }
         }
 
         #endregion
@@ -206,6 +202,15 @@ namespace RedBjorn.ProtoTiles.Example
                 _attackArea.Hide();
         }
 
+        public void RealeaseSelectedUnit()
+        {
+            if (selectedUnit != null)
+            {
+                selectedUnit.ChangeSelected(false);
+                selectedUnit = null;
+            }
+        }
+
         public void ResetAll(UnitMove unit)
         {
             if (selectedUnit != unit)
@@ -219,7 +224,7 @@ namespace RedBjorn.ProtoTiles.Example
             if (_attackArea != null) _attackArea.InactiveState();
             if (_path != null) _path.IsEnabled = false;
         }
-
+        
         public void SetCachedMap(MapEntity map)
         {
             _cachedMap = map;
