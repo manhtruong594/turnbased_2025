@@ -17,7 +17,7 @@ namespace RedBjorn.ProtoTiles.Example
         public Transform RotationNode;
         [SerializeField] Button _cancelMoveButton;
 
-        readonly UnitRuntimeStats runtimeStats = new();
+        public readonly UnitRuntimeStats runtimeStats = new();
         private CommandInvoker _commandInvoker = new CommandInvoker();
         ICommand _moveCommand;
         Coroutine _movingCoroutine;

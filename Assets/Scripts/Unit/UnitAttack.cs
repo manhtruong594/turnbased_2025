@@ -4,18 +4,23 @@ using System.Collections.Generic;
 using RedBjorn.ProtoTiles;
 using RedBjorn.ProtoTiles.Example;
 using UnityEngine.UI;
+using TurnBasedGame.Skills;
 
 namespace TurnBasedGame.Unit
 {
     /// <summary>
     /// Component xử lý logic tấn công của unit
     /// Quản lý phạm vi tấn công, target selection và thực thi damage
+    /// Tích hợp với Skill System (Strategy Pattern)
     /// </summary>
     public class UnitAttack : MonoBehaviour
     {
         UnitRuntimeStats runtimeStats;
+        UnitSkillManager skillManager;
+
         [Header("Attack Settings")]
         [SerializeField] private bool canAttackThroughObstacles = false;
+        [SerializeField] private bool useSkillSystem = true;
 
         [Header("Attack State Button")]
         [SerializeField] Button AttackModeButton;
@@ -23,13 +28,24 @@ namespace TurnBasedGame.Unit
         [SerializeField] CanvasGroup _actionCanvasGroup;
         MapEntity _cachedMap;
 
-        //private bool isInAttackMode = false;
-
         #region  Unity Methods and Initialization
         public void Init(UnitRuntimeStats runtimeStats)
         {
             this.runtimeStats = runtimeStats;
             _cachedMap = runtimeStats.MapEntity;
+            
+            // Khởi tạo Skill Manager
+            skillManager = GetComponent<UnitSkillManager>();
+            if (skillManager == null && useSkillSystem)
+            {
+                skillManager = gameObject.AddComponent<UnitSkillManager>();
+            }
+            
+            if (skillManager != null)
+            {
+                skillManager.Initialize(GetComponent<UnitMove>());
+            }
+            
             AttackModeButton.onClick.AddListener(EnterAttackMode);
             FinishAttackButton.onClick.AddListener(FinishAttack);
         }
@@ -51,12 +67,32 @@ namespace TurnBasedGame.Unit
                 var tileClicked = _cachedMap.Tile(mousePos);
                 if (tileClicked == null)
                     return;
-                var unitAtTile = MapManager.Instance?.GetUnitAtTile(tileClicked.Position);
-                if (unitAtTile == null)
-                    return;
-                if (CanAttack(unitAtTile))
+                
+                // Sử dụng Skill System nếu được bật
+                if (useSkillSystem && skillManager != null)
                 {
-                    ExecuteAttack(unitAtTile, true);
+                    var usableSkills = skillManager.GetUsableSkills(tileClicked.Position);
+                    if (usableSkills.Count > 0)
+                    {
+                        // Ưu tiên dùng Normal Skill
+                        var skillToUse = skillManager.NormalSkill != null && 
+                                        skillManager.NormalSkill.CanUse(GetComponent<UnitMove>(), tileClicked.Position)
+                            ? skillManager.NormalSkill
+                            : usableSkills[0];
+                        
+                        ExecuteSkillAttack(skillToUse, tileClicked.Position);
+                    }
+                }
+                else
+                {
+                    // Fallback: Dùng logic tấn công cũ
+                    var unitAtTile = MapManager.Instance?.GetUnitAtTile(tileClicked.Position);
+                    if (unitAtTile == null)
+                        return;
+                    if (CanAttack(unitAtTile))
+                    {
+                        ExecuteAttack(unitAtTile, true);
+                    }
                 }
             }
         }
@@ -66,6 +102,13 @@ namespace TurnBasedGame.Unit
         private void FinishAttack()
         {
             ExitAttackMode();
+            
+            // Giảm cooldown skills khi kết thúc turn
+            if (useSkillSystem && skillManager != null)
+            {
+                skillManager.OnTurnEnd();
+            }
+            
             runtimeStats.OnFinishTurn?.Invoke();
         }
 
@@ -105,6 +148,17 @@ namespace TurnBasedGame.Unit
             runtimeStats.IsInAttackMode = false;
             _actionCanvasGroup.alpha = 1;
             AreaPathManager.Instance.HideAttackArea();
+        }
+
+        /// <summary>
+        /// Thực thi skill attack (Skill System)
+        /// </summary>
+        private void ExecuteSkillAttack(ISkill skill, Vector3Int targetPos)
+        {
+            if (skillManager.UseSkill(skill, targetPos))
+            {
+                FinishAttack();
+            }
         }
         #endregion
 
