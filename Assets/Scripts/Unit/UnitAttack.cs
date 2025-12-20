@@ -71,6 +71,7 @@ namespace TurnBasedGame.Unit
                 // Sử dụng Skill System nếu được bật
                 if (useSkillSystem && skillManager != null)
                 {
+                    // todo: Chọn skill = UI; fix skillManager show được skill đang chọn (nếu ko chọn gì thì dùng normal)
                     var usableSkills = skillManager.GetUsableSkills(tileClicked.Position);
                     if (usableSkills.Count > 0)
                     {

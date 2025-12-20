@@ -158,6 +158,7 @@ GameObject:
   - component: {fileID: 662182742872618790}
   - component: {fileID: 7572629158187435638}
   - component: {fileID: 1328495523500364131}
+  - component: {fileID: 4049436020191812616}
   m_Layer: 0
   m_Name: Archer
   m_TagString: Untagged
@@ -215,6 +216,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   canAttackThroughObstacles: 0
+  useSkillSystem: 1
   AttackModeButton: {fileID: 2846939672715314015}
   FinishAttackButton: {fileID: 3332735922958582441}
   _actionCanvasGroup: {fileID: 5935454900314583146}
@@ -231,6 +233,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HealthBar
   healthBarRenderer: {fileID: 4219279390209745164}
+--- !u!114 &4049436020191812616
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5204393105807402248}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c8542ae9a24279a4cabb22b49fe1c33b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Skills.UnitSkillManager
+  startingSkills:
+  - {fileID: 11400000, guid: c8301b7a126a8b247a11efd55082b802, type: 2}
+  - {fileID: 11400000, guid: 264d50d6fa6498c459c5e1b5ba81b661, type: 2}
 --- !u!1 &8793134353577196331
 GameObject:
   m_ObjectHideFlags: 0
