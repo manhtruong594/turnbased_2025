@@ -22,18 +22,18 @@ namespace TurnBasedGame.Skills
             if (target == null || target.IsDead()) return;
 
             // Heal target
-            int currentHealth = target.runtimeStats.Health;
-            int maxHealth = target.runtimeStats.MaxHealth;
-            int actualHeal = Mathf.Min(healAmount, maxHealth - currentHealth);
+            // int currentHealth = target.runtimeStats.Health;
+            // int maxHealth = target.runtimeStats.MaxHealth;
+            // int actualHeal = Mathf.Min(healAmount, maxHealth - currentHealth);
             
-            target.runtimeStats.Health = Mathf.Min(currentHealth + healAmount, maxHealth);
-            // Spawn VFX nếu có
-            if (healVFX != null)
-            {
-                Instantiate(healVFX, target.transform.position, Quaternion.identity);
-            }
+            // target.runtimeStats.Health = Mathf.Min(currentHealth + healAmount, maxHealth);
+            // // Spawn VFX nếu có
+            // if (healVFX != null)
+            // {
+            //     Instantiate(healVFX, target.transform.position, Quaternion.identity);
+            // }
 
-            Debug.Log($"{caster.name} hồi {actualHeal} HP cho {target.name}!");
+            // Debug.Log($"{caster.name} hồi {actualHeal} HP cho {target.name}!");
         }
 
         public override List<Vector3Int> GetValidTargets(UnitMove caster)

@@ -199,10 +199,8 @@ namespace RedBjorn.ProtoTiles.Example
     public class UnitRuntimeStats
     {
         public int Health;
-        public float AttackDamage;
         public int MaxHealth;
         public int MoveRange;
-        public int AttackRange;
         public MapEntity MapEntity { get; private set; }
         public PlayerID Owner;
         public Action OnFinishTurn;
@@ -232,8 +230,6 @@ namespace RedBjorn.ProtoTiles.Example
             Health = baseData.Health;
             MaxHealth = baseData.Health;
             MoveRange = Mathf.FloorToInt(baseData.moveRange);
-            AttackRange = Mathf.FloorToInt(baseData.attackRange);
-            AttackDamage = baseData.attackDamage;
             IsInAttackMode = false;
             IsMoveCompleted = false;
             IsActionCompleted = false;

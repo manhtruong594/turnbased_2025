@@ -23,9 +23,19 @@ namespace TurnBasedGame.Unit
         [SerializeField] private bool useSkillSystem = true;
 
         [Header("Attack State Button")]
-        [SerializeField] Button AttackModeButton;
+        //[SerializeField] Button AttackModeButton;
         [SerializeField] Button FinishAttackButton;
         [SerializeField] CanvasGroup _actionCanvasGroup;
+
+        [Header("Skill System")]
+        [SerializeField] private List<SkillBase> startingSkills = new List<SkillBase>();
+        private List<ISkill> activeSkills = new List<ISkill>();
+        [SerializeField] private SkillButton skillButtonPrefab;
+        [SerializeField] private Transform skillButtonContainer;
+
+        private SkillBase _normalSkill;
+        private SkillBase _selectedSkill;
+
         MapEntity _cachedMap;
 
         #region  Unity Methods and Initialization
@@ -33,26 +43,34 @@ namespace TurnBasedGame.Unit
         {
             this.runtimeStats = runtimeStats;
             _cachedMap = runtimeStats.MapEntity;
-            
-            // Khởi tạo Skill Manager
-            skillManager = GetComponent<UnitSkillManager>();
-            if (skillManager == null && useSkillSystem)
-            {
-                skillManager = gameObject.AddComponent<UnitSkillManager>();
-            }
-            
-            if (skillManager != null)
-            {
-                skillManager.Initialize(GetComponent<UnitMove>());
-            }
-            
-            AttackModeButton.onClick.AddListener(EnterAttackMode);
+
             FinishAttackButton.onClick.AddListener(FinishAttack);
+            _normalSkill = startingSkills[0];
+            _selectedSkill = _normalSkill;
+
+
+            {
+                activeSkills.Clear();
+                foreach (var skill in startingSkills)
+                {
+                    activeSkills.Add(skill.Clone());
+                }
+                foreach (var skill in startingSkills)
+                {
+                    var skillBtnObj = Instantiate(skillButtonPrefab, skillButtonContainer);
+                    skillBtnObj.Initialize(skill, OnSkillButtonClicked);
+                }
+            }
+        }
+
+        private void OnSkillButtonClicked(ISkill skill)
+        {
+            _selectedSkill = skill as SkillBase;
+            EnterAttackMode();
         }
 
         void OnDisable()
         {
-            AttackModeButton.onClick.RemoveListener(EnterAttackMode);
             FinishAttackButton.onClick.RemoveListener(FinishAttack);
         }
 
@@ -67,49 +85,34 @@ namespace TurnBasedGame.Unit
                 var tileClicked = _cachedMap.Tile(mousePos);
                 if (tileClicked == null)
                     return;
-                
-                // Sử dụng Skill System nếu được bật
-                if (useSkillSystem && skillManager != null)
+                if (_selectedSkill.CanUse(this.GetComponent<UnitMove>(), tileClicked.Position))
                 {
-                    // todo: Chọn skill = UI; fix skillManager show được skill đang chọn (nếu ko chọn gì thì dùng normal)
-                    var usableSkills = skillManager.GetUsableSkills(tileClicked.Position);
-                    if (usableSkills.Count > 0)
-                    {
-                        // Ưu tiên dùng Normal Skill
-                        var skillToUse = skillManager.NormalSkill != null && 
-                                        skillManager.NormalSkill.CanUse(GetComponent<UnitMove>(), tileClicked.Position)
-                            ? skillManager.NormalSkill
-                            : usableSkills[0];
-                        
-                        ExecuteSkillAttack(skillToUse, tileClicked.Position);
-                    }
+                    // Sử dụng skill đã chọn
+                    _selectedSkill.Execute(this.GetComponent<UnitMove>(), tileClicked.Position);
+                    return;
                 }
                 else
                 {
-                    // Fallback: Dùng logic tấn công cũ
-                    var unitAtTile = MapManager.Instance?.GetUnitAtTile(tileClicked.Position);
-                    if (unitAtTile == null)
-                        return;
-                    if (CanAttack(unitAtTile))
-                    {
-                        ExecuteAttack(unitAtTile, true);
-                    }
+                    ExitAttackMode();
+                    Debug.Log("Cannot use skill on this tile.");
                 }
+                
             }
         }
+
         #endregion
 
         #region  Attack Logic
         private void FinishAttack()
         {
             ExitAttackMode();
-            
+
             // Giảm cooldown skills khi kết thúc turn
             if (useSkillSystem && skillManager != null)
             {
                 skillManager.OnTurnEnd();
             }
-            
+
             runtimeStats.OnFinishTurn?.Invoke();
         }
 
@@ -124,7 +127,7 @@ namespace TurnBasedGame.Unit
             AreaPathManager.Instance.ShowAttackArea(
                 _cachedMap.WalkableBorder(
                     _cachedMap.Tile(transform.position).Position,
-                    runtimeStats.AttackRange));
+                    _selectedSkill.Range));
         }
 
         /// <summary>
@@ -172,7 +175,7 @@ namespace TurnBasedGame.Unit
             if (targetUnit.GetOwner() == runtimeStats.Owner)
                 return false;
 
-            if (GetDistanceToTarget(targetUnit.currentGridPosition) > runtimeStats.AttackRange)
+            if (GetDistanceToTarget(targetUnit.currentGridPosition) > _selectedSkill.Range)
                 return false;
 
             // Kiểm tra line of sight nếu cần
@@ -214,7 +217,7 @@ namespace TurnBasedGame.Unit
             var myTile = _cachedMap.Tile(transform.position);
             if (myTile == null) return new List<TileEntity>();
 
-            var walkableTiles = _cachedMap.WalkableTiles(myTile.Position, runtimeStats.AttackRange);
+            var walkableTiles = _cachedMap.WalkableTiles(myTile.Position, _selectedSkill.Range);
             return new List<TileEntity>(walkableTiles);
         }
 
@@ -224,8 +227,8 @@ namespace TurnBasedGame.Unit
             if (myTile == null) return float.MaxValue;
 
             // Tính khoảng cách Manhattan (grid-based)
-            return Mathf.Abs(myTile.Position.x - targetGridPos.x) + 
-                   Mathf.Abs(myTile.Position.y - targetGridPos.y) + 
+            return Mathf.Abs(myTile.Position.x - targetGridPos.x) +
+                   Mathf.Abs(myTile.Position.y - targetGridPos.y) +
                    Mathf.Abs(myTile.Position.z - targetGridPos.z);
         }
 
@@ -240,8 +243,8 @@ namespace TurnBasedGame.Unit
         {
             // TODO: Implement proper health/damage system
             // Hiện tại chỉ log để test
-            Debug.Log($"{gameObject.name} tấn công {target.name} gây {runtimeStats.AttackDamage} sát thương!");
-            target.TakeDamage(runtimeStats.AttackDamage);
+            Debug.Log($"{gameObject.name} tấn công {target.name} gây {_selectedSkill.BaseValue} sát thương!");
+            target.TakeDamage(_selectedSkill.BaseValue);
         }
     }
     #endregion

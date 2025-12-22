@@ -25,12 +25,6 @@ namespace TurnBasedGame.Unit
         [Range(1f, 10f)]
         public float moveSpeed = 5f;
 
-        [Header("Attack")]
-        [Range(1, 10)]
-        public int attackRange = 2;
-        [Range(1, 100)]
-        public float attackDamage = 10;
-
         [Tooltip("Icon hiển thị trên UI")]
         public Sprite icon;
     }

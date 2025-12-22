@@ -15,11 +15,10 @@ namespace TurnBasedGame.Skills
         SkillType Type { get; }
         Sprite Icon { get; }
         
-        int ManaCost { get; }
         int Cooldown { get; }
-        int CurrentCooldown { get; }
         int Range { get; }
-        
+        int BaseValue { get; }
+
         bool CanUse(UnitMove caster, Vector3Int targetPos);
         void Execute(UnitMove caster, Vector3Int targetPos);
         List<Vector3Int> GetValidTargets(UnitMove caster);

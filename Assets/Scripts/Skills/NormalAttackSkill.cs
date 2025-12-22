@@ -13,7 +13,7 @@ namespace TurnBasedGame.Skills
     public class NormalAttackSkill : SkillBase
     {
         [Header("Attack Settings")]
-        [SerializeField] private int baseDamage = 10;
+        [SerializeField] private int bonusDmg = 10;
         [SerializeField] private bool useAttackStat = true;
 
         protected override void ExecuteEffect(UnitMove caster, Vector3Int targetPos)
@@ -30,8 +30,8 @@ namespace TurnBasedGame.Skills
         private int CalculateDamage(UnitMove caster)
         {
             if (useAttackStat)
-                return baseDamage + (int)caster.UnitData.attackDamage;
-            return baseDamage;
+                return BaseValue + (int)bonusDmg;
+            return BaseValue;
         }
 
         public override List<Vector3Int> GetValidTargets(UnitMove caster)

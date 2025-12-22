@@ -16,74 +16,31 @@ namespace TurnBasedGame.Skills
         [Header("Starting Skills")]
         [SerializeField] private List<SkillBase> startingSkills = new List<SkillBase>();
 
-        private UnitMove owner;
-        private ISkill normalSkill;
+        private UnitMove _owner;
+        private SkillBase _normalSkill;
         private List<ISkill> activeSkills = new List<ISkill>();
 
-        public ISkill NormalSkill => normalSkill;
-        public IReadOnlyList<ISkill> ActiveSkills => activeSkills;
-        public IReadOnlyList<ISkill> AllSkills
-        {
-            get
-            {
-                var all = new List<ISkill>();
-                if (normalSkill != null) all.Add(normalSkill);
-                all.AddRange(activeSkills);
-                return all;
-            }
-        }
+        public ISkill NormalSkill => _normalSkill; 
+        public SkillBase _selectedSkill;
 
         #region Initialization
         public void Initialize(UnitMove owner)
         {
-            this.owner = owner;
+            this._owner = owner;
             LoadStartingSkills();
         }
 
         private void LoadStartingSkills()
         {
-            foreach (var skillData in startingSkills)
-            {
-                if (skillData == null) continue;
-                AddSkill(skillData);
-            }
         }
         #endregion
 
         #region Skill Management
-        public void AddSkill(SkillBase skillData)
-        {
-            var skill = skillData.Clone();
-            
-            if (skill.Type == SkillType.Normal)
-            {
-                normalSkill = skill;
-                Debug.Log($"{owner.name} học Normal Skill: {skill.SkillName}");
-            }
-            else
-            {
-                activeSkills.Add(skill);
-                Debug.Log($"{owner.name} học {skill.Type} Skill: {skill.SkillName}");
-            }
-
-            SkillEventBus.Instance?.TriggerSkillLearned(skill, owner);
-        }
-
-        public bool RemoveSkill(ISkill skill)
-        {
-            if (skill == normalSkill)
-            {
-                normalSkill = null;
-                return true;
-            }
-
-            return activeSkills.Remove(skill);
-        }
-
+ 
         public ISkill GetSkillByName(string skillName)
         {
-            if (normalSkill?.SkillName == skillName)
-                return normalSkill;
+            if (_normalSkill?.SkillName == skillName)
+                return _normalSkill;
 
             return activeSkills.FirstOrDefault(s => s.SkillName == skillName);
         }
@@ -98,13 +55,13 @@ namespace TurnBasedGame.Skills
                 return false;
             }
 
-            if (!skill.CanUse(owner, targetPos))
+            if (!skill.CanUse(_owner, targetPos))
             {
                 Debug.LogWarning($"Cannot use {skill.SkillName}");
                 return false;
             }
 
-            skill.Execute(owner, targetPos);
+            skill.Execute(_owner, targetPos);
             return true;
         }
 
@@ -116,13 +73,13 @@ namespace TurnBasedGame.Skills
 
         public bool UseNormalSkill(Vector3Int targetPos)
         {
-            if (normalSkill == null)
+            if (_normalSkill == null)
             {
-                Debug.LogWarning($"{owner.name} không có Normal Skill!");
+                Debug.LogWarning($"{_owner.name} không có Normal Skill!");
                 return false;
             }
 
-            return UseSkill(normalSkill, targetPos);
+            return UseSkill(_normalSkill, targetPos);
         }
         #endregion
 
@@ -131,51 +88,20 @@ namespace TurnBasedGame.Skills
         {
             var usable = new List<ISkill>();
 
-            if (normalSkill != null && normalSkill.CanUse(owner, targetPos))
-                usable.Add(normalSkill);
+            if (_normalSkill != null && _normalSkill.CanUse(_owner, targetPos))
+                usable.Add(_normalSkill);
 
-            usable.AddRange(activeSkills.Where(s => s.CanUse(owner, targetPos)));
+            usable.AddRange(activeSkills.Where(s => s.CanUse(_owner, targetPos)));
 
             return usable;
         }
 
-        public List<ISkill> GetReadySkills()
-        {
-            var ready = new List<ISkill>();
-
-            if (normalSkill != null)
-                ready.Add(normalSkill);
-
-            ready.AddRange(activeSkills.Where(s => s.CurrentCooldown <= 0));
-
-            return ready;
-        }
 
         public bool HasSkillInRange(Vector3Int targetPos)
         {
             return GetUsableSkills(targetPos).Count > 0;
         }
 
-        public List<Vector3Int> GetAllValidTargets()
-        {
-            var allTargets = new HashSet<Vector3Int>();
-
-            if (normalSkill != null)
-            {
-                foreach (var target in normalSkill.GetValidTargets(owner))
-                    allTargets.Add(target);
-            }
-
-            foreach (var skill in activeSkills)
-            {
-                if (skill.CurrentCooldown > 0) continue;
-                
-                foreach (var target in skill.GetValidTargets(owner))
-                    allTargets.Add(target);
-            }
-
-            return allTargets.ToList();
-        }
         #endregion
 
         #region Turn Management
@@ -191,22 +117,17 @@ namespace TurnBasedGame.Skills
 
         private void ReduceAllCooldowns()
         {
-            normalSkill?.ReduceCooldown();
+            _normalSkill?.ReduceCooldown();
 
             foreach (var skill in activeSkills)
             {
                 skill.ReduceCooldown();
-                
-                if (skill.CurrentCooldown == 0)
-                {
-                    SkillEventBus.Instance?.TriggerCooldownComplete(skill);
-                }
             }
         }
 
         public void ResetAllCooldowns()
         {
-            normalSkill?.ResetCooldown();
+            _normalSkill?.ResetCooldown();
             
             foreach (var skill in activeSkills)
             {
@@ -219,14 +140,14 @@ namespace TurnBasedGame.Skills
         [ContextMenu("Debug Skills")]
         private void DebugSkills()
         {
-            Debug.Log($"=== {owner.name} Skills ===");
+            Debug.Log($"=== {_owner.name} Skills ===");
             
-            if (normalSkill != null)
-                Debug.Log($"Normal: {normalSkill.SkillName}");
+            if (_normalSkill != null)
+                Debug.Log($"Normal: {_normalSkill.SkillName}");
 
             foreach (var skill in activeSkills)
             {
-                Debug.Log($"{skill.Type}: {skill.SkillName} (CD: {skill.CurrentCooldown}/{skill.Cooldown})");
+                Debug.Log($"{skill.Type}: {skill.SkillName}");
             }
         }
         #endregion

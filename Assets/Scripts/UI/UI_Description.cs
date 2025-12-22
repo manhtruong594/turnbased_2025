@@ -4,7 +4,6 @@ using UnityEngine.EventSystems;
 
 public class UI_Description : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
-    [SerializeField] Button _myButton;
     [SerializeField] GameObject _descriptionPanel;
 
     void Start()

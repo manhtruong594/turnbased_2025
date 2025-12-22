@@ -16,9 +16,7 @@ namespace TurnBasedGame.Skills
         [SerializeField, TextArea(3, 5)] protected string description = "No description";
         [SerializeField] protected SkillType skillType;
         [SerializeField] protected Sprite icon;
-
-        [Header("Cost & Cooldown")]
-        [SerializeField] protected int manaCost;
+        [SerializeField] protected int value;
         [SerializeField] protected int cooldown;
         [SerializeField] protected int range = 1;
 
@@ -35,10 +33,10 @@ namespace TurnBasedGame.Skills
         public string Description => description;
         public SkillType Type => skillType;
         public Sprite Icon => icon;
-        public int ManaCost => manaCost;
         public int Cooldown => cooldown;
         public int CurrentCooldown => currentCooldown;
         public int Range => range;
+        public int BaseValue => value;
         #endregion
 
         #region Template Method - Validation Pipeline
@@ -167,7 +165,7 @@ namespace TurnBasedGame.Skills
 
         protected RedBjorn.ProtoTiles.MapEntity GetMap(UnitMove caster)
         {
-            return caster.runtimeStats.MapEntity;
+            return MapManager.Instance.MapEntity;
         }
 
         public virtual ISkill Clone()
