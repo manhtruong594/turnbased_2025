@@ -17,11 +17,9 @@ namespace TurnBasedGame.Skills
         
         int Cooldown { get; }
         int Range { get; }
-        int BaseValue { get; }
 
         bool CanUse(UnitMove caster, Vector3Int targetPos);
         void Execute(UnitMove caster, Vector3Int targetPos);
-        List<Vector3Int> GetValidTargets(UnitMove caster);
         List<Vector3Int> GetAffectedTiles(Vector3Int targetPos);
         
         void ResetCooldown();

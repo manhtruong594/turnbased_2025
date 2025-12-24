@@ -215,9 +215,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   canAttackThroughObstacles: 0
-  AttackModeButton: {fileID: 1489679809000466887}
   FinishAttackButton: {fileID: 2120767450990766129}
   _actionCanvasGroup: {fileID: 7021326912714218226}
+  startingSkills:
+  - {fileID: 11400000, guid: c8301b7a126a8b247a11efd55082b802, type: 2}
+  - {fileID: 11400000, guid: 264d50d6fa6498c459c5e1b5ba81b661, type: 2}
+  skillButtonPrefab: {fileID: 6131648088992773535, guid: 2cc31421d5ee23044aed87af651491df, type: 3}
+  skillButtonContainer: {fileID: 2981066630240430395}
 --- !u!114 &2426162835147626077
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -504,17 +508,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
---- !u!114 &1489679809000466887 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 7770353629008008393, guid: 3fc8a414e7149ea468e5e6450c42da8e, type: 3}
-  m_PrefabInstance: {fileID: 9185567047935589646}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
 --- !u!114 &2120767450990766129 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7068340596925535551, guid: 3fc8a414e7149ea468e5e6450c42da8e, type: 3}
@@ -529,6 +522,11 @@ MonoBehaviour:
 --- !u!1 &2271035569122642095 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 6988995364828149153, guid: 3fc8a414e7149ea468e5e6450c42da8e, type: 3}
+  m_PrefabInstance: {fileID: 9185567047935589646}
+  m_PrefabAsset: {fileID: 0}
+--- !u!224 &2981066630240430395 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 6208019527175476277, guid: 3fc8a414e7149ea468e5e6450c42da8e, type: 3}
   m_PrefabInstance: {fileID: 9185567047935589646}
   m_PrefabAsset: {fileID: 0}
 --- !u!225 &7021326912714218226 stripped

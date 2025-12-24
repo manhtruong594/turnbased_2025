@@ -1,10 +1,11 @@
 using System;
 using TMPro;
+using TurnBasedGame.ObjectPool;
 using TurnBasedGame.Skills;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class SkillButton : MonoBehaviour
+public class SkillButton : PooledObject
 {
     [SerializeField] Button _myButton;
     [SerializeField] TextMeshProUGUI _descriptionText;

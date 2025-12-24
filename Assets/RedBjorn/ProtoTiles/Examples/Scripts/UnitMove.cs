@@ -18,7 +18,7 @@ namespace RedBjorn.ProtoTiles.Example
         public Transform RotationNode;
         [SerializeField] Button _cancelMoveButton;
 
-        public readonly UnitRuntimeStats runtimeStats = new();
+        readonly UnitRuntimeStats runtimeStats = new();
         private CommandInvoker _commandInvoker = new CommandInvoker();
         ICommand _moveCommand;
         Coroutine _movingCoroutine;
@@ -48,7 +48,7 @@ namespace RedBjorn.ProtoTiles.Example
             ResetComponents();
             UpdateGridPosition(startGridPos);
             CreateStats();
-            _attackComponent.Init(runtimeStats);
+            _attackComponent.Init(runtimeStats, this);
             runtimeStats.OnFinishTurn += FinishTurnActions;
 
             void CreateStats()
@@ -168,6 +168,8 @@ namespace RedBjorn.ProtoTiles.Example
 
         public UnitData UnitData => unitData;
         public int GetMoveRange() => runtimeStats.MoveRange;
+        public int GetCurrentHealth() => runtimeStats.Health;
+        public float GetHealthPercent() => (float)runtimeStats.Health / runtimeStats.MaxHealth;
         public PlayerID GetOwner() => runtimeStats.Owner;
         public bool IsMoveDone() => runtimeStats.IsMoveCompleted;
         public bool CanMove() => !runtimeStats.IsMoveCompleted && !runtimeStats.IsInAttackMode;

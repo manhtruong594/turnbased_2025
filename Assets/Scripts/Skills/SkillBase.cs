@@ -2,6 +2,9 @@ using UnityEngine;
 using System.Collections.Generic;
 using TurnBasedGame.Unit;
 using RedBjorn.ProtoTiles.Example;
+using TurnBasedGame.ObjectPool;
+using System.Collections;
+using Unity.VisualScripting;
 
 namespace TurnBasedGame.Skills
 {
@@ -16,9 +19,10 @@ namespace TurnBasedGame.Skills
         [SerializeField, TextArea(3, 5)] protected string description = "No description";
         [SerializeField] protected SkillType skillType;
         [SerializeField] protected Sprite icon;
-        [SerializeField] protected int value;
         [SerializeField] protected int cooldown;
         [SerializeField] protected int range = 1;
+        [SerializeField] protected float delay = 0f;
+        [SerializeField] protected GameObject vfxPrefab;
 
         [Header("Target Settings")]
         [SerializeField] protected bool canTargetAllies;
@@ -36,7 +40,6 @@ namespace TurnBasedGame.Skills
         public int Cooldown => cooldown;
         public int CurrentCooldown => currentCooldown;
         public int Range => range;
-        public int BaseValue => value;
         #endregion
 
         #region Template Method - Validation Pipeline
@@ -65,7 +68,7 @@ namespace TurnBasedGame.Skills
 
         protected virtual bool ValidateRange(UnitMove caster, Vector3Int targetPos)
         {
-            int distance = GetDistance(caster.currentGridPosition, targetPos);
+            var distance = MapManager.Instance.GetDistance(caster.currentGridPosition, targetPos);
             return distance <= range;
         }
 
@@ -96,15 +99,15 @@ namespace TurnBasedGame.Skills
         #region Template Method - Execution Pipeline
         public void Execute(UnitMove caster, Vector3Int targetPos)
         {
-            if (!CanUse(caster, targetPos))
-            {
-                Debug.LogWarning($"Cannot use skill {skillName}");
-                return;
-            }
+            Updater.Instance.StartCoroutine(ExcuteAsync(caster, targetPos));
+        }
 
+        IEnumerator ExcuteAsync(UnitMove caster, Vector3Int targetPos)
+        {
             OnExecuteStart(caster, targetPos);
             
             ConsumeMana(caster);
+            yield return new WaitForSeconds(delay);
             ExecuteEffect(caster, targetPos);
             StartCooldown();
             
@@ -125,7 +128,7 @@ namespace TurnBasedGame.Skills
         }
 
         protected abstract void ExecuteEffect(UnitMove caster, Vector3Int targetPos);
-
+       
         protected virtual void StartCooldown()
         {
             if (skillType != SkillType.Normal)
@@ -141,7 +144,6 @@ namespace TurnBasedGame.Skills
         #endregion
 
         #region Abstract Methods - Phải implement ở subclass
-        public abstract List<Vector3Int> GetValidTargets(UnitMove caster);
         public abstract List<Vector3Int> GetAffectedTiles(Vector3Int targetPos);
         #endregion
 
@@ -156,14 +158,8 @@ namespace TurnBasedGame.Skills
         #endregion
 
         #region Utility Methods
-        protected int GetDistance(Vector3Int from, Vector3Int to)
-        {
-            return Mathf.Abs(from.x - to.x) + 
-                   Mathf.Abs(from.y - to.y) + 
-                   Mathf.Abs(from.z - to.z);
-        }
 
-        protected RedBjorn.ProtoTiles.MapEntity GetMap(UnitMove caster)
+        protected RedBjorn.ProtoTiles.MapEntity GetMap()
         {
             return MapManager.Instance.MapEntity;
         }

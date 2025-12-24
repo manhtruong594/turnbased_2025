@@ -16,12 +16,13 @@ MonoBehaviour:
   description: No description
   skillType: 0
   icon: {fileID: 0}
-  manaCost: 0
   cooldown: 0
   range: 1
+  delay: 1
+  vfxPrefab: {fileID: 7964717395565540154, guid: aff42c5e821e59748962ea0f6c960a51, type: 3}
   canTargetAllies: 0
   canTargetEnemies: 1
   canTargetSelf: 0
   canTargetEmptyTile: 0
-  baseDamage: 10
+  dmg: 10
   useAttackStat: 1

@@ -88,4 +88,11 @@ public class MapManager : BaseManager
         return _unitPositions.ContainsKey(gridPos);
     }
     #endregion
+
+    #region  Helper Methods
+    public float GetDistance(Vector3Int posA, Vector3Int posB)
+    {
+        return MapEntity.Distance(posA, posB);
+    }
+    #endregion 
 }

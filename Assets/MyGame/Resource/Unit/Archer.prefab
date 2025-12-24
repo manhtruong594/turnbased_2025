@@ -158,7 +158,6 @@ GameObject:
   - component: {fileID: 662182742872618790}
   - component: {fileID: 7572629158187435638}
   - component: {fileID: 1328495523500364131}
-  - component: {fileID: 4049436020191812616}
   m_Layer: 0
   m_Name: Archer
   m_TagString: Untagged
@@ -216,14 +215,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   canAttackThroughObstacles: 0
-  useSkillSystem: 1
-  AttackModeButton: {fileID: 2846939672715314015}
   FinishAttackButton: {fileID: 3332735922958582441}
   _actionCanvasGroup: {fileID: 5935454900314583146}
-  startingSkills: []
-  skillButtonPrefab: {fileID: 8101935332649465872, guid: 2cc31421d5ee23044aed87af651491df, type: 3}
+  startingSkills:
+  - {fileID: 11400000, guid: c8301b7a126a8b247a11efd55082b802, type: 2}
+  - {fileID: 11400000, guid: 264d50d6fa6498c459c5e1b5ba81b661, type: 2}
+  skillButtonPrefab: {fileID: 6131648088992773535, guid: 2cc31421d5ee23044aed87af651491df, type: 3}
   skillButtonContainer: {fileID: 1905263602909234083}
-  _selectedSkill: {fileID: 0}
 --- !u!114 &1328495523500364131
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -237,22 +235,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HealthBar
   healthBarRenderer: {fileID: 4219279390209745164}
---- !u!114 &4049436020191812616
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5204393105807402248}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c8542ae9a24279a4cabb22b49fe1c33b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Skills.UnitSkillManager
-  startingSkills:
-  - {fileID: 11400000, guid: c8301b7a126a8b247a11efd55082b802, type: 2}
-  - {fileID: 11400000, guid: 264d50d6fa6498c459c5e1b5ba81b661, type: 2}
-  _selectedSkill: {fileID: 0}
 --- !u!1 &8793134353577196331
 GameObject:
   m_ObjectHideFlags: 0
@@ -562,17 +544,6 @@ RectTransform:
 --- !u!114 &2419698170991639223 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7909435104010120481, guid: 3fc8a414e7149ea468e5e6450c42da8e, type: 3}
-  m_PrefabInstance: {fileID: 5501019370028619670}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
---- !u!114 &2846939672715314015 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 7770353629008008393, guid: 3fc8a414e7149ea468e5e6450c42da8e, type: 3}
   m_PrefabInstance: {fileID: 5501019370028619670}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}

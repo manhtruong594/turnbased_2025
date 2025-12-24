@@ -16,11 +16,10 @@ namespace TurnBasedGame.Unit
     public class UnitAttack : MonoBehaviour
     {
         UnitRuntimeStats runtimeStats;
-        UnitSkillManager skillManager;
+        UnitSkillsBridge _skillsBridge;
 
         [Header("Attack Settings")]
         [SerializeField] private bool canAttackThroughObstacles = false;
-        [SerializeField] private bool useSkillSystem = true;
 
         [Header("Attack State Button")]
         //[SerializeField] Button AttackModeButton;
@@ -29,49 +28,46 @@ namespace TurnBasedGame.Unit
 
         [Header("Skill System")]
         [SerializeField] private List<SkillBase> startingSkills = new List<SkillBase>();
-        private List<ISkill> activeSkills = new List<ISkill>();
-        [SerializeField] private SkillButton skillButtonPrefab;
+        [SerializeField] private GameObject skillButtonPrefab;
         [SerializeField] private Transform skillButtonContainer;
 
-        private SkillBase _normalSkill;
-        private SkillBase _selectedSkill;
+        private List<ISkill> activeSkills = new List<ISkill>();
+        private ISkill _normalSkill;
+        private ISkill _selectedSkill;
 
         MapEntity _cachedMap;
+        UnitMove _cachedUnitMove;
 
         #region  Unity Methods and Initialization
-        public void Init(UnitRuntimeStats runtimeStats)
+        public void Init(UnitRuntimeStats runtimeStats, UnitMove unitMove)
         {
             this.runtimeStats = runtimeStats;
             _cachedMap = runtimeStats.MapEntity;
-
+            _cachedUnitMove = unitMove;
             FinishAttackButton.onClick.AddListener(FinishAttack);
-            _normalSkill = startingSkills[0];
-            _selectedSkill = _normalSkill;
-
 
             {
                 activeSkills.Clear();
                 foreach (var skill in startingSkills)
                 {
                     activeSkills.Add(skill.Clone());
+                    _skillsBridge.CreateSkillButton(skillButtonPrefab, skillButtonContainer, skill, OnSkillButtonClicked);
                 }
-                foreach (var skill in startingSkills)
-                {
-                    var skillBtnObj = Instantiate(skillButtonPrefab, skillButtonContainer);
-                    skillBtnObj.Initialize(skill, OnSkillButtonClicked);
-                }
+                _normalSkill = activeSkills[0];
+                _selectedSkill = _normalSkill;
             }
         }
 
         private void OnSkillButtonClicked(ISkill skill)
         {
-            _selectedSkill = skill as SkillBase;
+            _selectedSkill = skill;
             EnterAttackMode();
         }
 
         void OnDisable()
         {
             FinishAttackButton.onClick.RemoveListener(FinishAttack);
+            _skillsBridge.DisposeSkillButtons();
         }
 
         void Update()
@@ -85,10 +81,11 @@ namespace TurnBasedGame.Unit
                 var tileClicked = _cachedMap.Tile(mousePos);
                 if (tileClicked == null)
                     return;
-                if (_selectedSkill.CanUse(this.GetComponent<UnitMove>(), tileClicked.Position))
+                if (_selectedSkill.CanUse(_cachedUnitMove, tileClicked.Position))
                 {
                     // Sử dụng skill đã chọn
-                    _selectedSkill.Execute(this.GetComponent<UnitMove>(), tileClicked.Position);
+                    _selectedSkill.Execute(_cachedUnitMove, tileClicked.Position);
+                    FinishAttack();
                     return;
                 }
                 else
@@ -96,7 +93,6 @@ namespace TurnBasedGame.Unit
                     ExitAttackMode();
                     Debug.Log("Cannot use skill on this tile.");
                 }
-                
             }
         }
 
@@ -106,13 +102,6 @@ namespace TurnBasedGame.Unit
         private void FinishAttack()
         {
             ExitAttackMode();
-
-            // Giảm cooldown skills khi kết thúc turn
-            if (useSkillSystem && skillManager != null)
-            {
-                skillManager.OnTurnEnd();
-            }
-
             runtimeStats.OnFinishTurn?.Invoke();
         }
 
@@ -154,16 +143,6 @@ namespace TurnBasedGame.Unit
             AreaPathManager.Instance.HideAttackArea();
         }
 
-        /// <summary>
-        /// Thực thi skill attack (Skill System)
-        /// </summary>
-        private void ExecuteSkillAttack(ISkill skill, Vector3Int targetPos)
-        {
-            if (skillManager.UseSkill(skill, targetPos))
-            {
-                FinishAttack();
-            }
-        }
         #endregion
 
         #region  Helper Methods
@@ -241,10 +220,10 @@ namespace TurnBasedGame.Unit
 
         private void DealDamage(UnitMove target)
         {
-            // TODO: Implement proper health/damage system
-            // Hiện tại chỉ log để test
-            Debug.Log($"{gameObject.name} tấn công {target.name} gây {_selectedSkill.BaseValue} sát thương!");
-            target.TakeDamage(_selectedSkill.BaseValue);
+            // TODO: fix logic sử dụng action để Invoke sự kiện tấn công
+             Debug.Log($"{gameObject.name} tấn công {target.name} gây sát thương!");
+            // target.TakeDamage(_selectedSkill.BaseValue);
+
         }
     }
     #endregion
