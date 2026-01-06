@@ -145,7 +145,11 @@ namespace TurnBasedGame.ObjectPool
             var pooledObj = pool.Get();
             if (pooledObj == null)
                 return null;
-
+            if (parent != null)
+            {
+                pooledObj.transform.SetParent(parent);
+                pooledObj.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+            }
             return pooledObj.gameObject;
         }   
 

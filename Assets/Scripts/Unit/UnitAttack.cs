@@ -16,7 +16,7 @@ namespace TurnBasedGame.Unit
     public class UnitAttack : MonoBehaviour
     {
         UnitRuntimeStats runtimeStats;
-        UnitSkillsBridge _skillsBridge;
+        UnitSkillsBridge _skillsBridge = new UnitSkillsBridge();
 
         [Header("Attack Settings")]
         [SerializeField] private bool canAttackThroughObstacles = false;

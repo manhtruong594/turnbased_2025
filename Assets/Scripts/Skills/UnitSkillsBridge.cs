@@ -12,7 +12,7 @@ namespace TurnBasedGame.Skills
     /// <summary>
     ///  Component cầu nối giữa UnitAttack và Skill System
     /// </summary>
-    public class UnitSkillsBridge : MonoBehaviour
+    public class UnitSkillsBridge
     {
         private Dictionary<ISkill, SkillButton> _skillButtonMap = new Dictionary<ISkill, SkillButton>();
 
