@@ -187,7 +187,7 @@ GameObject:
   - component: {fileID: 7572629158187435638}
   - component: {fileID: 1328495523500364131}
   m_Layer: 0
-  m_Name: Archer
+  m_Name: Soldier_Enemy
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -227,7 +227,7 @@ MonoBehaviour:
   Speed: 5
   RotationNode: {fileID: 7208497065503833964}
   _cancelMoveButton: {fileID: 2419698170991639223}
-  unitData: {fileID: 11400000, guid: c23b5fc0f13ad354aa337310e48e1178, type: 2}
+  unitData: {fileID: 11400000, guid: a0e43c22704825340b51ab926be48607, type: 2}
   _attackComponent: {fileID: 7572629158187435638}
   _healthBar: {fileID: 1328495523500364131}
   _actionPanel: {fileID: 3218505528879063607}
