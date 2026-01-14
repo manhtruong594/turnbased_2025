@@ -29,6 +29,7 @@ namespace RedBjorn.ProtoTiles.Example
         [SerializeField] private UnitData unitData;
         [SerializeField] private UnitAttack _attackComponent;
         [SerializeField] private HealthBar _healthBar;
+        [SerializeField] private UnitAnimator _unitAnimator;
         [SerializeField] private GameObject _actionPanel;
 
         private void Awake()
@@ -83,6 +84,7 @@ namespace RedBjorn.ProtoTiles.Example
                     StopCoroutine(_movingCoroutine);
                 }
                 _movingCoroutine = StartCoroutine(Moving(_tempPath));
+                _unitAnimator.StartMoving();
             }
             else
             {
@@ -156,7 +158,11 @@ namespace RedBjorn.ProtoTiles.Example
         #endregion
 
         #region  Support Methods
-       
+
+        public void PerformAttack(SkillType skillType)
+        {
+            _unitAnimator.PlayAttack(skillType);
+        }
 
         public UnitAttack AttackComponent => _attackComponent;
 
@@ -183,6 +189,11 @@ namespace RedBjorn.ProtoTiles.Example
             if (runtimeStats.Health <= 0)
             {
                 runtimeStats.IsDead = true;
+                _unitAnimator.PlayDeath();
+            }
+            else if (damage > 0)
+            {
+                _unitAnimator.PlayHit();
             }
         }
 

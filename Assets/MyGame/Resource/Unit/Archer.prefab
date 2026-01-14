@@ -206,7 +206,7 @@ RotationConstraint:
   serializedVersion: 2
   m_Weight: 0.5
   m_RotationAtRest: {x: -90, y: 0, z: 0}
-  m_RotationOffset: {x: 70.60253, y: -12.570058, z: -5.298168}
+  m_RotationOffset: {x: 56.076855, y: 157.61554, z: -179.32312}
   m_AffectRotationX: 1
   m_AffectRotationY: 1
   m_AffectRotationZ: 1
@@ -420,7 +420,7 @@ RotationConstraint:
   serializedVersion: 2
   m_Weight: 0.5
   m_RotationAtRest: {x: 36.638622, y: -175.17076, z: -140.65733}
-  m_RotationOffset: {x: -5.478762, y: -6.1226964, z: 31.431395}
+  m_RotationOffset: {x: -32.43917, y: 15.2976055, z: -10.337871}
   m_AffectRotationX: 1
   m_AffectRotationY: 1
   m_AffectRotationZ: 1
@@ -1147,7 +1147,7 @@ RotationConstraint:
   serializedVersion: 2
   m_Weight: 0.5
   m_RotationAtRest: {x: -90, y: 0, z: 0}
-  m_RotationOffset: {x: -65.611305, y: 177.60143, z: 177.2665}
+  m_RotationOffset: {x: -43.08947, y: 171.5258, z: 179.9934}
   m_AffectRotationX: 1
   m_AffectRotationY: 1
   m_AffectRotationZ: 1
@@ -2713,7 +2713,7 @@ RotationConstraint:
   serializedVersion: 2
   m_Weight: 0.5
   m_RotationAtRest: {x: 0.16972092, y: 179.8665, z: -128.21599}
-  m_RotationOffset: {x: 31.278202, y: -5.842404, z: 45.58927}
+  m_RotationOffset: {x: -2.9073806, y: -8.031904, z: 11.17105}
   m_AffectRotationX: 1
   m_AffectRotationY: 1
   m_AffectRotationZ: 1
@@ -2766,7 +2766,7 @@ RotationConstraint:
   serializedVersion: 2
   m_Weight: 0.5
   m_RotationAtRest: {x: 0, y: -0.00014823602, z: 0.00018887484}
-  m_RotationOffset: {x: -24.367413, y: 164.80037, z: -59.557735}
+  m_RotationOffset: {x: -20.083546, y: -152.33835, z: 2.8442194}
   m_AffectRotationX: 0
   m_AffectRotationY: 1
   m_AffectRotationZ: 0
@@ -4404,6 +4404,7 @@ MonoBehaviour:
   unitData: {fileID: 11400000, guid: c23b5fc0f13ad354aa337310e48e1178, type: 2}
   _attackComponent: {fileID: 7572629158187435638}
   _healthBar: {fileID: 1328495523500364131}
+  _unitAnimator: {fileID: 4399936470503347770}
   _actionPanel: {fileID: 3218505528879063607}
 --- !u!114 &7572629158187435638
 MonoBehaviour:
@@ -5386,7 +5387,7 @@ RotationConstraint:
   serializedVersion: 2
   m_Weight: 0.5
   m_RotationAtRest: {x: 0, y: 0, z: 0}
-  m_RotationOffset: {x: 8.372257, y: -0.41637662, z: 3.6014845}
+  m_RotationOffset: {x: 4.8156834, y: 39.123123, z: 7.170858}
   m_AffectRotationX: 0
   m_AffectRotationY: 1
   m_AffectRotationZ: 0
@@ -5767,7 +5768,7 @@ RotationConstraint:
   serializedVersion: 2
   m_Weight: 0.5
   m_RotationAtRest: {x: -90, y: 0, z: 0}
-  m_RotationOffset: {x: -77.850075, y: -178.23283, z: 174.51987}
+  m_RotationOffset: {x: -30.095085, y: 177.5739, z: 157.70921}
   m_AffectRotationX: 1
   m_AffectRotationY: 1
   m_AffectRotationZ: 1
@@ -5820,7 +5821,7 @@ RotationConstraint:
   serializedVersion: 2
   m_Weight: 0.5
   m_RotationAtRest: {x: -89.980225, y: 0, z: -0.002785123}
-  m_RotationOffset: {x: -46.857944, y: 179.375, z: -172.28642}
+  m_RotationOffset: {x: -55.665493, y: -141.12372, z: -139.26707}
   m_AffectRotationX: 1
   m_AffectRotationY: 1
   m_AffectRotationZ: 1
@@ -7105,7 +7106,7 @@ RotationConstraint:
   serializedVersion: 2
   m_Weight: 0.5
   m_RotationAtRest: {x: 0, y: 0, z: 0}
-  m_RotationOffset: {x: -12.590975, y: 6.5868473, z: -9.007814}
+  m_RotationOffset: {x: -11.624061, y: -9.583548, z: -15.746123}
   m_AffectRotationX: 0
   m_AffectRotationY: 1
   m_AffectRotationZ: 0
@@ -7769,7 +7770,7 @@ RotationConstraint:
   serializedVersion: 2
   m_Weight: 0.5
   m_RotationAtRest: {x: 0.16972649, y: -179.8665, z: 128.21599}
-  m_RotationOffset: {x: -19.485144, y: -7.090718, z: -53.60136}
+  m_RotationOffset: {x: 33.749783, y: -23.359127, z: -52.327953}
   m_AffectRotationX: 1
   m_AffectRotationY: 1
   m_AffectRotationZ: 1
@@ -7822,7 +7823,7 @@ RotationConstraint:
   serializedVersion: 2
   m_Weight: 0.5
   m_RotationAtRest: {x: -89.980225, y: 0, z: 0.0027792125}
-  m_RotationOffset: {x: -46.42285, y: -174.31969, z: 172.24948}
+  m_RotationOffset: {x: -37.38878, y: 168.86046, z: 164.75534}
   m_AffectRotationX: 1
   m_AffectRotationY: 1
   m_AffectRotationZ: 1
@@ -7970,7 +7971,7 @@ RotationConstraint:
   serializedVersion: 2
   m_Weight: 0.5
   m_RotationAtRest: {x: 36.638603, y: 175.17076, z: 140.65733}
-  m_RotationOffset: {x: -55.612484, y: 1.8967952, z: -45.277695}
+  m_RotationOffset: {x: -2.7827168, y: -19.049671, z: -37.02396}
   m_AffectRotationX: 1
   m_AffectRotationY: 1
   m_AffectRotationZ: 1
@@ -8393,6 +8394,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7208497065503833964}
   - component: {fileID: 3668627435138639126}
+  - component: {fileID: 4399936470503347770}
   m_Layer: 0
   m_Name: P09_Human
   m_TagString: Untagged
@@ -8431,7 +8433,7 @@ Animator:
   m_Controller: {fileID: 9100000, guid: 99e6b3ffb2253dd428628b38f37b79a2, type: 2}
   m_CullingMode: 1
   m_UpdateMode: 0
-  m_ApplyRootMotion: 1
+  m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
   m_AnimatePhysics: 0
@@ -8440,6 +8442,20 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &4399936470503347770
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8017086075023222230}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03ee294848efff3409e464af6568a786, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animator: {fileID: 3668627435138639126}
+  defaultAttackSpeed: 1
 --- !u!1 &8019289918136019493
 GameObject:
   m_ObjectHideFlags: 0
@@ -8547,7 +8563,7 @@ RotationConstraint:
   serializedVersion: 2
   m_Weight: 0.5
   m_RotationAtRest: {x: -90, y: 0, z: 0}
-  m_RotationOffset: {x: 58.008484, y: -174.0902, z: -169.84157}
+  m_RotationOffset: {x: 49.314003, y: -94.90607, z: -85.60193}
   m_AffectRotationX: 1
   m_AffectRotationY: 1
   m_AffectRotationZ: 1
@@ -9371,7 +9387,7 @@ RotationConstraint:
   serializedVersion: 2
   m_Weight: 0.5
   m_RotationAtRest: {x: 0, y: 0.0001469484, z: 0.00017995322}
-  m_RotationOffset: {x: 4.2630186, y: 16.257074, z: -56.559383}
+  m_RotationOffset: {x: 14.664526, y: 2.115704, z: -27.69799}
   m_AffectRotationX: 0
   m_AffectRotationY: 1
   m_AffectRotationZ: 0
