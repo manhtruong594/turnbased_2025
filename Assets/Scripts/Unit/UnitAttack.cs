@@ -45,6 +45,7 @@ namespace TurnBasedGame.Unit
             _cachedMap = runtimeStats.MapEntity;
             _cachedUnitMove = unitMove;
             FinishAttackButton.onClick.AddListener(FinishAttack);
+            runtimeStats.OnFinishTurn += FinishAttack;
 
             {
                 activeSkills.Clear();
@@ -68,6 +69,10 @@ namespace TurnBasedGame.Unit
         {
             FinishAttackButton.onClick.RemoveListener(FinishAttack);
             _skillsBridge.DisposeSkillButtons();
+            if (runtimeStats != null)
+            {
+                runtimeStats.OnFinishTurn -= FinishAttack;
+            }
         }
 
         void Update()
@@ -85,7 +90,6 @@ namespace TurnBasedGame.Unit
                 {
                     // Sử dụng skill đã chọn
                     _selectedSkill.Execute(_cachedUnitMove, tileClicked.Position);
-                    FinishAttack();
                     return;
                 }
                 else
@@ -102,7 +106,6 @@ namespace TurnBasedGame.Unit
         private void FinishAttack()
         {
             ExitAttackMode();
-            runtimeStats.OnFinishTurn?.Invoke();
         }
 
         /// <summary>

@@ -159,9 +159,10 @@ namespace RedBjorn.ProtoTiles.Example
 
         #region  Support Methods
 
-        public void PerformAttack(SkillType skillType)
+        public void PerformSkill(SkillBase skill, Action onHitAction)
         {
-            _unitAnimator.PlayAttack(skillType);
+            _unitAnimator.PlayAttack(skill, onHitAction);
+            _unitAnimator.OnAttackAnimationComplete = FinishTurnActions;
         }
 
         public UnitAttack AttackComponent => _attackComponent;
@@ -201,6 +202,7 @@ namespace RedBjorn.ProtoTiles.Example
         {
             runtimeStats.IsMoveCompleted = true;
             runtimeStats.IsActionCompleted = true;
+            runtimeStats.OnFinishTurn?.Invoke();
             ChangeSelected(false);
             AreaPathManager.Instance.ResetAll(this);
         }

@@ -12,17 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9a7d36df9fad3cd41a0e8cd7817d5aa3, type: 3}
   m_Name: Fireball
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Skills.FireballSkill
-  skillName: Unnamed Skill
+  skillName: FireBall
   description: No description
   skillType: 1
   icon: {fileID: 0}
-  cooldown: 0
+  cooldown: 3
   range: 1
-  delay: 1
-  vfxPrefab: {fileID: 7964717395565540154, guid: aff42c5e821e59748962ea0f6c960a51, type: 3}
+  vfxPrefab: {fileID: 7826723565402596215, guid: da7a6b99fef0a3243bad5a1867ab80af, type: 3}
   canTargetAllies: 0
   canTargetEnemies: 1
   canTargetSelf: 0
-  canTargetEmptyTile: 0
+  canTargetEmptyTile: 1
   damage: 25
   aoeRadius: 1

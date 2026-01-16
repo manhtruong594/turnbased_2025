@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using TurnBasedGame.Skills;
+using TurnBasedGame.ObjectPool;
 
 namespace TurnBasedGame.Unit
 {
@@ -25,10 +26,12 @@ namespace TurnBasedGame.Unit
         private static readonly int AttackType = Animator.StringToHash("AttackType");
 
         // Events
-        public event Action OnAttackHitFrame;
-        public event Action OnAttackAnimationComplete;
-        public event Action OnDeathAnimationComplete;
+        public Action OnAttackHitFrame;
+        public Action OnAttackAnimationComplete;
+        public Action OnDeathAnimationComplete;
 
+        SkillBase _currentSkill;
+        
         #region Animation Control
 
         public void StartMoving()
@@ -43,16 +46,17 @@ namespace TurnBasedGame.Unit
             animator.SetBool(IsMoving, false);
         }
 
-        public void PlayAttack(SkillType skillType, float attackSpeed = -1f)
+        public void PlayAttack(SkillBase skill, Action onHitAction, float attackSpeed = -1f)
         {
             if (animator == null) return;
 
             if (attackSpeed < 0)
                 attackSpeed = defaultAttackSpeed;
-
+            OnAttackHitFrame = onHitAction;
             animator.SetFloat(AttackSpeed, attackSpeed);
             animator.SetTrigger(Attack);
-            animator.SetInteger(AttackType, (int)skillType);
+            animator.SetInteger(AttackType, (int)skill.Type);
+            _currentSkill = skill;
         }
 
         public void PlayHit()
@@ -88,6 +92,11 @@ namespace TurnBasedGame.Unit
         public void AnimEvent_AttackHit()
         {
             OnAttackHitFrame?.Invoke();
+        }
+
+        public void AnimEvent_AttackStart()
+        {
+            
         }
 
         /// <summary>

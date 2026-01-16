@@ -22,10 +22,10 @@ namespace TurnBasedGame.Skills
             var map = GetMap();
             
             // Spawn VFX từ pool thay vì Instantiate
-            if (vfxPrefab != null && ObjectPoolManager.Instance != null)
+            if (VfxPrefab != null && ObjectPoolManager.Instance != null)
             {
                 var worldPos = map.WorldPosition(targetPos);
-                ObjectPoolManager.Instance.Spawn(vfxPrefab).transform.SetPositionAndRotation(worldPos, Quaternion.identity);
+                ObjectPoolManager.Instance.Spawn(VfxPrefab).transform.SetPositionAndRotation(worldPos, Quaternion.identity);
             }
 
             // Gây damage cho tất cả units trong AOE

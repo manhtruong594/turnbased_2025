@@ -40,6 +40,10 @@ public class Updater : MonoBehaviour
         instance = this;
         DontDestroyOnLoad(gameObject);
     }
+    void OnDisable()
+    {
+        StopAllCoroutines();
+    }
 
     private void Update()
     {

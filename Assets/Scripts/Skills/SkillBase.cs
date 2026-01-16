@@ -5,6 +5,7 @@ using RedBjorn.ProtoTiles.Example;
 using TurnBasedGame.ObjectPool;
 using System.Collections;
 using Unity.VisualScripting;
+using System;
 
 namespace TurnBasedGame.Skills
 {
@@ -21,8 +22,8 @@ namespace TurnBasedGame.Skills
         [SerializeField] protected Sprite icon;
         [SerializeField] protected int cooldown;
         [SerializeField] protected int range = 1;
-        [SerializeField] protected float delay = 0f;
-        [SerializeField] protected GameObject vfxPrefab;
+        public GameObject VfxPrefab;
+        public GameObject VfxHitPrefab;
 
         [Header("Target Settings")]
         [SerializeField] protected bool canTargetAllies;
@@ -104,29 +105,28 @@ namespace TurnBasedGame.Skills
 
         IEnumerator ExcuteAsync(UnitMove caster, Vector3Int targetPos)
         {
-            OnExecuteStart(caster, targetPos);
-            
+            caster.PerformSkill(this, ExecuteEffectWrapper);
             ConsumeMana(caster);
-            yield return new WaitForSeconds(delay);
-            ExecuteEffect(caster, targetPos);
+            while (caster.IsActionFinished() == false)
+            {
+                yield return null;
+            }
             StartCooldown();
-            
             OnExecuteComplete(caster, targetPos);
-        }
 
-        protected virtual void OnExecuteStart(UnitMove caster, Vector3Int targetPos)
-        {
-            Debug.Log($"{caster.name} sử dụng {skillName}");
+            void ExecuteEffectWrapper()
+            {
+                ExecuteEffect(caster, targetPos);
+            }
         }
-
+ 
         protected virtual void ConsumeMana(UnitMove caster)
         {
-            // if (skillType != SkillType.Normal)
-            // {
-            //     caster.RuntimeStats.CurrentMana -= manaCost;
-            // }
         }
 
+        /// <summary>
+        /// xử lý effect và tính toán tác động của skill
+        /// </summary>
         protected abstract void ExecuteEffect(UnitMove caster, Vector3Int targetPos);
        
         protected virtual void StartCooldown()
