@@ -2,6 +2,7 @@ using UnityEngine;
 using System;
 using TurnBasedGame.Skills;
 using TurnBasedGame.ObjectPool;
+using TurnBasedGame.VFX;
 
 namespace TurnBasedGame.Unit
 {
@@ -96,7 +97,11 @@ namespace TurnBasedGame.Unit
 
         public void AnimEvent_AttackStart()
         {
-            
+            if (_currentSkill != null)
+            {
+                var projectile = ObjectPoolManager.Instance.Spawn(_currentSkill.VfxPrefab).GetComponent<Projectile>();
+                projectile.Launch(transform.position, transform.position + transform.forward * 10);
+            }
         }
 
         /// <summary>

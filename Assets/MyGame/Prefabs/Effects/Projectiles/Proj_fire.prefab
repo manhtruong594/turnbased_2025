@@ -4802,6 +4802,7 @@ GameObject:
   - component: {fileID: 1616551538552242789}
   - component: {fileID: 2683729124462302219}
   - component: {fileID: 2295147265097023091}
+  - component: {fileID: 511650434463479647}
   m_Layer: 0
   m_Name: Proj_fire
   m_TagString: Untagged
@@ -9585,6 +9586,24 @@ ParticleSystemRenderer:
   m_MeshWeighting2: 1
   m_MeshWeighting3: 1
   m_MaskInteraction: 0
+--- !u!114 &511650434463479647
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5681976723181098187}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6b8756319040c9a418c5c584c2348180, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  trajectoryType: 1
+  speed: 10
+  arcHeight: 3
+  rotateToDirection: 1
+  trailEffect: {fileID: 0}
+  hitEffectPrefab: {fileID: 7826723565402596215, guid: da7a6b99fef0a3243bad5a1867ab80af, type: 3}
 --- !u!1 &5950933714961167034
 GameObject:
   m_ObjectHideFlags: 0

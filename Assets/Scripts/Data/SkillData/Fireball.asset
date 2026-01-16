@@ -18,7 +18,8 @@ MonoBehaviour:
   icon: {fileID: 0}
   cooldown: 3
   range: 1
-  vfxPrefab: {fileID: 7826723565402596215, guid: da7a6b99fef0a3243bad5a1867ab80af, type: 3}
+  VfxPrefab: {fileID: 5681976723181098187, guid: 0a1f2274c09342443a1b556d27eab448, type: 3}
+  VfxHitPrefab: {fileID: 7826723565402596215, guid: da7a6b99fef0a3243bad5a1867ab80af, type: 3}
   canTargetAllies: 0
   canTargetEnemies: 1
   canTargetSelf: 0
