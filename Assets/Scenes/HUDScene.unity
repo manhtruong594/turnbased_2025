@@ -16870,6 +16870,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Archer
       objectReference: {fileID: 0}
+    - target: {fileID: 5204393105807402248, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

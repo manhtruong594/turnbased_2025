@@ -202,7 +202,7 @@ namespace RedBjorn.ProtoTiles.Example
         {
             runtimeStats.IsMoveCompleted = true;
             runtimeStats.IsActionCompleted = true;
-            runtimeStats.OnFinishTurn?.Invoke();
+            _attackComponent.FinishAttack();
             ChangeSelected(false);
             AreaPathManager.Instance.ResetAll(this);
         }

@@ -117,10 +117,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerID: 2
+  _playerData: {fileID: 0}
   _actionLefts: {fileID: 0}
   _aiOpponent: {fileID: 0}
   turnIndicator: {fileID: 4821047843294361405}
   _myUI: {fileID: 8391981850062095256}
+  _spawnPanel: {fileID: 0}
 --- !u!114 &6648454841861185703
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -155,7 +157,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   availableUnits:
-  - {fileID: 662182742872618790, guid: 7efec5699575aa24f86336ee966420e2, type: 3}
+  - {fileID: 662182742872618790, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}
   actionDelay: 1
 --- !u!1 &678604374565587546
 GameObject:

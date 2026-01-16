@@ -103,7 +103,7 @@ namespace TurnBasedGame.Unit
         #endregion
 
         #region  Attack Logic
-        private void FinishAttack()
+        public void FinishAttack()
         {
             ExitAttackMode();
         }
