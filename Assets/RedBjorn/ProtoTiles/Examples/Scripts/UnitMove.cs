@@ -127,6 +127,7 @@ namespace RedBjorn.ProtoTiles.Example
             _actionPanel.SetActive(IsSelected);
             OnCompleteMove?.Invoke();
             _cancelMoveButton.interactable = true;
+            _unitAnimator.StopMoving();
         }
 
         public void ChangeSelected(bool select)

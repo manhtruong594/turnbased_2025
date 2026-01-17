@@ -20,6 +20,7 @@ namespace TurnBasedGame.Skills
         {
             var skillBtnObj = ObjectPoolManager.Instance.Spawn(skillButtonPrefab, skillButtonContainer);
             skillBtnObj.name = $"SkillButton_{skill.SkillName}";
+            skillBtnObj.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
             var skillButton = skillBtnObj.GetComponent<SkillButton>();
             skillButton.Initialize(skill, onSkillSelected);
             _skillButtonMap[skill] = skillButton;

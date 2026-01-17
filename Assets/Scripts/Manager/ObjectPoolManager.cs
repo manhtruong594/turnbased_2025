@@ -89,7 +89,7 @@ namespace TurnBasedGame.ObjectPool
         /// <summary>
         /// Lấy object từ pool
         /// </summary>
-        public GameObject Spawn(string key, Vector3 position, Quaternion rotation)
+        public GameObject Spawn(string key)
         {
             if (!_pools.TryGetValue(key, out var pool))
             {
@@ -97,7 +97,7 @@ namespace TurnBasedGame.ObjectPool
                 if (_prefabCache.TryGetValue(key, out var prefab))
                 {
                     CreatePool(key, prefab);
-                    return Spawn(key, position, rotation);
+                    return Spawn(key);
                 }
                 return null;
             }
@@ -107,22 +107,20 @@ namespace TurnBasedGame.ObjectPool
                 return null;
 
             var obj = pooledObj.gameObject;
-            obj.transform.position = position;
-            obj.transform.rotation = rotation;
-
             return obj;
         }
 
         /// <summary>
         /// Lấy object từ pool với parent
         /// </summary>
-        public GameObject Spawn(string key, Vector3 position, Quaternion rotation, Transform parent)
+        public GameObject Spawn(string key, Transform parent)
         {
-            var obj = Spawn(key, position, rotation);
+            var obj = Spawn(key);
             if (obj != null && parent != null)
             {
                 obj.transform.SetParent(parent);
             }
+
             return obj;
         }
         
@@ -133,12 +131,12 @@ namespace TurnBasedGame.ObjectPool
                 if (_prefabCache.TryGetValue(prefab.name, out var cachedPrefab))
                 {
                     CreatePool(prefab.name, cachedPrefab);
-                    return Spawn(prefab.name, Vector3.zero, Quaternion.identity, parent);
+                    return Spawn(prefab.name, parent);
                 }
                 else
                 {
                     CreatePool(prefab.name, prefab);
-                    return Spawn(prefab.name, Vector3.zero, Quaternion.identity, parent);
+                    return Spawn(prefab.name, parent);
                 }
             }
 
@@ -149,10 +147,20 @@ namespace TurnBasedGame.ObjectPool
             {
                 pooledObj.transform.SetParent(parent);
             }
-            pooledObj.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
             return pooledObj.gameObject;
         }   
 
+        public GameObject Spawn(GameObject prefab, Vector3 position, Quaternion rotation)
+        {
+            var obj = Spawn(prefab);
+            if (obj != null)
+            {
+                obj.transform.position = position;
+                obj.transform.rotation = rotation;
+            }
+            return obj;
+        }
+        
         /// <summary>
         /// Trả object về pool
         /// </summary>

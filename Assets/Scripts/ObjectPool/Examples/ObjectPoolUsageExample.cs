@@ -33,8 +33,7 @@ namespace TurnBasedGame.ObjectPool.Examples
                 return;
             }
 
-            var position = spawnPoint != null ? spawnPoint.position : transform.position;
-            var obj = ObjectPoolManager.Instance.Spawn(vfxPoolKey, position, Quaternion.identity);
+            var obj = ObjectPoolManager.Instance.Spawn(vfxPoolKey);
 
             if (obj != null)
             {
@@ -62,9 +61,7 @@ namespace TurnBasedGame.ObjectPool.Examples
             {
                 var angle = i * (360f / count) * Mathf.Deg2Rad;
                 var offset = new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle)) * radius;
-                var position = transform.position + offset;
-
-                ObjectPoolManager.Instance?.Spawn(poolKey, position, Quaternion.identity);
+                ObjectPoolManager.Instance?.Spawn(poolKey);
             }
         }
     }
