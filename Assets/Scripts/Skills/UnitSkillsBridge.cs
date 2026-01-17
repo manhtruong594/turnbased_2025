@@ -19,6 +19,7 @@ namespace TurnBasedGame.Skills
         public SkillButton CreateSkillButton(GameObject skillButtonPrefab, Transform skillButtonContainer, ISkill skill, Action<ISkill> onSkillSelected)
         {
             var skillBtnObj = ObjectPoolManager.Instance.Spawn(skillButtonPrefab, skillButtonContainer);
+            skillBtnObj.name = $"SkillButton_{skill.SkillName}";
             var skillButton = skillBtnObj.GetComponent<SkillButton>();
             skillButton.Initialize(skill, onSkillSelected);
             _skillButtonMap[skill] = skillButton;

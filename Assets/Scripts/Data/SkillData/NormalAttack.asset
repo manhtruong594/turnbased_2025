@@ -12,14 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 65e443a4567d66244b7d585e46e2b439, type: 3}
   m_Name: NormalAttack
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Skills.NormalAttackSkill
-  skillName: Unnamed Skill
+  skillName: NormalAttack
   description: No description
   skillType: 0
   icon: {fileID: 0}
   cooldown: 0
   range: 1
-  delay: 1
-  vfxPrefab: {fileID: 7964717395565540154, guid: aff42c5e821e59748962ea0f6c960a51, type: 3}
+  VfxPrefab: {fileID: 0}
+  VfxHitPrefab: {fileID: 0}
   canTargetAllies: 0
   canTargetEnemies: 1
   canTargetSelf: 0

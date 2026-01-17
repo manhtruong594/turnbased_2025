@@ -1077,9 +1077,8 @@ GameObject:
   - component: {fileID: 4360547400759674082}
   - component: {fileID: 6970798847762504147}
   - component: {fileID: 3654636512132225598}
-  - component: {fileID: 7770353629008008393}
   - component: {fileID: 5056629688235576994}
-  - component: {fileID: 5632703640403605458}
+  - component: {fileID: 4552623957487307093}
   m_Layer: 5
   m_Name: Skill
   m_TagString: Untagged
@@ -1147,7 +1146,20 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &7770353629008008393
+--- !u!114 &5056629688235576994
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7733599955735181917}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eb51066dc247266489bab432bfb461c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI_Description
+  _descriptionPanel: {fileID: 4663250052121342117}
+--- !u!114 &4552623957487307093
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1156,9 +1168,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 7733599955735181917}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Script: {fileID: 11500000, guid: 9085046f02f69544eb97fd06b6048fe2, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
+  m_EditorClassIdentifier: 
   m_Navigation:
     m_Mode: 3
     m_WrapAround: 0
@@ -1188,37 +1200,25 @@ MonoBehaviour:
     m_DisabledTrigger: Disabled
   m_Interactable: 1
   m_TargetGraphic: {fileID: 3654636512132225598}
-  m_OnClick:
+  toggleTransition: 1
+  graphic: {fileID: 3654636512132225598}
+  m_Group: {fileID: 0}
+  onValueChanged:
     m_PersistentCalls:
-      m_Calls: []
---- !u!114 &5056629688235576994
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7733599955735181917}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: eb51066dc247266489bab432bfb461c5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UI_Description
-  _descriptionPanel: {fileID: 4663250052121342117}
---- !u!114 &5632703640403605458
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7733599955735181917}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2728f36f9ac79ad4896af7809fd37f78, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SkillButton
-  _myButton: {fileID: 7770353629008008393}
-  _descriptionText: {fileID: 60436353062298833}
-  _icon: {fileID: 1275182229579843611}
+      m_Calls:
+      - m_Target: {fileID: 4663250052121342117}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  m_IsOn: 0
 --- !u!1 &8064915746789405138
 GameObject:
   m_ObjectHideFlags: 0
