@@ -17,8 +17,8 @@ namespace TurnBasedGame.Unit
 
         [Header("Animation Settings")]
         [SerializeField] private float defaultAttackSpeed = 1f;
+        [SerializeField] private Transform _effectSpawnPoint;
 
-        // Animation Parameter Hashes (tối ưu performance)
         private static readonly int IsMoving = Animator.StringToHash("IsMoving");
         private static readonly int Attack = Animator.StringToHash("Attack");
         private static readonly int Hit = Animator.StringToHash("Hit");
@@ -100,6 +100,7 @@ namespace TurnBasedGame.Unit
             if (_currentSkill != null)
             {
                 var projectile = ObjectPoolManager.Instance.Spawn(_currentSkill.VfxPrefab).GetComponent<Projectile>();
+                projectile.transform.SetPositionAndRotation(_effectSpawnPoint.position, _effectSpawnPoint.rotation);
                 projectile.Launch(transform.position, transform.position + transform.forward * 10);
             }
         }

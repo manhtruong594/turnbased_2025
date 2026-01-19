@@ -160,8 +160,10 @@ namespace RedBjorn.ProtoTiles.Example
 
         #region  Support Methods
 
-        public void PerformSkill(SkillBase skill, Action onHitAction)
+        public void PerformSkill(SkillBase skill, Vector3Int targetPos, Action onHitAction)
         {
+            var targetPoint = runtimeStats.MapEntity.WorldPosition(targetPos);
+            RotationNode.LookAt(targetPoint);
             _unitAnimator.PlayAttack(skill, onHitAction);
             _unitAnimator.OnAttackAnimationComplete = FinishTurnActions;
         }

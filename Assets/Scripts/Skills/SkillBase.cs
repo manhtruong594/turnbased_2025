@@ -105,7 +105,7 @@ namespace TurnBasedGame.Skills
 
         IEnumerator ExcuteAsync(UnitMove caster, Vector3Int targetPos)
         {
-            caster.PerformSkill(this, ExecuteEffectWrapper);
+            caster.PerformSkill(this, targetPos, ExecuteEffectWrapper);
             ConsumeMana(caster);
             while (caster.IsActionFinished() == false)
             {

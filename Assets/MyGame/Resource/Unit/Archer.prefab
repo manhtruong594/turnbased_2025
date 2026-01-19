@@ -4398,7 +4398,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4629a9214f47d5640a16a9aa3abeebd1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Speed: 5
+  Speed: 4
   RotationNode: {fileID: 7208497065503833964}
   _cancelMoveButton: {fileID: 2419698170991639223}
   unitData: {fileID: 11400000, guid: c23b5fc0f13ad354aa337310e48e1178, type: 2}
@@ -8456,6 +8456,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   animator: {fileID: 3668627435138639126}
   defaultAttackSpeed: 1
+  _effectSpawnPoint: {fileID: 0}
 --- !u!1 &8019289918136019493
 GameObject:
   m_ObjectHideFlags: 0

@@ -17,6 +17,16 @@ namespace TurnBasedGame.Skills
         [SerializeField] private int damage = 25;
         [SerializeField] private int aoeRadius = 1;
 
+        public override bool CanUse(UnitMove caster, Vector3Int targetPos)
+        {
+            if (!ValidateCooldown()) return false;
+            if (!ValidateMana(caster)) return false;
+            if (!ValidateRange(caster, targetPos)) return false;
+            if (!ValidateCustomConditions(caster, targetPos)) return false;
+
+            return true;
+        }
+
         protected override void ExecuteEffect(UnitMove caster, Vector3Int targetPos)
         {
             var map = GetMap();
