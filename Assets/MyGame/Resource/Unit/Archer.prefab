@@ -8456,7 +8456,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   animator: {fileID: 3668627435138639126}
   defaultAttackSpeed: 1
-  _effectSpawnPoint: {fileID: 0}
+  _effectSpawnPoint: {fileID: 599137153868048845}
 --- !u!1 &8019289918136019493
 GameObject:
   m_ObjectHideFlags: 0

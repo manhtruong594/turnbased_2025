@@ -17,6 +17,7 @@ namespace RedBjorn.ProtoTiles.Example
         public AreaOutline AreaPrefab;
         public AreaOutline AttackAreaPrefab;
         public PathDrawer PathPrefab;
+        public bool IsLocked = false;
 
         MapEntity _cachedMap;
 
@@ -72,6 +73,7 @@ namespace RedBjorn.ProtoTiles.Example
 
         private void Update()
         {
+            if (IsLocked) return;
             var mousePos = MyInput.GroundPosition(_cachedMap.Settings.Plane());
             if (MyInput.GetOnWorldUp(_cachedMap.Settings.Plane()))
             {

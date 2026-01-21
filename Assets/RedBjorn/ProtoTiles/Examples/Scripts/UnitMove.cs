@@ -50,7 +50,6 @@ namespace RedBjorn.ProtoTiles.Example
             UpdateGridPosition(startGridPos);
             CreateStats();
             _attackComponent.Init(runtimeStats, this);
-            runtimeStats.OnFinishTurn += FinishTurnActions;
 
             void CreateStats()
             {
@@ -160,12 +159,11 @@ namespace RedBjorn.ProtoTiles.Example
 
         #region  Support Methods
 
-        public void PerformSkill(SkillBase skill, Vector3Int targetPos, Action onHitAction)
+        public void PerformSkill(SkillBase skill, Vector3Int targetPos)
         {
             var targetPoint = runtimeStats.MapEntity.WorldPosition(targetPos);
             RotationNode.LookAt(targetPoint);
-            _unitAnimator.PlayAttack(skill, onHitAction);
-            _unitAnimator.OnAttackAnimationComplete = FinishTurnActions;
+            _unitAnimator.PlayAttack(skill);
         }
 
         public UnitAttack AttackComponent => _attackComponent;
@@ -203,6 +201,8 @@ namespace RedBjorn.ProtoTiles.Example
 
         public void FinishTurnActions()
         {
+            if (runtimeStats.IsActionCompleted)
+                return;
             runtimeStats.IsMoveCompleted = true;
             runtimeStats.IsActionCompleted = true;
             _attackComponent.FinishAttack();

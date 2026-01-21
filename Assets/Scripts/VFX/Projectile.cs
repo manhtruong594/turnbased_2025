@@ -35,7 +35,7 @@ namespace TurnBasedGame.VFX
         private PooledObject _pooledObject;
 
         // Events
-        public Action<Vector3> OnReachTarget;
+        public Action OnReachTarget;
 
         public bool IsActive => _isFlying;
 
@@ -184,7 +184,7 @@ namespace TurnBasedGame.VFX
             _isFlying = false;
             transform.position = _targetPosition;
 
-            OnReachTarget?.Invoke(_targetPosition);
+            OnReachTarget?.Invoke();
 
             SpawnHitEffect();
             

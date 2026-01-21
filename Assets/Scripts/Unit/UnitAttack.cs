@@ -45,7 +45,6 @@ namespace TurnBasedGame.Unit
             _cachedMap = runtimeStats.MapEntity;
             _cachedUnitMove = unitMove;
             FinishAttackButton.onClick.AddListener(FinishAttack);
-            runtimeStats.OnFinishTurn += FinishAttack;
 
             {
                 activeSkills.Clear();
@@ -69,10 +68,6 @@ namespace TurnBasedGame.Unit
         {
             FinishAttackButton.onClick.RemoveListener(FinishAttack);
             _skillsBridge.DisposeSkillButtons();
-            if (runtimeStats != null)
-            {
-                runtimeStats.OnFinishTurn -= FinishAttack;
-            }
         }
 
         void Update()
@@ -94,7 +89,7 @@ namespace TurnBasedGame.Unit
                 }
                 else
                 {
-                    ExitAttackMode();
+                    _cachedUnitMove.ChangeSelected(false);
                     Debug.Log("Cannot use skill on this tile.");
                 }
             }
@@ -130,9 +125,7 @@ namespace TurnBasedGame.Unit
             if (immidiate && !CanAttack(targetUnit))
                 return;
 
-            // Gây sát thương
-            DealDamage(targetUnit);
-            FinishAttack();
+            _selectedSkill.Execute(_cachedUnitMove, targetUnit.currentGridPosition);
         }
 
         /// <summary>
@@ -219,14 +212,6 @@ namespace TurnBasedGame.Unit
             // TODO: Implement proper line of sight check
             // Hiện tại chỉ return true
             return true;
-        }
-
-        private void DealDamage(UnitMove target)
-        {
-            // TODO: fix logic sử dụng action để Invoke sự kiện tấn công
-             Debug.Log($"{gameObject.name} tấn công {target.name} gây sát thương!");
-            // target.TakeDamage(_selectedSkill.BaseValue);
-
         }
     }
     #endregion

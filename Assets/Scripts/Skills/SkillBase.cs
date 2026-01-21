@@ -43,6 +43,9 @@ namespace TurnBasedGame.Skills
         public int Range => range;
         #endregion
 
+        protected bool _isExecuting = false;
+        ValueTuple<UnitMove, Vector3Int> _currentExecutionContext;
+
         #region Template Method - Validation Pipeline
         public virtual bool CanUse(UnitMove caster, Vector3Int targetPos)
         {
@@ -105,30 +108,19 @@ namespace TurnBasedGame.Skills
 
         IEnumerator ExcuteAsync(UnitMove caster, Vector3Int targetPos)
         {
-            caster.PerformSkill(this, targetPos, ExecuteEffectWrapper);
-            ConsumeMana(caster);
-            while (caster.IsActionFinished() == false)
+            AreaPathManager.Instance.IsLocked= true;
+            _isExecuting = true;
+            _currentExecutionContext = (caster, targetPos);
+            caster.PerformSkill(this, targetPos);
+            StartCooldown();
+            while (_isExecuting)
             {
                 yield return null;
             }
-            StartCooldown();
             OnExecuteComplete(caster, targetPos);
-
-            void ExecuteEffectWrapper()
-            {
-                ExecuteEffect(caster, targetPos);
-            }
+            AreaPathManager.Instance.IsLocked= false;
         }
  
-        protected virtual void ConsumeMana(UnitMove caster)
-        {
-        }
-
-        /// <summary>
-        /// xử lý effect và tính toán tác động của skill
-        /// </summary>
-        protected abstract void ExecuteEffect(UnitMove caster, Vector3Int targetPos);
-       
         protected virtual void StartCooldown()
         {
             if (skillType != SkillType.Normal)
@@ -137,14 +129,27 @@ namespace TurnBasedGame.Skills
             }
         }
 
+        public void StartEffect()
+        {
+            ExecuteEffect(_currentExecutionContext.Item1, _currentExecutionContext.Item2);
+            _isExecuting = false;
+        }
+
         protected virtual void OnExecuteComplete(UnitMove caster, Vector3Int targetPos)
         {
             SkillEventBus.Instance?.TriggerSkillUsed(this, caster, targetPos);
+            caster.FinishTurnActions();
         }
+
         #endregion
 
         #region Abstract Methods - Phải implement ở subclass
         public abstract List<Vector3Int> GetAffectedTiles(Vector3Int targetPos);
+        
+        /// <summary>
+        /// xử lý effect và tính toán tác động của skill
+        /// </summary>
+        protected abstract void ExecuteEffect(UnitMove caster, Vector3Int targetPos);
         #endregion
 
         #region Cooldown Management

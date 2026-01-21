@@ -26,11 +26,6 @@ namespace TurnBasedGame.Unit
         private static readonly int AttackSpeed = Animator.StringToHash("AttackSpeed");
         private static readonly int AttackType = Animator.StringToHash("AttackType");
 
-        // Events
-        public Action OnAttackHitFrame;
-        public Action OnAttackAnimationComplete;
-        public Action OnDeathAnimationComplete;
-
         SkillBase _currentSkill;
         
         #region Animation Control
@@ -47,13 +42,12 @@ namespace TurnBasedGame.Unit
             animator.SetBool(IsMoving, false);
         }
 
-        public void PlayAttack(SkillBase skill, Action onHitAction, float attackSpeed = -1f)
+        public void PlayAttack(SkillBase skill, float attackSpeed = -1f)
         {
             if (animator == null) return;
 
             if (attackSpeed < 0)
                 attackSpeed = defaultAttackSpeed;
-            OnAttackHitFrame = onHitAction;
             animator.SetFloat(AttackSpeed, attackSpeed);
             animator.SetTrigger(Attack);
             animator.SetInteger(AttackType, (int)skill.Type);
@@ -84,6 +78,14 @@ namespace TurnBasedGame.Unit
 
         #endregion
 
+        private void OnHitTarget()
+        {
+            if (_currentSkill != null)
+            {
+                _currentSkill.StartEffect();
+            }
+        }
+
         #region Animation Events (Được gọi từ Animation Clips)
 
         /// <summary>
@@ -92,7 +94,7 @@ namespace TurnBasedGame.Unit
         /// </summary>
         public void AnimEvent_AttackHit()
         {
-            OnAttackHitFrame?.Invoke();
+            OnHitTarget();
         }
 
         public void AnimEvent_AttackStart()
@@ -102,16 +104,16 @@ namespace TurnBasedGame.Unit
                 var projectile = ObjectPoolManager.Instance.Spawn(_currentSkill.VfxPrefab).GetComponent<Projectile>();
                 projectile.transform.SetPositionAndRotation(_effectSpawnPoint.position, _effectSpawnPoint.rotation);
                 projectile.Launch(transform.position, transform.position + transform.forward * 10);
+                projectile.OnReachTarget = OnHitTarget;
             }
         }
-
+        
         /// <summary>
         /// Animation Event: Được gọi khi attack animation hoàn thành
         /// Thêm event này vào Attack Animation Clip tại frame cuối
         /// </summary>
         public void AnimEvent_AttackComplete()
         {
-            OnAttackAnimationComplete?.Invoke();
         }
 
         /// <summary>
@@ -120,7 +122,6 @@ namespace TurnBasedGame.Unit
         /// </summary>
         public void AnimEvent_DeathComplete()
         {
-            OnDeathAnimationComplete?.Invoke();
         }
 
         #endregion
