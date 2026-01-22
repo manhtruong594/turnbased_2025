@@ -25,4 +25,22 @@ public class SkillButton : PooledObject
             _myButton.onClick.AddListener(() => onClickAction?.Invoke(skill));
         }
     }
+
+    public void UpdateCooldownDisplay(int currentCooldown, int maxCooldown)
+    {
+        // Cập nhật giao diện nút dựa trên cooldown hiện tại
+        if (currentCooldown > 0)
+        {
+            // Ví dụ: làm mờ nút và hiển thị số cooldown
+            _myButton.interactable = false;
+            _descriptionText.text = $"Cooldown: {currentCooldown}/{maxCooldown}";
+        }
+        else
+        {
+            // Nút sẵn sàng sử dụng
+            _myButton.interactable = true;
+            // Giả sử bạn có một biến skill để lấy mô tả gốc
+            // _descriptionText.text = skill.Description; 
+        }
+    }
 }

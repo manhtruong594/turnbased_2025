@@ -27,6 +27,16 @@ namespace TurnBasedGame.Skills
             return skillButton;
         }
 
+        public void UpdateSkillButtonsCooldowns()
+        {
+            foreach (var kvp in _skillButtonMap)
+            {
+                var skill = kvp.Key;
+                var skillButton = kvp.Value;
+                skillButton.UpdateCooldownDisplay(skill.CurrentCooldown, skill.Cooldown);
+            }
+        }
+
         public void DisposeSkillButtons()
         {
             foreach (var skillButton in _skillButtonMap.Values)
@@ -35,6 +45,6 @@ namespace TurnBasedGame.Skills
             }
             _skillButtonMap.Clear();
         }
-
+        
     }
 }

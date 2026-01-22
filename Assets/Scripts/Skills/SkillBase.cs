@@ -49,11 +49,23 @@ namespace TurnBasedGame.Skills
         #region Template Method - Validation Pipeline
         public virtual bool CanUse(UnitMove caster, Vector3Int targetPos)
         {
-            if (!ValidateCooldown()) return false;
-            if (!ValidateMana(caster)) return false;
-            if (!ValidateRange(caster, targetPos)) return false;
-            if (!ValidateTarget(caster, targetPos)) return false;
-            if (!ValidateCustomConditions(caster, targetPos)) return false;
+            if (!ValidateCooldown()) 
+            {
+                Debug.LogWarning($"{skillName} is on cooldown.");
+                return false;
+            }
+            if (!ValidateRange(caster, targetPos)) {
+                Debug.LogWarning($"{targetPos} is out of range for {skillName}.");
+                return false;
+            }
+            if (!ValidateTarget(caster, targetPos)){
+                Debug.LogWarning($"{skillName} cannot target the selected tile.");
+                return false;
+            }
+            if (!ValidateCustomConditions(caster, targetPos)) {
+                Debug.LogWarning($"{skillName} cannot be used due to custom conditions.");
+                return false;
+            }
 
             return true;
         }
@@ -62,12 +74,6 @@ namespace TurnBasedGame.Skills
         {
             if (skillType == SkillType.Normal) return true;
             return currentCooldown <= 0;
-        }
-
-        protected virtual bool ValidateMana(UnitMove caster)
-        {
-            // todo: tính toán mana cost với các hiệu ứng giảm mana nếu có
-            return true;
         }
 
         protected virtual bool ValidateRange(UnitMove caster, Vector3Int targetPos)

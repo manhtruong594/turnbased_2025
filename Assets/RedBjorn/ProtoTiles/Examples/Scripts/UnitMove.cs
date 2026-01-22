@@ -166,14 +166,19 @@ namespace RedBjorn.ProtoTiles.Example
             _unitAnimator.PlayAttack(skill);
         }
 
-        public UnitAttack AttackComponent => _attackComponent;
-
+        public void OnTurnBegin()
+        {
+            _attackComponent.ReduceSkillsCooldowns();
+            ResetComponents();
+        }
+    
         public void ResetComponents()
         {
             ResetMove();
             _cancelMoveButton.interactable = false;
         }
 
+        public UnitAttack AttackComponent => _attackComponent;
         public UnitData UnitData => unitData;
         public int GetMoveRange() => runtimeStats.MoveRange;
         public int GetCurrentHealth() => runtimeStats.Health;

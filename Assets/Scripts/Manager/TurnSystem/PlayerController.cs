@@ -123,7 +123,7 @@ namespace TurnBasedGame.Core
             _myUnits = UnitSpawner.Instance.GetPlayerUnits(playerID);
             foreach (var unit in _myUnits)
             {
-                unit.ResetComponents();
+                unit.OnTurnBegin();
             }
             TurnManager.Instance.CalculateTimeLimitInTurn(_myUnits.Count);
             // yield return new WaitForSeconds(_currentTimeLimit); 

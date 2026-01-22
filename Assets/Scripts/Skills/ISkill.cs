@@ -16,6 +16,7 @@ namespace TurnBasedGame.Skills
         Sprite Icon { get; }
         
         int Cooldown { get; }
+        int CurrentCooldown { get; }
         int Range { get; }
 
         bool CanUse(UnitMove caster, Vector3Int targetPos);

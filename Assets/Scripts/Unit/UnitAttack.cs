@@ -22,7 +22,6 @@ namespace TurnBasedGame.Unit
         [SerializeField] private bool canAttackThroughObstacles = false;
 
         [Header("Attack State Button")]
-        //[SerializeField] Button AttackModeButton;
         [SerializeField] Button FinishAttackButton;
         [SerializeField] CanvasGroup _actionCanvasGroup;
 
@@ -50,8 +49,10 @@ namespace TurnBasedGame.Unit
                 activeSkills.Clear();
                 foreach (var skill in startingSkills)
                 {
-                    activeSkills.Add(skill.Clone());
-                    _skillsBridge.CreateSkillButton(skillButtonPrefab, skillButtonContainer, skill, OnSkillButtonClicked);
+                    var iSkill = skill.Clone();
+                    iSkill.ResetCooldown();
+                    activeSkills.Add(iSkill);
+                    _skillsBridge.CreateSkillButton(skillButtonPrefab, skillButtonContainer, iSkill, OnSkillButtonClicked);
                 }
                 _normalSkill = activeSkills[0];
                 _selectedSkill = _normalSkill;
@@ -142,6 +143,15 @@ namespace TurnBasedGame.Unit
         #endregion
 
         #region  Helper Methods
+        public void ReduceSkillsCooldowns()
+        {
+            foreach (var skill in activeSkills)
+            {
+                skill.ReduceCooldown();
+            }
+            _skillsBridge.UpdateSkillButtonsCooldowns();
+        }
+
         public bool CanAttack(UnitMove targetUnit)
         {
             if (targetUnit == null || targetUnit.IsDead())
@@ -160,42 +170,7 @@ namespace TurnBasedGame.Unit
             }
             return true;
         }
-
-        /// <summary>
-        /// Lấy danh sách các unit có thể tấn công trong phạm vi
-        /// </summary>
-        public List<UnitMove> GetAttackableTargets()
-        {
-            var targets = new List<UnitMove>();
-            var tilesInRange = GetTilesInAttackRange();
-
-            foreach (var tile in tilesInRange)
-            {
-                var unitAtTile = MapManager.Instance?.GetUnitAtTile(tile.Position);
-                if (unitAtTile == null) continue;
-
-                if (unitAtTile.GetOwner() == runtimeStats.Owner) continue;
-
-                if (canAttackThroughObstacles || HasLineOfSight(tile.Position))
-                {
-                    targets.Add(unitAtTile);
-                }
-            }
-
-            return targets;
-        }
-
-        private List<TileEntity> GetTilesInAttackRange()
-        {
-            if (_cachedMap == null) return new List<TileEntity>();
-
-            var myTile = _cachedMap.Tile(transform.position);
-            if (myTile == null) return new List<TileEntity>();
-
-            var walkableTiles = _cachedMap.WalkableTiles(myTile.Position, _selectedSkill.Range);
-            return new List<TileEntity>(walkableTiles);
-        }
-
+ 
         private float GetDistanceToTarget(Vector3Int targetGridPos)
         {
             var myTile = _cachedMap.Tile(transform.position);

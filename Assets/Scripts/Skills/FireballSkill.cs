@@ -19,10 +19,19 @@ namespace TurnBasedGame.Skills
 
         public override bool CanUse(UnitMove caster, Vector3Int targetPos)
         {
-            if (!ValidateCooldown()) return false;
-            if (!ValidateMana(caster)) return false;
-            if (!ValidateRange(caster, targetPos)) return false;
-            if (!ValidateCustomConditions(caster, targetPos)) return false;
+             if (!ValidateCooldown()) 
+            {
+                Debug.LogWarning($"{skillName} is on cooldown.");
+                return false;
+            }
+            if (!ValidateRange(caster, targetPos)) {
+                Debug.LogWarning($"{targetPos} is out of range for {skillName}.");
+                return false;
+            }
+            if (!ValidateCustomConditions(caster, targetPos)) {
+                Debug.LogWarning($"{skillName} cannot be used due to custom conditions.");
+                return false;
+            }
 
             return true;
         }
