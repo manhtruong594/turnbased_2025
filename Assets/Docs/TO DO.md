@@ -1,2 +1,2 @@
-** Improve Skills system
-** Start with UnitAttack
+** Improve projectile
+** Pause time system when attack is performing

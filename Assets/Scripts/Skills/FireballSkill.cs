@@ -39,14 +39,6 @@ namespace TurnBasedGame.Skills
         protected override void ExecuteEffect(UnitMove caster, Vector3Int targetPos)
         {
             var map = GetMap();
-            
-            // Spawn VFX từ pool thay vì Instantiate
-            if (VfxPrefab != null && ObjectPoolManager.Instance != null)
-            {
-                var worldPos = map.WorldPosition(targetPos);
-                ObjectPoolManager.Instance.Spawn(VfxPrefab).transform.SetPositionAndRotation(worldPos, Quaternion.identity);
-            }
-
             // Gây damage cho tất cả units trong AOE
             var affectedTiles = map.Area(targetPos, aoeRadius);
             int hitCount = 0;

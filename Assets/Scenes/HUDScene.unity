@@ -708,7 +708,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   StartingPlayer: 1
   TurnTransitionDelay: 0.5
-  _flatTimeLimit: 20
+  _flatTimeLimit: 50
   ClockText: {fileID: 363354496}
 --- !u!1001 &66131524
 PrefabInstance:
@@ -20274,6 +20274,7 @@ MonoBehaviour:
   AreaPrefab: {fileID: 114964435729023602, guid: fe2319e9d6e840f409af77b3e7a85259, type: 3}
   AttackAreaPrefab: {fileID: 114964435729023602, guid: 324f98cd96c12ef408a7f17bbe21aa12, type: 3}
   PathPrefab: {fileID: 114413117004689456, guid: 4eac60a74696c8142b18f93d4453e87d, type: 3}
+  IsLocked: 0
 --- !u!1001 &1735622739
 PrefabInstance:
   m_ObjectHideFlags: 0

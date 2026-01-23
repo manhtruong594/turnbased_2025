@@ -29,7 +29,7 @@ namespace TurnBasedGame.ObjectPool
         /// <summary>
         /// Tạo pool mới cho prefab
         /// </summary>
-        public void CreatePool(string key, GameObject prefab, int initialSize = 10, int maxSize = 100, bool prewarm = true)
+        public void CreatePool(string key, GameObject prefab, int initialSize = 1, int maxSize = 100, bool prewarm = true)
         {
             if (_pools.ContainsKey(key))
             {

@@ -90,7 +90,7 @@ namespace TurnBasedGame.Unit
                 }
                 else
                 {
-                    _cachedUnitMove.ChangeSelected(false);
+                    AreaPathManager.Instance.RealeaseSelectedUnit();
                     Debug.Log("Cannot use skill on this tile.");
                 }
             }
@@ -112,6 +112,8 @@ namespace TurnBasedGame.Unit
             if (runtimeStats.IsInAttackMode) return;
             runtimeStats.IsInAttackMode = true;
             _actionCanvasGroup.alpha = 0;
+            _actionCanvasGroup.interactable = false;
+            _actionCanvasGroup.blocksRaycasts = false;
             AreaPathManager.Instance.ShowAttackArea(
                 _cachedMap.WalkableBorder(
                     _cachedMap.Tile(transform.position).Position,
@@ -137,6 +139,8 @@ namespace TurnBasedGame.Unit
             if (!runtimeStats.IsInAttackMode) return;
             runtimeStats.IsInAttackMode = false;
             _actionCanvasGroup.alpha = 1;
+            _actionCanvasGroup.interactable = true;
+            _actionCanvasGroup.blocksRaycasts = true;
             AreaPathManager.Instance.HideAttackArea();
         }
 

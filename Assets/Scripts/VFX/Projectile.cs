@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using TurnBasedGame.ObjectPool;
+using Unity.VisualScripting;
 
 namespace TurnBasedGame.VFX
 {
@@ -8,7 +9,7 @@ namespace TurnBasedGame.VFX
     /// Component quản lý chuyển động của projectile
     /// Hỗ trợ 2 loại đường bay: thẳng và cầu vồng (parabol)
     /// </summary>
-    public class Projectile : MonoBehaviour, IPoolable
+    public class Projectile : MonoBehaviour
     {
         public enum TrajectoryType
         {
@@ -17,6 +18,7 @@ namespace TurnBasedGame.VFX
         }
 
         [Header("Settings")]
+        [SerializeField] PooledObject pooledObject;
         [SerializeField] private TrajectoryType trajectoryType = TrajectoryType.Linear;
         [SerializeField] private float speed = 10f;
         [SerializeField] private float arcHeight = 3f; // Độ cao cầu vồng (chỉ dùng cho Arc)
@@ -32,17 +34,11 @@ namespace TurnBasedGame.VFX
         private float _progress;
         private float _duration;
         private bool _isFlying;
-        private PooledObject _pooledObject;
 
         // Events
         public Action OnReachTarget;
 
         public bool IsActive => _isFlying;
-
-        void Awake()
-        {
-            _pooledObject = GetComponent<PooledObject>();
-        }
 
         void Update()
         {
@@ -60,6 +56,23 @@ namespace TurnBasedGame.VFX
             UpdateRotation();
         }
 
+        private void OnEnable()
+        {
+            // Reset state khi spawn
+            _isFlying = false;
+            _progress = 0f;
+        }
+
+        private void OnDisable()
+        {
+            // Cleanup khi despawn
+            _isFlying = false;
+            OnReachTarget = null;
+
+            if (trailEffect != null)
+                trailEffect.Stop();
+        }
+
         #region Public Methods
 
         /// <summary>
@@ -70,7 +83,7 @@ namespace TurnBasedGame.VFX
             _startPosition = start;
             _targetPosition = target;
             trajectoryType = type;
-            
+
             if (customSpeed > 0) speed = customSpeed;
             if (customArcHeight > 0) arcHeight = customArcHeight;
 
@@ -89,27 +102,6 @@ namespace TurnBasedGame.VFX
         public void Launch(Vector3 start, Vector3 target)
         {
             Launch(start, target, trajectoryType, speed, arcHeight);
-        }
-
-        #endregion
-
-        #region IPoolable Implementation
-
-        public void OnSpawnFromPool()
-        {
-            // Reset state khi spawn
-            _isFlying = false;
-            _progress = 0f;
-        }
-
-        public void OnReturnToPool()
-        {
-            // Cleanup khi despawn
-            _isFlying = false;
-            OnReachTarget = null;
-
-            if (trailEffect != null)
-                trailEffect.Stop();
         }
 
         #endregion
@@ -171,7 +163,7 @@ namespace TurnBasedGame.VFX
             // Tính hướng tiếp tuyến tại điểm hiện tại trên đường cong
             float nextProgress = Mathf.Min(_progress + 0.01f, 1f);
             Vector3 currentPos = CalculateArcPosition();
-            
+
             Vector3 nextBasePos = Vector3.Lerp(_startPosition, _targetPosition, nextProgress);
             float nextHeight = arcHeight * 4f * nextProgress * (1f - nextProgress);
             nextBasePos.y += nextHeight;
@@ -187,21 +179,19 @@ namespace TurnBasedGame.VFX
             OnReachTarget?.Invoke();
 
             SpawnHitEffect();
-            
-            // Despawn sau khi hit
-            _pooledObject?.DespawnAfter(0.1f);
+            ObjectPoolManager.Instance.Despawn(pooledObject);
         }
 
         private void SpawnHitEffect()
         {
             if (hitEffectPrefab == null) return;
 
-            var effect = ObjectPoolManager.Instance?.Spawn(hitEffectPrefab)?.GetComponent<PooledVFX>();
+            var effect = ObjectPoolManager.Instance.Spawn(hitEffectPrefab);
             if (effect == null)
             {
-                // Fallback nếu không dùng pool
-                Instantiate(hitEffectPrefab, _targetPosition, Quaternion.identity);
+                return;
             }
+            effect.transform.SetPositionAndRotation(_targetPosition, Quaternion.identity);
         }
 
         #endregion

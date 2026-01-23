@@ -24,7 +24,7 @@ namespace TurnBasedGame.Unit
         private static readonly int Hit = Animator.StringToHash("Hit");
         private static readonly int Death = Animator.StringToHash("Death");
         private static readonly int AttackSpeed = Animator.StringToHash("AttackSpeed");
-        private static readonly int AttackType = Animator.StringToHash("AttackType");
+        private static readonly int AttackType = Animator.StringToHash("SkillType");
 
         SkillBase _currentSkill;
         
@@ -50,7 +50,7 @@ namespace TurnBasedGame.Unit
                 attackSpeed = defaultAttackSpeed;
             animator.SetFloat(AttackSpeed, attackSpeed);
             animator.SetTrigger(Attack);
-            animator.SetInteger(AttackType, (int)skill.Type);
+            animator.SetFloat(AttackType, (float)skill.Type);
             _currentSkill = skill;
         }
 
@@ -103,7 +103,7 @@ namespace TurnBasedGame.Unit
             {
                 var projectile = ObjectPoolManager.Instance.Spawn(_currentSkill.VfxPrefab).GetComponent<Projectile>();
                 projectile.transform.SetPositionAndRotation(_effectSpawnPoint.position, _effectSpawnPoint.rotation);
-                projectile.Launch(transform.position, transform.position + transform.forward * 10);
+                projectile.Launch(_effectSpawnPoint.position, _effectSpawnPoint.position + _effectSpawnPoint.forward * 10);
                 projectile.OnReachTarget = OnHitTarget;
             }
         }

@@ -122,12 +122,12 @@ namespace RedBjorn.ProtoTiles.Example
                 }
                 else
                 {
-                    clickedUnit.ChangeSelected(true);
                     if (selectedUnit != null)
                     {
                         selectedUnit.ChangeSelected(false);
                         previousSelectedUnit = selectedUnit;
                     }
+                    clickedUnit.ChangeSelected(true);
                     selectedUnit = clickedUnit;
                     if (!selectedUnit.IsMoveDone())
                     {
@@ -197,7 +197,7 @@ namespace RedBjorn.ProtoTiles.Example
             HideMoveArea();
             HidePath();
         }
-        
+
         public void HideAttackArea()
         {
             if (_attackArea != null)
@@ -226,7 +226,7 @@ namespace RedBjorn.ProtoTiles.Example
             if (_attackArea != null) _attackArea.InactiveState();
             if (_path != null) _path.IsEnabled = false;
         }
-        
+
         public void SetCachedMap(MapEntity map)
         {
             _cachedMap = map;
