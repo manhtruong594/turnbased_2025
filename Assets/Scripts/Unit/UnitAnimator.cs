@@ -103,7 +103,7 @@ namespace TurnBasedGame.Unit
             {
                 var projectile = ObjectPoolManager.Instance.Spawn(_currentSkill.VfxPrefab).GetComponent<Projectile>();
                 projectile.transform.SetPositionAndRotation(_effectSpawnPoint.position, _effectSpawnPoint.rotation);
-                projectile.Launch(_effectSpawnPoint.position, _effectSpawnPoint.position + _effectSpawnPoint.forward * 10);
+                projectile.Launch(_effectSpawnPoint.position, _currentSkill.GetCurrentTargetWorldPosition());
                 projectile.OnReachTarget = OnHitTarget;
             }
         }

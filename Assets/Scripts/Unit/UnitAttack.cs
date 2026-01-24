@@ -101,7 +101,7 @@ namespace TurnBasedGame.Unit
         #region  Attack Logic
         public void FinishAttack()
         {
-            ExitAttackMode();
+             _cachedUnitMove.FinishTurnActions();
         }
 
         /// <summary>

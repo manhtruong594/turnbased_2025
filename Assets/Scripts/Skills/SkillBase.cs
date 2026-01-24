@@ -147,6 +147,12 @@ namespace TurnBasedGame.Skills
             caster.FinishTurnActions();
         }
 
+        public Vector3 GetCurrentTargetWorldPosition()
+        {
+            var (caster, targetPos) = _currentExecutionContext;
+            return GetMap().WorldPosition(targetPos);
+        }
+
         #endregion
 
         #region Abstract Methods - Phải implement ở subclass
