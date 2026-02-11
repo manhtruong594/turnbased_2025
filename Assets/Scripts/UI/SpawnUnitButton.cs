@@ -100,21 +100,8 @@ namespace TurnBasedGame.UI
 
         private void OnSpawnButtonClicked()
         {
-            if (unit == null)
+            if (unit == null || TurnManager.Instance == null || UnitSpawner.Instance == null)
             {
-                Debug.LogWarning("Cannot spawn: No unit data assigned");
-                return;
-            }
-
-            if (TurnManager.Instance == null)
-            {
-                Debug.LogWarning("TurnManager not found");
-                return;
-            }
-
-            if (UnitSpawner.Instance == null)
-            {
-                Debug.LogWarning("UnitSpawner not found");
                 return;
             }
 

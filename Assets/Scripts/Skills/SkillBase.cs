@@ -89,7 +89,7 @@ namespace TurnBasedGame.Skills
             if (targetUnit == null)
                 return canTargetEmptyTile;
 
-            if (targetUnit == caster)
+            if (targetUnit == caster || targetUnit.IsDead())
                 return canTargetSelf;
 
             bool isSameOwner = targetUnit.GetOwner() == caster.GetOwner();

@@ -154,6 +154,7 @@ namespace RedBjorn.ProtoTiles.Example
             MapManager.Instance.UnregisterUnit(currentGridPosition);
             currentGridPosition = newGridPos;
             MapManager.Instance.RegisterUnit(newGridPos, this);
+            GameMediator.Instance?.NotifyUnitMoved(this, newGridPos);
         }
         #endregion
 
@@ -197,11 +198,19 @@ namespace RedBjorn.ProtoTiles.Example
             {
                 runtimeStats.IsDead = true;
                 _unitAnimator.PlayDeath();
+                MapManager.Instance.UnregisterUnit(currentGridPosition);
+                StartCoroutine(DelayDead());
             }
             else if (damage > 0)
             {
                 _unitAnimator.PlayHit();
             }
+        }
+
+        IEnumerator DelayDead()
+        {
+            yield return new WaitForSeconds(2f);
+            DestroyImmediate(gameObject);
         }
 
         public void FinishTurnActions()

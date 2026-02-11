@@ -10,9 +10,11 @@ public class PlayerUI : MonoBehaviour
     public TextMeshProUGUI nameText;
     [SerializeField] private GameObject _actionPanel;
 
-    [Header("Action Buttons")]
-    public Button EndTurnButton;
-    [SerializeField] DiceUI _diceUI;
+    [Header("Panels")]
+    [SerializeField] private GameObject _indicatorObj;
+    [SerializeField] private GameObject _spawnPanel;
+    [SerializeField]private GameObject _spellPanel;
+    
     [SerializeField] Button _spawnUnitButton;
     [SerializeField] Button _spellButton;
 
@@ -20,34 +22,18 @@ public class PlayerUI : MonoBehaviour
 
     void Start()
     {
-        if (EndTurnButton != null)
-        {
-            EndTurnButton.onClick.AddListener(() =>
-            {
-                TurnManager.Instance?.EndCurrentTurn();
-            });
-        }
-        _spawnUnitButton?.onClick.AddListener(SpawnUnitButtonHandler);
-        _spellButton?.onClick.AddListener(SpellButtonHandler);
+        _spawnUnitButton?.onClick.AddListener(ToggleSpawnPanel);
+        _spellButton?.onClick.AddListener(ToggleSpellPanel);
+    }
+ 
+    private void ToggleSpawnPanel()
+    {
+       _spawnPanel.SetActive(!_spawnPanel.activeSelf);
     }
 
-    void OnEnable()
+    private void ToggleSpellPanel()
     {
-
-    }
-
-    private void SpawnUnitButtonHandler()
-    {
-        if (_actionsLeft.Value <= 0) return;
-        _spawnUnitButton.interactable = false;
-        _actionsLeft.Value -= 1;
-    }
-
-    private void SpellButtonHandler()
-    {
-        if (_actionsLeft.Value <= 0) return;
-        _spellButton.interactable = false;  
-        _actionsLeft.Value -= 1;
+        _spellPanel.SetActive(!_spellPanel.activeSelf);
     }
     
     public void Setup(string playerName)
@@ -61,12 +47,13 @@ public class PlayerUI : MonoBehaviour
         {
             _actionPanel.SetActive(show);
         }
-        if (EndTurnButton != null)
-        {
-            EndTurnButton.interactable = show;
-        }
+        _indicatorObj.SetActive(show);
         _spawnUnitButton.interactable = show;
         _spellButton.interactable = show;
-        _diceUI.ActiveDicePanel(show);
+        if (!show)
+        {
+            _spawnPanel.SetActive(false);
+            _spellPanel.SetActive(false);
+        }
     }
 }

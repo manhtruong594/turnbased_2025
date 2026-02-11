@@ -19,21 +19,16 @@ namespace TurnBasedGame.UI
         [SerializeField] private Transform buttonContainer;
         [SerializeField] private GameObject spawnButtonPrefab;
 
-        [Header("Settings")]
-        [SerializeField] private bool showOnStart = true;
-
         private List<SpawnUnitButton> spawnButtons = new List<SpawnUnitButton>();
 
         private void Start()
         {
-            if (!showOnStart)
-            {
-                Hide();
-            }
         }
+
         public void Initialize(List<UnitMove> units)
         {
-            SetAvailableUnits(units);
+            availableUnits = new List<UnitMove>(units);
+            GenerateSpawnButtons();
         }
 
         /// <summary>
@@ -83,38 +78,6 @@ namespace TurnBasedGame.UI
             }
         }
 
-        /// <summary>
-        /// Thêm unit vào danh sách có thể spawn
-        /// </summary>
-        public void AddAvailableUnit(UnitMove unit)
-        {
-            if (unit == null || availableUnits.Contains(unit))
-                return;
-
-            availableUnits.Add(unit);
-            CreateSpawnButton(unit);
-        }
-
-        /// <summary>
-        /// Xóa unit khỏi danh sách có thể spawn
-        /// </summary>
-        public void RemoveAvailableUnit(UnitMove unit)
-        {
-            if (unit == null || !availableUnits.Contains(unit))
-                return;
-
-            availableUnits.Remove(unit);
-            GenerateSpawnButtons(); // Regenerate all buttons
-        }
-
-        /// <summary>
-        /// Set danh sách units có thể spawn
-        /// </summary>
-        public void SetAvailableUnits(List<UnitMove> units)
-        {
-            availableUnits = new List<UnitMove>(units);
-            GenerateSpawnButtons();
-        }
 
         /// <summary>
         /// Xóa tất cả buttons

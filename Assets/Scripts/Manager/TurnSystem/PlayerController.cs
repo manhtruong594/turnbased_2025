@@ -21,8 +21,10 @@ namespace TurnBasedGame.Core
         [SerializeField] private PlayerDataSO _playerData;
         [SerializeField] private IntReference _actionLefts;
         [SerializeField] private AIController _aiOpponent;
-        [Header("UI References (Optional)")]
-        [SerializeField] private GameObject turnIndicator;
+
+        [Header("UI References")]
+        public Button EndTurnButton;
+        [SerializeField] DiceUI _diceUI;
         [SerializeField] private PlayerUI _myUI;
         [SerializeField] private SpawnPanel _spawnPanel;
         private bool _isMyTurn;
@@ -32,7 +34,7 @@ namespace TurnBasedGame.Core
         {
             SubscribeToEvents();
             SetupUI();
-            if (_aiOpponent != null) 
+            if (_aiOpponent != null)
                 _aiOpponent.Initialize(playerID);
         }
 
@@ -43,6 +45,13 @@ namespace TurnBasedGame.Core
 
         private void SubscribeToEvents()
         {
+            if (EndTurnButton != null)
+            {
+                EndTurnButton.onClick.AddListener(() =>
+                {
+                    TurnManager.Instance?.EndCurrentTurn();
+                });
+            }
             if (GameMediator.Instance != null)
             {
                 GameMediator.Instance.OnPlayerTurnStarted += HandleTurnStarted;
@@ -52,6 +61,10 @@ namespace TurnBasedGame.Core
 
         private void UnsubscribeFromEvents()
         {
+            if (EndTurnButton != null)
+            {
+                EndTurnButton.onClick.RemoveAllListeners();
+            }
             if (GameMediator.Instance != null)
             {
                 GameMediator.Instance.OnPlayerTurnStarted -= HandleTurnStarted;
@@ -79,13 +92,13 @@ namespace TurnBasedGame.Core
             if (_isMyTurn)
             {
                 StartCoroutine(OnMyTurnStarted());
+                UpdateUI(_isMyTurn);
             }
             else
             {
                 StartCoroutine(WaitOpponentTurn());
             }
 
-            UpdateUI(_isMyTurn);
         }
 
         /// <summary>
@@ -99,12 +112,12 @@ namespace TurnBasedGame.Core
                 StartCoroutine(OnMyTurnEnded());
                 UpdateUI(false);
             }
-             
+
         }
 
         private IEnumerator OnMyTurnEnded()
         {
-            if(_myUnits.Count == 0)
+            if (_myUnits.Count == 0)
                 yield break;
             foreach (var unit in _myUnits)
             {
@@ -126,15 +139,12 @@ namespace TurnBasedGame.Core
                 unit.OnTurnBegin();
             }
             TurnManager.Instance.CalculateTimeLimitInTurn(_myUnits.Count);
-            // yield return new WaitForSeconds(_currentTimeLimit); 
-            // yield return null;
-            // TurnManager.Instance.EndCurrentTurn();
         }
-        
+
         IEnumerator WaitOpponentTurn()
         {
             yield return null;
-            TurnManager.Instance.SetTimeFixedTimeInTurn(30f);
+            TurnManager.Instance.SetTimeFixedTimeInTurn(30f);       // hack chờ AI
             if (_aiOpponent != null)
             {
                 yield return StartCoroutine(_aiOpponent.ExecuteAITurn());
@@ -147,10 +157,10 @@ namespace TurnBasedGame.Core
         private void UpdateUI(bool isMyTurn)
         {
             _myUI.ShowActionPanel(isMyTurn);
-
-            if (turnIndicator != null)
+            _diceUI.ActiveDicePanel(isMyTurn);
+            if (EndTurnButton != null)
             {
-                turnIndicator.SetActive(isMyTurn);
+                EndTurnButton.interactable = isMyTurn;
             }
         }
     }

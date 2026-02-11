@@ -22,11 +22,13 @@ namespace TurnBasedGame.Core
         public TurnState CurrentState => currentState;
         public PlayerID CurrentPlayer => currentPlayer;
         public int TurnCount => turnCount;
+        public PlayerID? Winner => _winner;
 
         [Header("Display")]
         public TextMeshProUGUI ClockText;
         public float Timer { get; private set; }
         private bool _isTriggerTimer;
+        private PlayerID? _winner;
 
         private void Awake()
         {
@@ -133,6 +135,9 @@ namespace TurnBasedGame.Core
             Debug.Log($"=== Player {(int)currentPlayer}'s Turn Ended ===");
             _gameMediator.NotifyPlayerTurnEnded(currentPlayer);
 
+            // Chỉ chuyển lượt nếu game chưa kết thúc
+            if (currentState == TurnState.GameEnd) return;
+
             // Chuyển lượt sau delay ngắn
             Invoke(nameof(SwitchToNextPlayer), TurnTransitionDelay);
         }
@@ -142,6 +147,8 @@ namespace TurnBasedGame.Core
         /// </summary>
         private void SwitchToNextPlayer()
         {
+            if (currentState == TurnState.GameEnd) return;
+
             if (currentState == TurnState.Player1Turn)
             {
                 ChangeState(TurnState.Player2Turn);
@@ -153,12 +160,22 @@ namespace TurnBasedGame.Core
         }
 
         /// <summary>
+        /// Kết thúc game khi một phe chiếm tất cả cứ điểm
+        /// </summary>
+        public void TriggerGameEnd(PlayerID winner)
+        {
+            _winner = winner;
+            _isTriggerTimer = false;
+            CancelInvoke();
+            ChangeState(TurnState.GameEnd);
+        }
+
+        /// <summary>
         /// Xử lý khi game kết thúc
         /// </summary>
         private void HandleGameEnd()
         {
-            // Logic xử lý khi game kết thúc
-            Debug.Log("Game has ended!");
+            Debug.Log($"=== Game End! Winner: {(_winner.HasValue ? _winner.Value.ToString() : "None")} ===");
         }
 
         public void CalculateTimeLimitInTurn(int unitCount)

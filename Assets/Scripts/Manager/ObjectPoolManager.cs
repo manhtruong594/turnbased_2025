@@ -164,13 +164,13 @@ namespace TurnBasedGame.ObjectPool
         /// <summary>
         /// Trả object về pool
         /// </summary>
-        public void Despawn(string key, GameObject obj)
+        public void Despawn(string key, PooledObject obj)
         {
             if (obj == null)
                 return;
 
-            var pooledObj = obj.GetComponent<PooledObject>();
-            if (pooledObj == null)
+            var go = obj.gameObject;
+            if (go == null)
             {
                 Debug.LogWarning($"Object {obj.name} is not pooled. Destroying instead.");
                 Destroy(obj);
@@ -179,12 +179,11 @@ namespace TurnBasedGame.ObjectPool
 
             if (!_pools.TryGetValue(key, out var pool))
             {
-                Debug.LogError($"Pool with key '{key}' does not exist.");
-                Destroy(obj);
+                Debug.LogWarning($"Pool with key '{key}' does not exist.");
                 return;
             }
 
-            pool.Release(pooledObj);
+            pool.Release(obj);
         }
 
         /// <summary>
@@ -195,7 +194,7 @@ namespace TurnBasedGame.ObjectPool
             if (pooledObj == null)
                 return;
 
-            Despawn(pooledObj.PoolKey, pooledObj.gameObject);
+            Despawn(pooledObj.PoolKey, pooledObj);
         }
 
         /// <summary>

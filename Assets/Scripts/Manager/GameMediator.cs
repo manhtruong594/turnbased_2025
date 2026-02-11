@@ -4,6 +4,7 @@ using TurnBasedGame.Resources;
 using RedBjorn.ProtoTiles.Example;
 using System;
 using TurnBasedGame.Unit;
+using TurnBasedGame.Capture;
 
 /// <summary>
 /// Mediator Pattern: Trung gian giao tiếp giữa các Manager
@@ -19,6 +20,7 @@ public class GameMediator : MonoBehaviour
     [SerializeField] private MapManager mapManager;
     [SerializeField] private UnitSpawner unitSpawner;
     [SerializeField] private AreaPathManager areaPathManager;
+    [SerializeField] private CapturePointManager capturePointManager;
 
     #region Turn Events
     public event Action<PlayerID> OnPlayerTurnStarted;
@@ -32,6 +34,15 @@ public class GameMediator : MonoBehaviour
     #region  Visualize Path Events
     public event Action<UnitMove> OnUnitSelected;
     public event Action<UnitMove> OnUnitDeselected;
+    #endregion
+
+    #region Unit Movement Events
+    public event Action<UnitMove, Vector3Int> OnUnitMoved;
+    #endregion
+
+    #region Capture Point Events
+    public event Action<Vector3Int, PlayerID> OnCapturePointCaptured;
+    public event Action<PlayerID> OnGameEnd;
     #endregion
 
     private void Awake()
@@ -52,6 +63,9 @@ public class GameMediator : MonoBehaviour
         unitSpawner.Initialize(this);
         areaPathManager.Initialize(this);
         areaPathManager.SetCachedMap(mapManager.MapEntity);
+
+        if (capturePointManager != null)
+            capturePointManager.Initialize(this);
     }
 
     #region  Notify Methods
@@ -84,6 +98,22 @@ public class GameMediator : MonoBehaviour
     public void NotifyUnitDeselected(UnitMove unit)
     {
         OnUnitDeselected?.Invoke(unit);
+    }
+
+    public void NotifyUnitMoved(UnitMove unit, Vector3Int newPos)
+    {
+        OnUnitMoved?.Invoke(unit, newPos);
+    }
+
+    public void NotifyCapturePointCaptured(Vector3Int position, PlayerID newOwner)
+    {
+        OnCapturePointCaptured?.Invoke(position, newOwner);
+    }
+
+    public void NotifyGameEnd(PlayerID winner)
+    {
+        turnManager.TriggerGameEnd(winner);
+        OnGameEnd?.Invoke(winner);
     }
 
     #endregion
