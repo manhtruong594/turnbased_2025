@@ -26,7 +26,7 @@ namespace RedBjorn.ProtoTiles
         public GridType Type;
         public GridAxis Axis;
         public RotationType RotationType;
-        [HideInInspector] public float Edge = 1f;
+        public float Edge = 1f;
         [HideInInspector] public LayerMask MapMask;
         [Range(0f, 1f)] public float BorderSize = 0.025f;
         public Material CellMaterial;
