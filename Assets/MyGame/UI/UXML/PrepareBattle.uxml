@@ -1,0 +1,48 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/MyGame/UI/USS/Common.uss?fileID=7433441132597879392&amp;guid=0b80053ade238cb499f5793804f7c098&amp;type=3#Common" />
+    <Style src="project://database/Assets/MyGame/UI/USS/PrepareBattle.uss?fileID=7433441132597879392&amp;guid=ca15502c1d3592142a71793ab41195bd&amp;type=3#PrepareBattle" />
+    <ui:VisualElement name="prepare-root" class="screen-root">
+        <ui:VisualElement name="header" class="prepare-header">
+            <ui:Button name="btn-back" text="← Quay Lại" class="btn prepare-btn-back" />
+            <ui:Label name="screen-title" text="Chuẩn Bị Chiến Đấu" class="prepare-title" />
+            <ui:VisualElement name="gold-display" class="prepare-gold">
+                <ui:Label name="gold-label" text="💰 100" class="player-gold" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="main-content" class="prepare-content">
+            <ui:VisualElement name="collection-panel" class="panel prepare-collection">
+                <ui:VisualElement name="tab-bar" class="prepare-tab-bar">
+                    <ui:Button name="tab-units" text="⚔ Binh Lính" class="prepare-tab prepare-tab--active" />
+                    <ui:Button name="tab-spells" text="✨ Phép Thuật" class="prepare-tab" />
+                </ui:VisualElement>
+                <ui:VisualElement name="filter-row" class="prepare-filter-row">
+                    <ui:TextField name="search-field" class="prepare-search" />
+                </ui:VisualElement>
+                <ui:ScrollView name="collection-scroll" class="prepare-collection-scroll">
+                    <ui:VisualElement name="collection-list" class="prepare-collection-list" />
+                </ui:ScrollView>
+                <ui:Label name="empty-label" text="Chưa có vật phẩm nào" class="prepare-empty-label" />
+            </ui:VisualElement>
+            <ui:VisualElement name="deck-panel" class="panel prepare-deck">
+                <ui:VisualElement name="deck-section-units" class="prepare-deck-section">
+                    <ui:Label name="deck-units-title" text="Đội Hình (0/6)" class="prepare-deck-title" />
+                    <ui:VisualElement name="deck-units-grid" class="prepare-deck-grid" />
+                </ui:VisualElement>
+                <ui:VisualElement class="separator" />
+                <ui:VisualElement name="deck-section-spells" class="prepare-deck-section">
+                    <ui:Label name="deck-spells-title" text="Phép (0/4)" class="prepare-deck-title" />
+                    <ui:VisualElement name="deck-spells-grid" class="prepare-deck-grid" />
+                </ui:VisualElement>
+                <ui:VisualElement class="separator" />
+                <ui:VisualElement name="deck-info" class="prepare-deck-info">
+                    <ui:Label name="total-cost-label" text="Tổng chi phí: 0" class="prepare-cost-label" />
+                    <ui:Label name="validation-label" class="prepare-validation-label" />
+                </ui:VisualElement>
+                <ui:VisualElement name="action-buttons" class="prepare-actions" style="width: 275px;">
+                    <ui:Button name="btn-clear" text="Xóa Tất Cả" class="btn prepare-btn-clear" style="width: 100px; min-width: 100px; max-width: 100px;" />
+                    <ui:Button name="btn-confirm" text="⚔ Xác Nhận Chiến Đấu" class="btn prepare-btn-confirm" style="white-space: normal; min-width: 150px; max-width: 150px; width: 150px;" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

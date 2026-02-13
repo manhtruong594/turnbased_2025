@@ -1,0 +1,121 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:ui="UnityEngine.UIElements"
+         xmlns:uie="UnityEditor.UIElements"
+         xsi:noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd"
+         editor-extension-mode="False">
+
+    <ui:Style src="../USS/Common.uss" />
+    <ui:Style src="../USS/Inventory.uss" />
+
+    <!-- Root -->
+    <ui:VisualElement name="inventory-root" class="screen-root">
+
+        <!-- Header -->
+        <ui:VisualElement name="header" class="inv-header">
+            <ui:Button name="btn-back" text="← Quay Lại" class="btn inv-btn-back" />
+            <ui:Label name="screen-title" text="Bộ Sưu Tập" class="inv-title" />
+            <ui:VisualElement name="header-stats" class="inv-header-stats">
+                <ui:Label name="collection-count" text="0 vật phẩm" class="text-secondary" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- Main body: list + detail -->
+        <ui:VisualElement name="main-body" class="inv-body">
+
+            <!-- Left: Collection browser -->
+            <ui:VisualElement name="collection-panel" class="panel inv-collection-panel">
+
+                <!-- Tab bar -->
+                <ui:VisualElement name="tab-bar" class="inv-tab-bar">
+                    <ui:Button name="tab-units" text="⚔ Binh Lính" class="inv-tab inv-tab--active" />
+                    <ui:Button name="tab-spells" text="✨ Phép Thuật" class="inv-tab" />
+                </ui:VisualElement>
+
+                <!-- Toolbar: search + sort -->
+                <ui:VisualElement name="toolbar" class="inv-toolbar">
+                    <ui:TextField name="search-field" class="inv-search" />
+                    <ui:DropdownField name="sort-dropdown" label="" class="inv-sort" />
+                </ui:VisualElement>
+
+                <!-- Grid of cards -->
+                <ui:ScrollView name="collection-scroll" class="inv-scroll">
+                    <ui:VisualElement name="collection-grid" class="inv-grid" />
+                </ui:ScrollView>
+
+                <!-- Empty state -->
+                <ui:Label name="empty-label" text="Chưa sở hữu vật phẩm nào" class="inv-empty-label" />
+
+            </ui:VisualElement>
+
+            <!-- Right: Detail panel -->
+            <ui:VisualElement name="detail-panel" class="panel inv-detail-panel">
+
+                <!-- Placeholder khi chưa chọn -->
+                <ui:VisualElement name="detail-placeholder" class="inv-detail-placeholder">
+                    <ui:Label text="Chọn một vật phẩm để xem chi tiết" class="text-dim inv-placeholder-text" />
+                </ui:VisualElement>
+
+                <!-- Unit detail -->
+                <ui:VisualElement name="unit-detail" class="inv-detail-content" style="display: none;">
+                    <ui:VisualElement name="unit-icon-large" class="inv-detail-icon" />
+                    <ui:Label name="unit-detail-name" class="inv-detail-name" />
+                    <ui:Label name="unit-detail-desc" class="inv-detail-desc" />
+                    <ui:VisualElement class="separator" />
+                    <ui:VisualElement name="unit-stats-grid" class="inv-stats-grid">
+                        <ui:VisualElement class="inv-stat-row">
+                            <ui:Label text="❤ Máu" class="inv-stat-label" />
+                            <ui:Label name="unit-stat-hp" class="inv-stat-value" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="inv-stat-row">
+                            <ui:Label text="⚡ Chi phí" class="inv-stat-label" />
+                            <ui:Label name="unit-stat-cost" class="inv-stat-value text-gold" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="inv-stat-row">
+                            <ui:Label text="👣 Tầm di chuyển" class="inv-stat-label" />
+                            <ui:Label name="unit-stat-move" class="inv-stat-value" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="inv-stat-row">
+                            <ui:Label text="🏃 Tốc độ" class="inv-stat-label" />
+                            <ui:Label name="unit-stat-speed" class="inv-stat-value" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:VisualElement class="separator" />
+                    <ui:VisualElement name="unit-deck-status" class="inv-deck-status">
+                        <ui:Label name="unit-in-deck-label" text="" class="inv-deck-status-label" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <!-- Spell detail -->
+                <ui:VisualElement name="spell-detail" class="inv-detail-content" style="display: none;">
+                    <ui:VisualElement name="spell-icon-large" class="inv-detail-icon" />
+                    <ui:Label name="spell-detail-name" class="inv-detail-name" />
+                    <ui:Label name="spell-detail-type" class="inv-detail-type text-gold" />
+                    <ui:Label name="spell-detail-desc" class="inv-detail-desc" />
+                    <ui:VisualElement class="separator" />
+                    <ui:VisualElement name="spell-stats-grid" class="inv-stats-grid">
+                        <ui:VisualElement class="inv-stat-row">
+                            <ui:Label text="🔄 Cooldown" class="inv-stat-label" />
+                            <ui:Label name="spell-stat-cd" class="inv-stat-value" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="inv-stat-row">
+                            <ui:Label text="🎯 Tầm bắn" class="inv-stat-label" />
+                            <ui:Label name="spell-stat-range" class="inv-stat-value" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:VisualElement class="separator" />
+                    <ui:VisualElement name="spell-target-info" class="inv-target-info">
+                        <ui:Label text="Mục tiêu:" class="inv-stat-label" />
+                        <ui:Label name="spell-target-flags" class="inv-stat-value" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="spell-deck-status" class="inv-deck-status">
+                        <ui:Label name="spell-in-deck-label" text="" class="inv-deck-status-label" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+            </ui:VisualElement>
+
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+
+</ui:UXML>

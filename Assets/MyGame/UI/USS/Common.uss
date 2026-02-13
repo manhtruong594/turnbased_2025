@@ -1,0 +1,131 @@
+/* ============================================================
+   Common.uss — Shared theme "Đại Nam" cho toàn bộ UI screens.
+   Bảng màu: Gỗ tối, vàng cổ, đỏ son, ngà.
+   ============================================================ */
+
+/* ─── CSS Variables (Custom Properties) ─── */
+:root {
+    /* Colors */
+    --color-bg-dark: rgb(30, 20, 15);
+    --color-bg-medium: rgb(50, 35, 25);
+    --color-bg-panel: rgba(40, 28, 18, 0.92);
+    --color-bg-card: rgba(55, 40, 28, 0.95);
+
+    --color-gold: rgb(218, 185, 115);
+    --color-gold-dim: rgb(170, 140, 85);
+    --color-gold-bright: rgb(245, 215, 140);
+
+    --color-red: rgb(168, 50, 40);
+    --color-red-hover: rgb(195, 65, 50);
+
+    --color-green: rgb(60, 140, 75);
+    --color-green-hover: rgb(75, 165, 90);
+
+    --color-text-primary: rgb(240, 230, 210);
+    --color-text-secondary: rgb(190, 175, 150);
+    --color-text-dim: rgb(140, 125, 100);
+
+    --color-border: rgb(120, 95, 60);
+    --color-border-light: rgba(218, 185, 115, 0.3);
+
+    /* Sizing */
+    --border-radius-sm: 4px;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+}
+
+/* ─── Screen Root ─── */
+.screen-root {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--color-bg-dark);
+}
+
+/* ─── Common Button ─── */
+.btn {
+    padding: 10px 24px;
+    border-radius: var(--border-radius-md);
+    border-width: 2px;
+    border-color: var(--color-border);
+    background-color: var(--color-bg-medium);
+    color: var(--color-text-primary);
+    font-size: 16px;
+    -unity-font-style: bold;
+    transition-property: background-color, border-color, scale;
+    transition-duration: 0.15s;
+    cursor: link;
+}
+
+.btn:hover {
+    background-color: rgb(65, 48, 32);
+    border-color: var(--color-gold);
+    scale: 1.03;
+}
+
+.btn:active {
+    scale: 0.97;
+    background-color: rgb(45, 30, 20);
+}
+
+/* ─── Panel / Card ─── */
+.panel {
+    background-color: var(--color-bg-panel);
+    border-width: 1px;
+    border-color: var(--color-border);
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-md);
+}
+
+.card {
+    background-color: var(--color-bg-card);
+    border-width: 1px;
+    border-color: var(--color-border-light);
+    border-radius: var(--border-radius-sm);
+    padding: var(--spacing-sm);
+}
+
+/* ─── Typography ─── */
+.text-primary {
+    color: var(--color-text-primary);
+}
+
+.text-secondary {
+    color: var(--color-text-secondary);
+}
+
+.text-dim {
+    color: var(--color-text-dim);
+}
+
+.text-gold {
+    color: var(--color-gold);
+}
+
+/* ─── Scrollbar (Đại Nam theme) ─── */
+.unity-scroller--vertical > .unity-slider > .unity-base-slider__drag-container > .unity-base-slider__tracker {
+    background-color: rgba(40, 28, 18, 0.5);
+    border-width: 0;
+}
+
+.unity-scroller--vertical > .unity-slider > .unity-base-slider__drag-container > .unity-base-slider__dragger {
+    background-color: var(--color-gold-dim);
+    border-radius: 4px;
+    border-width: 0;
+}
+
+/* ─── Separator ─── */
+.separator {
+    height: 1px;
+    background-color: var(--color-border-light);
+    margin-top: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+}

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:ui="UnityEngine.UIElements"
+         xmlns:uie="UnityEditor.UIElements"
+         xsi:noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd">
+
+    <!-- Stylesheet -->
+    <Style src="../USS/Common.uss" />
+    <Style src="../USS/MainMenu.uss" />
+
+    <!-- Root container -->
+    <ui:VisualElement name="main-menu-root" class="screen-root">
+
+        <!-- Background layer (decorative) -->
+        <ui:VisualElement name="background" class="main-menu-bg" />
+
+        <!-- Content container -->
+        <ui:VisualElement name="content" class="main-menu-content">
+
+            <!-- Header: Game title -->
+            <ui:VisualElement name="header" class="main-menu-header">
+                <ui:Label name="game-title" text="ĐẠI NAM" class="game-title" />
+                <ui:Label name="game-subtitle" text="Chiến Thuật Cổ Lệnh" class="game-subtitle" />
+            </ui:VisualElement>
+
+            <!-- Player info bar -->
+            <ui:VisualElement name="player-info" class="player-info-bar">
+                <ui:Label name="player-name" text="Summoner" class="player-name" />
+                <ui:VisualElement name="player-stats" class="player-stats">
+                    <ui:Label name="player-level" text="Lv. 1" class="player-level" />
+                    <ui:Label name="player-gold" text="💰 100" class="player-gold" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <!-- Menu buttons -->
+            <ui:VisualElement name="menu-buttons" class="menu-buttons-container">
+
+                <ui:Button name="btn-battle" text="⚔ Chiến Đấu" class="menu-btn menu-btn-primary" />
+                <ui:Button name="btn-shop" text="🏪 Cửa Hàng" class="menu-btn menu-btn-secondary" />
+                <ui:Button name="btn-inventory" text="📜 Bộ Sưu Tập" class="menu-btn menu-btn-secondary" />
+                <ui:Button name="btn-settings" text="⚙ Cài Đặt" class="menu-btn menu-btn-tertiary" />
+
+            </ui:VisualElement>
+
+            <!-- Footer -->
+            <ui:VisualElement name="footer" class="main-menu-footer">
+                <ui:Label name="version-label" text="v0.1 — Vertical Slice" class="version-label" />
+            </ui:VisualElement>
+
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+
+</ui:UXML>

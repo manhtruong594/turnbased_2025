@@ -1,0 +1,411 @@
+/* ============================================================
+   PrepareBattle.uss — Styles cho Prepare Battle / Deck Builder.
+   Theme Đại Nam: bàn trà + bản đồ chiến thuật.
+   ============================================================ */
+
+/* ─── Header ─── */
+.prepare-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    background-color: var(--color-bg-medium);
+    border-bottom-width: 2px;
+    border-bottom-color: var(--color-border);
+}
+
+.prepare-title {
+    font-size: 28px;
+    color: var(--color-gold-bright);
+    -unity-font-style: bold;
+    letter-spacing: 2px;
+}
+
+.prepare-btn-back {
+    padding: 8px 16px;
+    font-size: 14px;
+    background-color: transparent;
+    border-color: var(--color-border-light);
+    border-width: 1px;
+    color: var(--color-text-secondary);
+}
+
+.prepare-btn-back:hover {
+    border-color: var(--color-gold-dim);
+    color: var(--color-text-primary);
+    background-color: rgba(50, 35, 25, 0.5);
+}
+
+.prepare-gold {
+    padding: 6px 14px;
+    background-color: var(--color-bg-panel);
+    border-radius: var(--border-radius-sm);
+    border-width: 1px;
+    border-color: var(--color-border-light);
+}
+
+/* ─── Main Content ─── */
+.prepare-content {
+    flex-grow: 1;
+    flex-direction: row;
+    padding: var(--spacing-md);
+}
+
+/* ─── Collection Panel (Left) ─── */
+.prepare-collection {
+    flex-grow: 2;
+    margin-right: var(--spacing-md);
+    min-width: 300px;
+}
+
+/* Tab bar */
+.prepare-tab-bar {
+    flex-direction: row;
+    margin-bottom: var(--spacing-sm);
+}
+
+.prepare-tab {
+    flex-grow: 1;
+    padding: 10px 16px;
+    font-size: 16px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    background-color: var(--color-bg-medium);
+    border-width: 1px;
+    border-color: var(--color-border);
+    border-radius: var(--border-radius-sm);
+    color: var(--color-text-secondary);
+    margin-right: var(--spacing-xs);
+    transition-property: background-color, color, border-color;
+    transition-duration: 0.15s;
+    cursor: link;
+}
+
+.prepare-tab:last-child {
+    margin-right: 0;
+}
+
+.prepare-tab:hover {
+    background-color: rgb(60, 42, 30);
+    color: var(--color-text-primary);
+}
+
+.prepare-tab--active {
+    background-color: var(--color-bg-panel);
+    border-color: var(--color-gold);
+    color: var(--color-gold-bright);
+}
+
+/* Filter row */
+.prepare-filter-row {
+    margin-bottom: var(--spacing-sm);
+}
+
+.prepare-search {
+    flex-grow: 1;
+    border-radius: var(--border-radius-sm);
+}
+
+.prepare-search > .unity-text-field__input {
+    background-color: var(--color-bg-medium);
+    border-width: 1px;
+    border-color: var(--color-border);
+    border-radius: var(--border-radius-sm);
+    color: var(--color-text-primary);
+    padding: 6px 10px;
+    font-size: 14px;
+}
+
+.prepare-search > .unity-text-field__input:focus {
+    border-color: var(--color-gold);
+}
+
+/* Collection scroll */
+.prepare-collection-scroll {
+    flex-grow: 1;
+}
+
+.prepare-collection-list {
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: var(--spacing-xs);
+}
+
+.prepare-empty-label {
+    display: none;
+    -unity-text-align: middle-center;
+    color: var(--color-text-dim);
+    font-size: 16px;
+    padding: 40px;
+}
+
+/* ─── Unit Card ─── */
+.unit-card {
+    flex-direction: row;
+    align-items: center;
+    width: 220px;
+    margin: var(--spacing-xs);
+    padding: var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    transition-property: background-color, border-color, scale;
+    transition-duration: 0.15s;
+    cursor: link;
+}
+
+.unit-card:hover {
+    border-color: var(--color-gold);
+    scale: 1.02;
+}
+
+.unit-card--selected {
+    border-color: var(--color-gold-bright);
+    border-width: 2px;
+    background-color: rgba(218, 185, 115, 0.12);
+}
+
+.unit-card--in-deck {
+    opacity: 0.5;
+}
+
+.unit-card__icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--border-radius-sm);
+    background-color: var(--color-bg-medium);
+    border-width: 1px;
+    border-color: var(--color-border-light);
+    margin-right: var(--spacing-sm);
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.unit-card__info {
+    flex-grow: 1;
+}
+
+.unit-card__name {
+    font-size: 14px;
+    color: var(--color-text-primary);
+    -unity-font-style: bold;
+    margin-bottom: 2px;
+}
+
+.unit-card__stats {
+    flex-direction: row;
+}
+
+.unit-card__stat {
+    font-size: 11px;
+    color: var(--color-text-secondary);
+    margin-right: 8px;
+}
+
+/* ─── Spell Card ─── */
+.spell-card {
+    flex-direction: row;
+    align-items: center;
+    width: 220px;
+    margin: var(--spacing-xs);
+    padding: var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    transition-property: background-color, border-color, scale;
+    transition-duration: 0.15s;
+    cursor: link;
+}
+
+.spell-card:hover {
+    border-color: var(--color-gold);
+    scale: 1.02;
+}
+
+.spell-card--selected {
+    border-color: var(--color-gold-bright);
+    border-width: 2px;
+    background-color: rgba(218, 185, 115, 0.12);
+}
+
+.spell-card--in-deck {
+    opacity: 0.5;
+}
+
+.spell-card__icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--border-radius-sm);
+    background-color: var(--color-bg-medium);
+    border-width: 1px;
+    border-color: var(--color-border-light);
+    margin-right: var(--spacing-sm);
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.spell-card__info {
+    flex-grow: 1;
+}
+
+.spell-card__name {
+    font-size: 14px;
+    color: var(--color-text-primary);
+    -unity-font-style: bold;
+    margin-bottom: 2px;
+}
+
+.spell-card__type {
+    font-size: 10px;
+    margin-bottom: 2px;
+}
+
+.spell-card__stats {
+    flex-direction: row;
+}
+
+.spell-card__stat {
+    font-size: 11px;
+    color: var(--color-text-secondary);
+    margin-right: 8px;
+}
+
+/* ─── Deck Panel (Right) ─── */
+.prepare-deck {
+    flex-grow: 1;
+    min-width: 240px;
+    max-width: 320px;
+    justify-content: space-between;
+}
+
+.prepare-deck-section {
+    margin-bottom: var(--spacing-sm);
+}
+
+.prepare-deck-title {
+    font-size: 16px;
+    color: var(--color-gold);
+    -unity-font-style: bold;
+    margin-bottom: var(--spacing-sm);
+}
+
+.prepare-deck-grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+/* ─── Deck Slot ─── */
+.deck-slot {
+    width: 80px;
+    height: 90px;
+    margin: var(--spacing-xs);
+    border-radius: var(--border-radius-sm);
+    border-width: 2px;
+    align-items: center;
+    justify-content: center;
+    transition-property: background-color, border-color;
+    transition-duration: 0.15s;
+    cursor: link;
+}
+
+.deck-slot--empty {
+    border-color: var(--color-border-light);
+    border-style: dashed;
+    background-color: rgba(40, 28, 18, 0.4);
+}
+
+.deck-slot--filled {
+    border-color: var(--color-gold-dim);
+    background-color: var(--color-bg-card);
+}
+
+.deck-slot--filled:hover {
+    border-color: var(--color-red);
+    background-color: rgba(168, 50, 40, 0.15);
+}
+
+.deck-slot__icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--border-radius-sm);
+    -unity-background-scale-mode: scale-to-fit;
+    margin-bottom: 2px;
+}
+
+.deck-slot__label {
+    font-size: 10px;
+    color: var(--color-text-primary);
+    -unity-text-align: middle-center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 72px;
+}
+
+.deck-slot__placeholder {
+    font-size: 28px;
+    color: var(--color-text-dim);
+    -unity-text-align: middle-center;
+}
+
+/* ─── Deck Info ─── */
+.prepare-deck-info {
+    padding: var(--spacing-sm) 0;
+}
+
+.prepare-cost-label {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    margin-bottom: 4px;
+}
+
+.prepare-validation-label {
+    font-size: 13px;
+    color: var(--color-red);
+    min-height: 18px;
+}
+
+/* ─── Action Buttons ─── */
+.prepare-actions {
+    flex-direction: row;
+    justify-content: space-between;
+    margin-top: var(--spacing-sm);
+}
+
+.prepare-btn-clear {
+    flex-grow: 1;
+    margin-right: var(--spacing-sm);
+    background-color: transparent;
+    border-color: var(--color-border-light);
+    border-width: 1px;
+    color: var(--color-text-secondary);
+    font-size: 14px;
+    padding: 10px;
+}
+
+.prepare-btn-clear:hover {
+    border-color: var(--color-red);
+    color: var(--color-red);
+}
+
+.prepare-btn-confirm {
+    flex-grow: 2;
+    background-color: var(--color-red);
+    border-color: rgb(200, 75, 60);
+    color: rgb(255, 240, 220);
+    font-size: 16px;
+    -unity-font-style: bold;
+    padding: 12px;
+}
+
+.prepare-btn-confirm:hover {
+    background-color: var(--color-red-hover);
+    border-color: var(--color-gold);
+    scale: 1.02;
+}
+
+.prepare-btn-confirm:active {
+    scale: 0.97;
+    background-color: rgb(140, 40, 30);
+}
+
+.prepare-btn-confirm:disabled {
+    opacity: 0.5;
+    background-color: rgb(80, 55, 45);
+    border-color: var(--color-border);
+    color: var(--color-text-dim);
+}

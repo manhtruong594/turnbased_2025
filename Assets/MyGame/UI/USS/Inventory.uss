@@ -1,0 +1,256 @@
+/* ============================================================
+   Inventory.uss — Styles cho Inventory / Bộ Sưu Tập.
+   Theme Đại Nam: cuộn thư, bộ sưu tập cổ vật.
+   ============================================================ */
+
+/* ─── Header ─── */
+.inv-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    background-color: var(--color-bg-medium);
+    border-bottom-width: 2px;
+    border-bottom-color: var(--color-border);
+}
+
+.inv-title {
+    font-size: 28px;
+    color: var(--color-gold-bright);
+    -unity-font-style: bold;
+    letter-spacing: 2px;
+}
+
+.inv-btn-back {
+    padding: 8px 16px;
+    font-size: 14px;
+    background-color: transparent;
+    border-color: var(--color-border-light);
+    border-width: 1px;
+    color: var(--color-text-secondary);
+}
+
+.inv-btn-back:hover {
+    border-color: var(--color-gold-dim);
+    color: var(--color-text-primary);
+    background-color: rgba(50, 35, 25, 0.5);
+}
+
+.inv-header-stats {
+    padding: 4px 12px;
+}
+
+/* ─── Body ─── */
+.inv-body {
+    flex-grow: 1;
+    flex-direction: row;
+    padding: var(--spacing-md);
+}
+
+/* ─── Collection Panel (Left) ─── */
+.inv-collection-panel {
+    flex-grow: 3;
+    margin-right: var(--spacing-md);
+    min-width: 360px;
+}
+
+/* Tab bar */
+.inv-tab-bar {
+    flex-direction: row;
+    margin-bottom: var(--spacing-sm);
+}
+
+.inv-tab {
+    flex-grow: 1;
+    padding: 10px 16px;
+    font-size: 16px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    background-color: var(--color-bg-medium);
+    border-width: 1px;
+    border-color: var(--color-border);
+    border-radius: var(--border-radius-sm);
+    color: var(--color-text-secondary);
+    margin-right: var(--spacing-xs);
+    transition-property: background-color, color, border-color;
+    transition-duration: 0.15s;
+    cursor: link;
+}
+
+.inv-tab:last-child {
+    margin-right: 0;
+}
+
+.inv-tab:hover {
+    background-color: rgb(60, 42, 30);
+    color: var(--color-text-primary);
+}
+
+.inv-tab--active {
+    background-color: var(--color-bg-panel);
+    border-color: var(--color-gold);
+    color: var(--color-gold-bright);
+}
+
+/* Toolbar */
+.inv-toolbar {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: var(--spacing-sm);
+}
+
+.inv-search {
+    flex-grow: 1;
+    margin-right: var(--spacing-sm);
+}
+
+.inv-search > .unity-text-field__input {
+    background-color: var(--color-bg-medium);
+    border-width: 1px;
+    border-color: var(--color-border);
+    border-radius: var(--border-radius-sm);
+    color: var(--color-text-primary);
+    padding: 6px 10px;
+    font-size: 14px;
+}
+
+.inv-search > .unity-text-field__input:focus {
+    border-color: var(--color-gold);
+}
+
+.inv-sort {
+    min-width: 140px;
+}
+
+.inv-sort > .unity-popup-field__input {
+    background-color: var(--color-bg-medium);
+    border-width: 1px;
+    border-color: var(--color-border);
+    border-radius: var(--border-radius-sm);
+    color: var(--color-text-primary);
+    padding: 6px 10px;
+    font-size: 13px;
+}
+
+/* Grid */
+.inv-scroll {
+    flex-grow: 1;
+}
+
+.inv-grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: var(--spacing-xs);
+}
+
+.inv-empty-label {
+    display: none;
+    -unity-text-align: middle-center;
+    color: var(--color-text-dim);
+    font-size: 16px;
+    padding: 60px 20px;
+}
+
+/* ─── Detail Panel (Right) ─── */
+.inv-detail-panel {
+    flex-grow: 2;
+    min-width: 260px;
+    max-width: 340px;
+}
+
+/* Placeholder */
+.inv-detail-placeholder {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+}
+
+.inv-placeholder-text {
+    font-size: 15px;
+    -unity-text-align: middle-center;
+    padding: 40px 20px;
+}
+
+/* Detail content (shared) */
+.inv-detail-content {
+    padding: var(--spacing-sm);
+}
+
+.inv-detail-icon {
+    width: 96px;
+    height: 96px;
+    align-self: center;
+    margin-bottom: var(--spacing-md);
+    border-radius: var(--border-radius-md);
+    border-width: 2px;
+    border-color: var(--color-gold-dim);
+    background-color: var(--color-bg-medium);
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.inv-detail-name {
+    font-size: 22px;
+    color: var(--color-text-primary);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    margin-bottom: 4px;
+}
+
+.inv-detail-type {
+    font-size: 13px;
+    -unity-text-align: middle-center;
+    margin-bottom: var(--spacing-sm);
+}
+
+.inv-detail-desc {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    white-space: normal;
+    margin-bottom: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    background-color: rgba(30, 20, 15, 0.4);
+    border-radius: var(--border-radius-sm);
+}
+
+/* Stats grid */
+.inv-stats-grid {
+    margin-top: var(--spacing-sm);
+}
+
+.inv-stat-row {
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 4px 0;
+}
+
+.inv-stat-label {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+}
+
+.inv-stat-value {
+    font-size: 13px;
+    color: var(--color-text-primary);
+    -unity-font-style: bold;
+}
+
+/* Target info */
+.inv-target-info {
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 4px 0;
+    margin-bottom: var(--spacing-sm);
+}
+
+/* Deck status */
+.inv-deck-status {
+    margin-top: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    -unity-text-align: middle-center;
+}
+
+.inv-deck-status-label {
+    font-size: 13px;
+    -unity-text-align: middle-center;
+    color: var(--color-green);
+}

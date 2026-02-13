@@ -41,6 +41,11 @@ namespace TurnBasedGame.Skills
         public int Cooldown => cooldown;
         public int CurrentCooldown => currentCooldown;
         public int Range => range;
+
+        public bool CanTargetAllies => canTargetAllies;
+        public bool CanTargetEnemies => canTargetEnemies;
+        public bool CanTargetSelf => canTargetSelf;
+        public bool CanTargetEmptyTile => canTargetEmptyTile;
         #endregion
 
         protected bool _isExecuting = false;
