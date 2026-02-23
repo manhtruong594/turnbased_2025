@@ -15,7 +15,7 @@ MonoBehaviour:
   skillName: FireBall
   description: No description
   skillType: 1
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 062eeb9d5e8ba8f45a9ddfea52518f82, type: 3}
   cooldown: 3
   range: 2
   VfxPrefab: {fileID: 5681976723181098187, guid: 0a1f2274c09342443a1b556d27eab448, type: 3}

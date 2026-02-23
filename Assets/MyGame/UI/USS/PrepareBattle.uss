@@ -78,11 +78,6 @@
     margin-right: var(--spacing-xs);
     transition-property: background-color, color, border-color;
     transition-duration: 0.15s;
-    cursor: link;
-}
-
-.prepare-tab:last-child {
-    margin-right: 0;
 }
 
 .prepare-tab:hover {
@@ -149,7 +144,6 @@
     border-radius: var(--border-radius-sm);
     transition-property: background-color, border-color, scale;
     transition-duration: 0.15s;
-    cursor: link;
 }
 
 .unit-card:hover {
@@ -209,7 +203,6 @@
     border-radius: var(--border-radius-sm);
     transition-property: background-color, border-color, scale;
     transition-duration: 0.15s;
-    cursor: link;
 }
 
 .spell-card:hover {
@@ -299,7 +292,6 @@
     justify-content: center;
     transition-property: background-color, border-color;
     transition-duration: 0.15s;
-    cursor: link;
 }
 
 .deck-slot--empty {

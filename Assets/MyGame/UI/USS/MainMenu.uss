@@ -105,7 +105,6 @@
     -unity-text-align: middle-center;
     transition-property: background-color, border-color, scale, color;
     transition-duration: 0.2s;
-    cursor: link;
 }
 
 .menu-btn:hover {

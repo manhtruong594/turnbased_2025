@@ -122,20 +122,7 @@ namespace TurnBasedGame.Unit
 
             // Đổi màu theo trạng thái
             Color color = isOccupied ? unavailableColor : availableColor;
-            
-            // Tạo material mới với màu phù hợp
-            Material mat = new Material(Shader.Find("Standard"));
-            mat.color = color;
-            mat.SetFloat("_Mode", 3); // Transparent mode
-            mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-            mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-            mat.SetInt("_ZWrite", 0);
-            mat.DisableKeyword("_ALPHATEST_ON");
-            mat.EnableKeyword("_ALPHABLEND_ON");
-            mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-            mat.renderQueue = 3000;
-
-            indicatorRenderer.material = mat;
+            indicatorRenderer.material.color = color;
         }
 
         private void OnDrawGizmos()

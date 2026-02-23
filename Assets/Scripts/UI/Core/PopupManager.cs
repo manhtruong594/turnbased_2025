@@ -213,6 +213,8 @@ namespace TurnBasedGame.UI
         {
             if (_popupDocument != null)
             {
+                // Đảm bảo popup luôn trên top
+                _popupDocument.sortingOrder = 1000;
                 _popupRoot = _popupDocument.rootVisualElement;
             }
             else
@@ -221,6 +223,7 @@ namespace TurnBasedGame.UI
                 var doc = gameObject.AddComponent<UIDocument>();
                 doc.sortingOrder = 1000; // luôn trên top
                 _popupRoot = doc.rootVisualElement;
+                _popupDocument = doc;
             }
 
             _popupRoot.style.position = Position.Absolute;

@@ -47,7 +47,6 @@ namespace TurnBasedGame.UI
             }
 
             Instance = this;
-            DontDestroyOnLoad(gameObject);
 
             if (_screenContainer == null)
                 _screenContainer = transform;

@@ -1,2 +1,2 @@
-** Improve projectile
-** Pause time system when attack is performing
+** Hoàn thiện logic UI từ mainmenu đến scene gameplay
+

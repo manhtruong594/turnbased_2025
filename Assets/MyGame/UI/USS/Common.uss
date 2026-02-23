@@ -62,7 +62,6 @@
     -unity-font-style: bold;
     transition-property: background-color, border-color, scale;
     transition-duration: 0.15s;
-    cursor: link;
 }
 
 .btn:hover {
