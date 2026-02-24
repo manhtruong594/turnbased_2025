@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using TurnBasedGame.Unit;
 using TurnBasedGame.Skills;
 using System.Linq;
+using RedBjorn.ProtoTiles.Example;
 
 namespace TurnBasedGame.UI
 {
@@ -206,11 +207,11 @@ namespace TurnBasedGame.UI
             {
                 var unit = units[i];
                 if (unit == null) continue;
-                if (!string.IsNullOrEmpty(filter) && !unit.unitName.ToLowerInvariant().Contains(filter))
+                if (!string.IsNullOrEmpty(filter) && !unit.UnitData.unitName.ToLowerInvariant().Contains(filter))
                     continue;
 
                 var card = new UnitCardElement();
-                card.Bind(unit);
+                card.Bind(unit.UnitData);
                 card.SetInDeck(_playerData.SelectedDeck.Contains(unit));
 
                 var capturedUnit = unit;
@@ -260,7 +261,7 @@ namespace TurnBasedGame.UI
 
         // ─── Card Click Handlers ───
 
-        private void OnUnitCardClicked(UnitData unit)
+        private void OnUnitCardClicked(UnitMove unit)
         {
             if (_playerData.SelectedDeck.Contains(unit))
             {
@@ -314,7 +315,7 @@ namespace TurnBasedGame.UI
 
         // ─── Data Event Handlers ───
 
-        private void HandleDeckChanged(List<UnitData> deck)
+        private void HandleDeckChanged(List<UnitMove> deck)
         {
             RefreshUnitSlots();
             RefreshCollectionList();

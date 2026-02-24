@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TurnBasedGame.Unit;
 using TurnBasedGame.Skills;
+using RedBjorn.ProtoTiles.Example;
 
 namespace TurnBasedGame.UI
 {
@@ -47,7 +48,7 @@ namespace TurnBasedGame.UI
         private SpellDetailPanel _spellDetail;
 
         // Selection tracking
-        private UnitData _selectedUnit;
+        private UnitMove _selectedUnit;
         private SkillBase _selectedSpell;
 
         // ─── Lifecycle ───
@@ -203,7 +204,7 @@ namespace TurnBasedGame.UI
             foreach (var unit in units)
             {
                 var card = new UnitCardElement();
-                card.Bind(unit);
+                card.Bind(unit.UnitData);
                 card.SetInDeck(_playerData.SelectedDeck.Contains(unit));
                 card.SetSelected(unit == _selectedUnit);
 
@@ -241,25 +242,25 @@ namespace TurnBasedGame.UI
 
         // ─── Sorting ───
 
-        private List<UnitData> GetSortedUnits(string filter)
+        private List<UnitMove> GetSortedUnits(string filter)
         {
-            var result = new List<UnitData>();
+            var result = new List<UnitMove>();
             var owned = _playerData.OwnedUnits;
 
             for (int i = 0; i < owned.Count; i++)
             {
                 var u = owned[i];
                 if (u == null) continue;
-                if (!string.IsNullOrEmpty(filter) && !u.unitName.ToLowerInvariant().Contains(filter))
+                if (!string.IsNullOrEmpty(filter) && !u.UnitData.unitName.ToLowerInvariant().Contains(filter))
                     continue;
                 result.Add(u);
             }
 
             result.Sort((a, b) => _currentSort switch
             {
-                SortMode.Cost => a.spawnCost.CompareTo(b.spawnCost),
-                SortMode.HP => b.Health.CompareTo(a.Health),
-                _ => string.Compare(a.unitName, b.unitName, StringComparison.Ordinal)
+                SortMode.Cost => a.UnitData.spawnCost.CompareTo(b.UnitData.spawnCost),
+                SortMode.HP => b.UnitData.Health.CompareTo(a.UnitData.Health),
+                _ => string.Compare(a.UnitData.unitName, b.UnitData.unitName, StringComparison.Ordinal)
             });
 
             return result;
@@ -291,7 +292,7 @@ namespace TurnBasedGame.UI
 
         // ─── Card Click → Detail ───
 
-        private void OnUnitCardClicked(UnitData unit, UnitCardElement card)
+        private void OnUnitCardClicked(UnitMove unit, UnitCardElement card)
         {
             _selectedUnit = unit;
             _selectedSpell = null;
@@ -319,13 +320,13 @@ namespace TurnBasedGame.UI
             _spellDetail?.Hide();
         }
 
-        private void ShowUnitDetail(UnitData unit)
+        private void ShowUnitDetail(UnitMove unit)
         {
             SetDisplay(_detailPlaceholder, false);
             _spellDetail?.Hide();
 
             bool inDeck = _playerData.SelectedDeck.Contains(unit);
-            _unitDetail?.Bind(unit, inDeck);
+            _unitDetail?.Bind(unit.UnitData, inDeck);
             _unitDetail?.Show();
         }
 
@@ -381,7 +382,7 @@ namespace TurnBasedGame.UI
 
         // ─── Data Event Handlers ───
 
-        private void HandleUnitAcquired(UnitData _)
+        private void HandleUnitAcquired(UnitMove _)
         {
             if (_activeTab == CollectionTab.Units) RefreshGrid();
         }

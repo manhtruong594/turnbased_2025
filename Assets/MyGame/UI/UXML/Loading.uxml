@@ -1,0 +1,32 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:ui="UnityEngine.UIElements"
+         noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd"
+         editor-extension-mode="False">
+
+    <Style src="project://database/Assets/MyGame/UI/USS/Common.uss" />
+    <Style src="project://database/Assets/MyGame/UI/USS/Loading.uss" />
+
+    <ui:VisualElement name="loading-overlay" class="loading-overlay">
+        <ui:VisualElement name="loading-container" class="loading-container">
+
+            <!-- Tiêu đề -->
+            <ui:Label name="loading-title" text="ĐẠI NAM" class="loading-title" />
+
+            <!-- Đường kẻ trang trí -->
+            <ui:VisualElement class="loading-separator" />
+
+            <!-- Mẹo / gợi ý -->
+            <ui:Label name="loading-hint" text="Hãy bày binh bố trận cẩn thận trước mỗi trận chiến..."
+                      class="loading-hint" />
+
+            <!-- Progress bar -->
+            <ui:ProgressBar name="loading-progress" class="loading-progress"
+                            low-value="0" high-value="100" value="0" />
+
+            <!-- Label trạng thái -->
+            <ui:Label name="loading-status" text="Đang tải..." class="loading-status" />
+
+        </ui:VisualElement>
+    </ui:VisualElement>
+
+</ui:UXML>

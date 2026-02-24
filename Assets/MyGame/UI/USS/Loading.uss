@@ -1,0 +1,94 @@
+/* ============================================================
+   Loading.uss — Loading overlay theo theme "Đại Nam".
+   Dùng cho SceneLoader loading screen.
+   ============================================================ */
+
+/* ─── Overlay fullscreen ─── */
+.loading-overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--color-bg-dark);
+    align-items: center;
+    justify-content: center;
+}
+
+/* ─── Container chính ─── */
+.loading-container {
+    align-items: center;
+    width: 50%;
+    min-width: 320px;
+    max-width: 600px;
+}
+
+/* ─── Tiêu đề loading ─── */
+.loading-title {
+    font-size: 28px;
+    color: var(--color-gold);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    margin-bottom: var(--spacing-lg);
+    letter-spacing: 2px;
+}
+
+/* ─── Hint / tip text ─── */
+.loading-hint {
+    font-size: 14px;
+    color: var(--color-text-dim);
+    -unity-text-align: middle-center;
+    -unity-font-style: italic;
+    margin-bottom: var(--spacing-xl);
+    white-space: normal;
+    max-width: 80%;
+}
+
+/* ─── Progress bar container ─── */
+.loading-progress {
+    width: 100%;
+    height: 24px;
+    margin-bottom: var(--spacing-sm);
+}
+
+/* Progress bar — tracker (nền) */
+.loading-progress > .unity-progress-bar__background {
+    background-color: var(--color-bg-medium);
+    border-width: 2px;
+    border-color: var(--color-border);
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+}
+
+/* Progress bar — fill (thanh tiến trình) */
+.loading-progress > .unity-progress-bar__background > .unity-progress-bar__progress {
+    background-color: var(--color-gold-dim);
+    border-radius: var(--border-radius-md);
+    transition-property: width;
+    transition-duration: 0.15s;
+}
+
+/* Progress bar — title text (% hiển thị) */
+.loading-progress > .unity-progress-bar__background > .unity-progress-bar__title {
+    color: var(--color-text-primary);
+    font-size: 12px;
+    -unity-font-style: bold;
+}
+
+/* ─── Status label ─── */
+.loading-status {
+    font-size: 16px;
+    color: var(--color-text-secondary);
+    -unity-text-align: middle-center;
+    margin-top: var(--spacing-xs);
+}
+
+/* ─── Decorative separator ─── */
+.loading-separator {
+    width: 60%;
+    height: 2px;
+    background-color: var(--color-border-light);
+    margin-top: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    align-self: center;
+}

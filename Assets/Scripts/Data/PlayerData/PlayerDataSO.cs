@@ -33,14 +33,14 @@ public class PlayerDataSO : ScriptableObject
     // ─── Collection (tất cả đã mở khóa) ───
 
     [Header("Owned Collection")]
-    [SerializeField] private List<UnitData> _ownedUnits = new();
+    [SerializeField] private List<UnitMove> _ownedUnits = new();
     [SerializeField] private List<SkillBase> _ownedSpells = new();
 
     // ─── Deck (chọn cho trận đấu) ───
 
     [Header("Selected Deck")]
     [Tooltip("Units được chọn cho trận đấu tiếp theo (max 6)")]
-    [SerializeField] private List<UnitData> _selectedDeck = new();
+    [SerializeField] private List<UnitMove> _selectedDeck = new();
     [Tooltip("Spells được chọn cho trận đấu tiếp theo (max 4)")]
     [SerializeField] private List<SkillBase> _selectedSpells = new();
 
@@ -53,9 +53,9 @@ public class PlayerDataSO : ScriptableObject
 
     public event Action<int> OnGoldChanged;
     public event Action<int, int> OnXPChanged; // (currentXP, level)
-    public event Action<List<UnitData>> OnDeckChanged;
+    public event Action<List<UnitMove>> OnDeckChanged;
     public event Action<List<SkillBase>> OnSpellsChanged;
-    public event Action<UnitData> OnUnitAcquired;
+    public event Action<UnitMove> OnUnitAcquired;
     public event Action<SkillBase> OnSpellAcquired;
 
     // ─── Properties ───
@@ -88,17 +88,17 @@ public class PlayerDataSO : ScriptableObject
         }
     }
 
-    public IReadOnlyList<UnitData> OwnedUnits => _ownedUnits;
+    public IReadOnlyList<UnitMove> OwnedUnits => _ownedUnits;
     public IReadOnlyList<SkillBase> OwnedSpells => _ownedSpells;
-    public IReadOnlyList<UnitData> SelectedDeck => _selectedDeck;
+    public IReadOnlyList<UnitMove> SelectedDeck => _selectedDeck;
     public IReadOnlyList<SkillBase> SelectedSpells => _selectedSpells;
 
     // ─── Collection Methods ───
 
-    public bool OwnsUnit(UnitData unit) => _ownedUnits.Contains(unit);
+    public bool OwnsUnit(UnitMove unit) => _ownedUnits.Contains(unit);
     public bool OwnsSpell(SkillBase spell) => _ownedSpells.Contains(spell);
 
-    public void AddUnit(UnitData unit)
+    public void AddUnit(UnitMove unit)
     {
         if (unit == null || _ownedUnits.Contains(unit)) return;
         _ownedUnits.Add(unit);
@@ -114,7 +114,7 @@ public class PlayerDataSO : ScriptableObject
 
     // ─── Deck Methods ───
 
-    public bool AddToDeck(UnitData unit)
+    public bool AddToDeck(UnitMove unit)
     {
         if (unit == null || _selectedDeck.Count >= MaxDeckSize) return false;
         if (_selectedDeck.Contains(unit)) return false;
@@ -125,7 +125,7 @@ public class PlayerDataSO : ScriptableObject
         return true;
     }
 
-    public bool RemoveFromDeck(UnitData unit)
+    public bool RemoveFromDeck(UnitMove unit)
     {
         if (!_selectedDeck.Remove(unit)) return false;
         OnDeckChanged?.Invoke(_selectedDeck);

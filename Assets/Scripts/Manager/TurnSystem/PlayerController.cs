@@ -77,7 +77,7 @@ namespace TurnBasedGame.Core
         /// </summary>
         private void SetupUI()
         {
-            _spawnPanel.Initialize(_playerData.AvalailableUnits);
+            _spawnPanel.Initialize(_playerData.SelectedDeck);
             _myUI.Setup(playerID.ToString());
             UpdateUI(false);
         }

@@ -9,6 +9,7 @@ namespace TurnBasedGame.UI
     /// <summary>
     /// Async scene loading với loading overlay (UI Toolkit).
     /// Singleton, DontDestroyOnLoad — persist qua scene transitions.
+    /// Sử dụng UXML/USS template theo theme "Đại Nam".
     /// </summary>
     public class SceneLoader : MonoBehaviour
     {
@@ -22,10 +23,10 @@ namespace TurnBasedGame.UI
         [SerializeField, Range(0.3f, 3f)] private float _minDisplayTime = 0.5f;
         [SerializeField, Range(0.1f, 1f)] private float _fadeDuration = 0.3f;
 
-        private VisualElement _root;
         private VisualElement _overlay;
         private ProgressBar _progressBar;
-        private Label _loadingLabel;
+        private Label _statusLabel;
+        private Label _hintLabel;
         private bool _isLoading;
 
         /// <summary>True nếu đang trong quá trình load scene.</summary>
@@ -33,6 +34,17 @@ namespace TurnBasedGame.UI
 
         /// <summary>Fired khi scene load hoàn tất.</summary>
         public event Action<string> OnSceneLoaded;
+
+        // ─── Loading Tips ───
+        private static readonly string[] LoadingHints =
+        {
+            "Hãy bày binh bố trận cẩn thận trước mỗi trận chiến...",
+            "Kết hợp kỹ năng đồng đội để tạo combo mạnh mẽ!",
+            "Địa hình ảnh hưởng lớn đến chiến thuật — hãy tận dụng!",
+            "Mỗi tướng có điểm mạnh riêng, hãy xây dựng đội hình hợp lý.",
+            "Đừng quên nâng cấp trang bị trước khi ra trận!",
+            "Quan sát lượt đi của đối thủ để dự đoán chiến thuật.",
+        };
 
         // ─── Lifecycle ───
 
@@ -46,7 +58,7 @@ namespace TurnBasedGame.UI
 
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            BuildLoadingUI();
+            CacheUIReferences();
         }
 
         // ─── Public API ───
@@ -57,7 +69,7 @@ namespace TurnBasedGame.UI
         /// <param name="sceneName">Tên scene cần load.</param>
         /// <param name="onProgress">Callback progress (0→1). Có thể null.</param>
         /// <param name="onComplete">Callback khi hoàn tất. Có thể null.</param>
-        public void LoadSceneAsync(string sceneName, Action<float> onProgress = null, Action onComplete = null)
+        public void LoadSceneAsync(string sceneName, Action onComplete = null)
         {
             if (_isLoading)
             {
@@ -65,16 +77,16 @@ namespace TurnBasedGame.UI
                 return;
             }
 
-            StartCoroutine(LoadSceneRoutine(sceneName, LoadSceneMode.Single, onProgress, onComplete));
+            StartCoroutine(LoadSceneRoutine(sceneName, LoadSceneMode.Single, onComplete));
         }
 
         /// <summary>
         /// Load scene additive async (giữ scene hiện tại).
         /// </summary>
-        public void LoadSceneAdditiveAsync(string sceneName, Action<float> onProgress = null, Action onComplete = null)
+        public void LoadSceneAdditiveAsync(string sceneName, Action onComplete = null)
         {
             if (_isLoading) return;
-            StartCoroutine(LoadSceneRoutine(sceneName, LoadSceneMode.Additive, onProgress, onComplete));
+            StartCoroutine(LoadSceneRoutine(sceneName, LoadSceneMode.Additive, onComplete));
         }
 
         /// <summary>
@@ -87,10 +99,13 @@ namespace TurnBasedGame.UI
 
         // ─── Core Routine ───
 
-        private IEnumerator LoadSceneRoutine(string sceneName, LoadSceneMode mode, Action<float> onProgress, Action onComplete)
+        private IEnumerator LoadSceneRoutine(string sceneName, LoadSceneMode mode, Action onComplete)
         {
             _isLoading = true;
             float startTime = Time.unscaledTime;
+
+            // Hiển thị hint ngẫu nhiên
+            SetRandomHint();
 
             // Show overlay
             yield return FadeOverlay(true);
@@ -105,12 +120,10 @@ namespace TurnBasedGame.UI
             {
                 float progress = Mathf.Clamp01(operation.progress / 0.9f);
                 UpdateProgress(progress);
-                onProgress?.Invoke(progress);
                 yield return null;
             }
 
             UpdateProgress(1f, "Hoàn tất!");
-            onProgress?.Invoke(1f);
 
             // Đảm bảo overlay hiển thị tối thiểu _minDisplayTime
             float elapsed = Time.unscaledTime - startTime;
@@ -140,50 +153,28 @@ namespace TurnBasedGame.UI
 
         // ─── Loading UI ───
 
-        private void BuildLoadingUI()
+        private void CacheUIReferences()
         {
             if (_loadingDocument == null) return;
 
-            _root = _loadingDocument.rootVisualElement;
-            _root.style.position = Position.Absolute;
-            _root.style.left = _root.style.top = _root.style.right = _root.style.bottom = 0;
+            var root = _loadingDocument.rootVisualElement;
+            _overlay = root.Q<VisualElement>("loading-overlay");
+            _progressBar = root.Q<ProgressBar>("loading-progress");
+            _statusLabel = root.Q<Label>("loading-status");
+            _hintLabel = root.Q<Label>("loading-hint");
 
-            // Overlay background
-            _overlay = new VisualElement { name = "loading-overlay" };
-            _overlay.style.position = Position.Absolute;
-            _overlay.style.left = _overlay.style.top = _overlay.style.right = _overlay.style.bottom = 0;
-            _overlay.style.backgroundColor = new Color(0.05f, 0.03f, 0.02f, 1f);
-            _overlay.style.alignItems = Align.Center;
-            _overlay.style.justifyContent = Justify.Center;
-            _overlay.style.display = DisplayStyle.None;
+            // Bắt đầu ẩn
+            if (_overlay != null)
+            {
+                _overlay.style.display = DisplayStyle.None;
+                _overlay.style.opacity = 0f;
+            }
+        }
 
-            // Container
-            var container = new VisualElement { name = "loading-container" };
-            container.style.alignItems = Align.Center;
-            container.style.width = Length.Percent(60);
-
-            // Loading text
-            _loadingLabel = new Label("Đang tải...") { name = "loading-label" };
-            _loadingLabel.style.fontSize = 22;
-            _loadingLabel.style.color = new Color(0.95f, 0.9f, 0.8f);
-            _loadingLabel.style.marginBottom = 16;
-            _loadingLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
-
-            // Progress bar
-            _progressBar = new ProgressBar { name = "loading-progress" };
-            _progressBar.style.width = Length.Percent(100);
-            _progressBar.style.height = 20;
-            _progressBar.lowValue = 0;
-            _progressBar.highValue = 100;
-            _progressBar.value = 0;
-
-            container.Add(_loadingLabel);
-            container.Add(_progressBar);
-            _overlay.Add(container);
-            _root.Add(_overlay);
-
-            // Start hidden
-            _overlay.style.opacity = 0f;
+        private void SetRandomHint()
+        {
+            if (_hintLabel == null || LoadingHints.Length == 0) return;
+            _hintLabel.text = LoadingHints[UnityEngine.Random.Range(0, LoadingHints.Length)];
         }
 
         private void UpdateProgress(float normalized, string text = null)
@@ -191,8 +182,8 @@ namespace TurnBasedGame.UI
             if (_progressBar != null)
                 _progressBar.value = normalized * 100f;
 
-            if (text != null && _loadingLabel != null)
-                _loadingLabel.text = text;
+            if (text != null && _statusLabel != null)
+                _statusLabel.text = text;
         }
 
         private IEnumerator FadeOverlay(bool fadeIn)

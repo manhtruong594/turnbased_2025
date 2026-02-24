@@ -25,7 +25,7 @@ namespace TurnBasedGame.UI
         {
         }
 
-        public void Initialize(List<UnitMove> units)
+        public void Initialize(IReadOnlyList<UnitMove> units)
         {
             availableUnits = new List<UnitMove>(units);
             GenerateSpawnButtons();

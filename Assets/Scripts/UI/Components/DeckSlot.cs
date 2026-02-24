@@ -1,6 +1,7 @@
 using UnityEngine.UIElements;
 using TurnBasedGame.Unit;
 using TurnBasedGame.Skills;
+using RedBjorn.ProtoTiles.Example;
 
 namespace TurnBasedGame.UI
 {
@@ -20,7 +21,7 @@ namespace TurnBasedGame.UI
         private readonly Label _label;
         private readonly Label _placeholder;
 
-        public UnitData UnitData { get; private set; }
+        public UnitMove UnitData { get; private set; }
         public SkillBase SpellData { get; private set; }
         public bool IsEmpty => UnitData == null && SpellData == null;
 
@@ -45,15 +46,15 @@ namespace TurnBasedGame.UI
         }
 
         /// <summary>Gán unit vào slot.</summary>
-        public void BindUnit(UnitData unit)
+        public void BindUnit(UnitMove unit)
         {
             ClearSlot();
             UnitData = unit;
             if (unit == null) return;
 
-            _label.text = unit.unitName;
-            if (unit.icon != null)
-                _icon.style.backgroundImage = new StyleBackground(unit.icon);
+            _label.text = unit.UnitData.unitName;
+            if (unit.UnitData.icon != null)
+                _icon.style.backgroundImage = new StyleBackground(unit.UnitData.icon);
 
             UpdateVisual();
         }
