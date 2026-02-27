@@ -1,5 +1,7 @@
 using UnityEngine;
 using TurnBasedGame.Core;
+using RedBjorn.ProtoTiles.Example;
+using System;
 
 namespace TurnBasedGame.Unit
 {
@@ -46,16 +48,27 @@ namespace TurnBasedGame.Unit
             gridPosition = gridPos;
             
             UpdateVisual();
+            GameMediator.Instance.OnUnitMoved += HandleUnitMoved;
         }
-
-        /// <summary>
-        /// Đặt vị trí grid cho spawn point
-        /// </summary>
-        public void SetGridPosition(Vector3Int gridPos)
+        
+        void OnDisable()
         {
-            gridPosition = gridPos;
+            GameMediator.Instance.OnUnitMoved -= HandleUnitMoved;
+        }
+        
+        private void HandleUnitMoved(UnitMove move, Vector3Int oldPos, Vector3Int newPos)
+        {
+            if (oldPos == gridPosition)
+            {
+                MarkAsAvailable();
+            }
+            else if (newPos == gridPosition)
+            {
+                MarkAsOccupied();
+            }
         }
 
+        
         /// <summary>
         /// Đánh dấu spawn point đã được sử dụng
         /// </summary>

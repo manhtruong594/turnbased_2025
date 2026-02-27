@@ -86,7 +86,7 @@ namespace TurnBasedGame.Capture
         /// <summary>
         /// OnUnitEnter: Unit di chuyển đến ô mới → kiểm tra chiếm cứ điểm
         /// </summary>
-        private void OnUnitMoved(UnitMove unit, Vector3Int newPos)
+        private void OnUnitMoved(UnitMove unit, Vector3Int oldPos, Vector3Int newPos)
         {
             var point = GetPointAt(newPos);
             if (point == null) return;

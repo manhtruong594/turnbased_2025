@@ -152,9 +152,9 @@ namespace RedBjorn.ProtoTiles.Example
         public void UpdateGridPosition(Vector3Int newGridPos)
         {
             MapManager.Instance.UnregisterUnit(currentGridPosition);
-            currentGridPosition = newGridPos;
             MapManager.Instance.RegisterUnit(newGridPos, this);
-            GameMediator.Instance?.NotifyUnitMoved(this, newGridPos);
+            GameMediator.Instance?.NotifyUnitMoved(this, currentGridPosition, newGridPos);
+            currentGridPosition = newGridPos;
         }
         #endregion
 

@@ -37,7 +37,7 @@ public class GameMediator : MonoBehaviour
     #endregion
 
     #region Unit Movement Events
-    public event Action<UnitMove, Vector3Int> OnUnitMoved;
+    public event Action<UnitMove, Vector3Int, Vector3Int> OnUnitMoved;
     #endregion
 
     #region Capture Point Events
@@ -100,9 +100,9 @@ public class GameMediator : MonoBehaviour
         OnUnitDeselected?.Invoke(unit);
     }
 
-    public void NotifyUnitMoved(UnitMove unit, Vector3Int newPos)
+    public void NotifyUnitMoved(UnitMove unit, Vector3Int oldPos, Vector3Int newPos)
     {
-        OnUnitMoved?.Invoke(unit, newPos);
+        OnUnitMoved?.Invoke(unit, oldPos, newPos);
     }
 
     public void NotifyCapturePointCaptured(Vector3Int position, PlayerID newOwner)

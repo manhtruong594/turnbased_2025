@@ -25,5 +25,7 @@ MonoBehaviour:
   - {fileID: 662182742872618790, guid: 5bbad2484b2ccdd4385e17d74927ac0f, type: 3}
   - {fileID: 662182742872618790, guid: 9b70e9f742e2e02498b2d5aa25c4fb5f, type: 3}
   _ownedSpells: []
-  _selectedDeck: []
+  _selectedDeck:
+  - {fileID: 662182742872618790, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}
+  - {fileID: 662182742872618790, guid: 5bbad2484b2ccdd4385e17d74927ac0f, type: 3}
   _selectedSpells: []
