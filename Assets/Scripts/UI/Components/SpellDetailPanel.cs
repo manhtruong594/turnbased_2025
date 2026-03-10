@@ -1,6 +1,7 @@
 using UnityEngine.UIElements;
 using TurnBasedGame.Skills;
 using System.Collections.Generic;
+using TurnBasedGame.SpellCard;
 
 namespace TurnBasedGame.UI
 {
@@ -34,20 +35,20 @@ namespace TurnBasedGame.UI
         }
 
         /// <summary>Bind dữ liệu SkillBase vào detail panel.</summary>
-        public void Bind(SkillBase spell, bool isInDeck)
+        public void Bind(SpellCardData spell, bool isInDeck)
         {
             if (spell == null) return;
 
-            if (spell.Icon != null)
-                _icon.style.backgroundImage = new StyleBackground(spell.Icon);
+            if (spell.icon != null)
+                _icon.style.backgroundImage = new StyleBackground(spell.icon);
             else
                 _icon.style.backgroundImage = StyleKeyword.None;
 
-            SetText(_name, spell.SkillName);
-            SetText(_type, spell.Type.ToString());
-            SetText(_desc, string.IsNullOrEmpty(spell.Description) ? "Không có mô tả." : spell.Description);
-            SetText(_cd, spell.Cooldown.ToString());
-            SetText(_range, spell.Range.ToString());
+            SetText(_name, spell.spellName);
+            SetText(_type, spell.targetType.ToString());
+            SetText(_desc, string.IsNullOrEmpty(spell.description) ? "Không có mô tả." : spell.description);
+            SetText(_cd, spell.mpCost.ToString());
+            SetText(_range, spell.range.ToString());
             SetText(_targetFlags, BuildTargetText(spell));
             SetText(_deckStatus, isInDeck ? "✔ Đang được trang bị" : "");
         }
@@ -55,13 +56,13 @@ namespace TurnBasedGame.UI
         public void Show() => _root.style.display = DisplayStyle.Flex;
         public void Hide() => _root.style.display = DisplayStyle.None;
 
-        private static string BuildTargetText(SkillBase spell)
+        private static string BuildTargetText(SpellCardData spell)
         {
             var targets = new List<string>(4);
-            if (spell.CanTargetEnemies) targets.Add("Địch");
-            if (spell.CanTargetAllies) targets.Add("Đồng minh");
-            if (spell.CanTargetSelf) targets.Add("Bản thân");
-            if (spell.CanTargetEmptyTile) targets.Add("Ô trống");
+            if (spell.targetType == SpellTargetType.SingleEnemy) targets.Add("Địch");
+            if (spell.targetType == SpellTargetType.SingleAlly) targets.Add("Đồng minh");
+            if (spell.targetType == SpellTargetType.Self) targets.Add("Bản thân");
+            if (spell.targetType == SpellTargetType.AnyUnit) targets.Add("Ô trống");
             return targets.Count > 0 ? string.Join(", ", targets) : "—";
         }
 

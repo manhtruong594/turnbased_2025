@@ -1,1 +1,2 @@
-** Hoàn thiện UI Ingame với Battle_UIManager
+** Thêm 2 character mới + 1 enemy
+** Thêm hệ thống spell

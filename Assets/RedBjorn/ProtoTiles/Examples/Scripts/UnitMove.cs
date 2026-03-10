@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using TurnBasedGame.Command;
 using TurnBasedGame.Core;
 using TurnBasedGame.Skills;
+using TurnBasedGame.SpellCard;
 using TurnBasedGame.Unit;
 using UnityEngine;
 using UnityEngine.UI;
@@ -28,6 +29,7 @@ namespace RedBjorn.ProtoTiles.Example
         [Header("Other Components")]
         [SerializeField] private UnitData unitData;
         [SerializeField] private UnitAttack _attackComponent;
+        [SerializeField] private BuffDebuffHandler _buffHandler;
         [SerializeField] private HealthBar _healthBar;
         [SerializeField] private UnitAnimator _unitAnimator;
         [SerializeField] private GameObject _actionPanel;
@@ -50,6 +52,7 @@ namespace RedBjorn.ProtoTiles.Example
             UpdateGridPosition(startGridPos);
             CreateStats();
             _attackComponent.Init(runtimeStats, this);
+            InitBuffHandler();
 
             void CreateStats()
             {
@@ -57,6 +60,13 @@ namespace RedBjorn.ProtoTiles.Example
                     .SetOwner(owner)
                     .AssignMap(MapManager.Instance.MapEntity);
             }
+        }
+
+        private void InitBuffHandler()
+        {
+            if (_buffHandler == null)
+                _buffHandler = GetComponent<BuffDebuffHandler>();
+            _buffHandler?.Init(this);
         }
 
         public void ResetMove()
@@ -170,6 +180,7 @@ namespace RedBjorn.ProtoTiles.Example
         public void OnTurnBegin()
         {
             _attackComponent.ReduceSkillsCooldowns();
+            _buffHandler?.TickBuffs();
             ResetComponents();
         }
     
@@ -186,13 +197,25 @@ namespace RedBjorn.ProtoTiles.Example
         public float GetHealthPercent() => (float)runtimeStats.Health / runtimeStats.MaxHealth;
         public PlayerID GetOwner() => runtimeStats.Owner;
         public bool IsMoveDone() => runtimeStats.IsMoveCompleted;
-        public bool CanMove() => !runtimeStats.IsMoveCompleted && !runtimeStats.IsInAttackMode;
+        public bool CanMove()
+        {
+            if (runtimeStats.IsMoveCompleted || runtimeStats.IsInAttackMode) return false;
+            if (_buffHandler != null && _buffHandler.IsRooted()) return false;
+            return true;
+        }
         public bool IsActionFinished() => runtimeStats.IsActionCompleted;
         public bool IsDead() => runtimeStats.IsDead;
 
+        public BuffDebuffHandler BuffHandler => _buffHandler;
+
         public void TakeDamage(float damage)
         {
+            // Áp dụng Shield giảm sát thương
+            if (damage > 0 && _buffHandler != null)
+                damage = _buffHandler.ModifyIncomingDamage(damage);
+
             runtimeStats.Health -= (int)damage;
+            runtimeStats.Health = Mathf.Clamp(runtimeStats.Health, 0, runtimeStats.MaxHealth);
             _healthBar.UpdateHealthBar((float)runtimeStats.Health / runtimeStats.MaxHealth);
             if (runtimeStats.Health <= 0)
             {

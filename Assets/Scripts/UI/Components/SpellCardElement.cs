@@ -1,5 +1,6 @@
 using UnityEngine.UIElements;
 using TurnBasedGame.Skills;
+using TurnBasedGame.SpellCard;
 
 namespace TurnBasedGame.UI
 {
@@ -17,10 +18,10 @@ namespace TurnBasedGame.UI
         private readonly VisualElement _icon;
         private readonly Label _nameLabel;
         private readonly Label _typeLabel;
-        private readonly Label _cdLabel;
+        private readonly Label _mpCostLabel;
         private readonly Label _rangeLabel;
 
-        public SkillBase Data { get; private set; }
+        public SpellCardData Data { get; private set; }
 
         public SpellCardElement()
         {
@@ -46,9 +47,9 @@ namespace TurnBasedGame.UI
             var statsRow = new VisualElement();
             statsRow.AddToClassList("spell-card__stats");
 
-            _cdLabel = new Label();
-            _cdLabel.AddToClassList("spell-card__stat");
-            statsRow.Add(_cdLabel);
+            _mpCostLabel = new Label();
+            _mpCostLabel.AddToClassList("spell-card__stat");
+            statsRow.Add(_mpCostLabel);
 
             _rangeLabel = new Label();
             _rangeLabel.AddToClassList("spell-card__stat");
@@ -58,20 +59,20 @@ namespace TurnBasedGame.UI
             Add(info);
         }
 
-        /// <summary>Bind dữ liệu SkillBase vào card.</summary>
-        public void Bind(SkillBase data)
+        /// <summary>Bind dữ liệu SpellCardData vào card.</summary>
+        public void Bind(SpellCardData data)
         {
             Data = data;
             if (data == null) return;
 
-            _nameLabel.text = data.SkillName;
-            _typeLabel.text = data.Type.ToString();
-            _cdLabel.text = $"🔄{data.Cooldown}";
-            _rangeLabel.text = $"🎯{data.Range}";
+            _nameLabel.text = data.spellName;
+            _typeLabel.text = data.targetType.ToString();
+            _mpCostLabel.text = $"🔄{data.mpCost}";
+            _rangeLabel.text = $"🎯{data.range}";
 
-            if (data.Icon != null)
+            if (data.icon != null)
             {
-                _icon.style.backgroundImage = new StyleBackground(data.Icon);
+                _icon.style.backgroundImage = new StyleBackground(data.icon);
             }
         }
 

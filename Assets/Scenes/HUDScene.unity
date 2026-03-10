@@ -30217,7 +30217,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1212564208}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5a7851da8854abc4191051f60d5ea3bb, type: 3}
   m_Name: 
@@ -30274,7 +30274,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1212564208}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f50ef8ae71ab4a54980ddf0015a0857d, type: 3}
   m_Name: 
@@ -30282,12 +30282,12 @@ MonoBehaviour:
   followTarget: {fileID: 0}
   followSmoothSpeed: 5
   followOffset: {x: 0, y: 10, z: -8}
-  panSpeedMouse: 0.3
-  panSpeedKeyboard: 10
-  panModifierKey: 324
+  panSpeedMouse: 0.05
+  panSpeedKeyboard: 20
+  panModifierKey: 323
   zoomSpeed: 3
-  zoomMin: 4
-  zoomMax: 20
+  zoomMin: 20
+  zoomMax: 40
   zoomSmoothSpeed: 8
   boundsCenter: {x: 0, y: 0}
   boundsSize: {x: 0, y: 0}
@@ -41532,6 +41532,51 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 7365716079596273168, guid: 8cd36fa15214dd34da7fe2ee9e436ff0, type: 3}
   m_PrefabInstance: {fileID: 1605403984}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1611178210
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1611178211}
+  - component: {fileID: 1611178212}
+  m_Layer: 0
+  m_Name: Spell Manager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1611178211
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1611178210}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -73.32496, y: 0, z: 29.64593}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1825163617}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1611178212
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1611178210}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 113b1dea16ec19649acd2027e8248c9f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.SpellCard.SpellCardManager
+  _actionLefts: {fileID: 0}
 --- !u!1001 &1612947454
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -47066,6 +47111,7 @@ Transform:
   - {fileID: 26522972}
   - {fileID: 1727988970}
   - {fileID: 850061340}
+  - {fileID: 1611178211}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1825163622

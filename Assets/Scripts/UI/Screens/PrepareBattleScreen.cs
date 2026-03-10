@@ -5,6 +5,7 @@ using TurnBasedGame.Unit;
 using TurnBasedGame.Skills;
 using System.Linq;
 using RedBjorn.ProtoTiles.Example;
+using TurnBasedGame.SpellCard;
 
 namespace TurnBasedGame.UI
 {
@@ -233,7 +234,7 @@ namespace TurnBasedGame.UI
             {
                 var spell = spells[i];
                 if (spell == null) continue;
-                if (!string.IsNullOrEmpty(filter) && !spell.SkillName.ToLowerInvariant().Contains(filter))
+                if (!string.IsNullOrEmpty(filter) && !spell.spellName.ToLowerInvariant().Contains(filter))
                     continue;
 
                 var card = new SpellCardElement();
@@ -277,7 +278,7 @@ namespace TurnBasedGame.UI
             }
         }
 
-        private void OnSpellCardClicked(SkillBase spell)
+        private void OnSpellCardClicked(SpellCardData spell)
         {
             if (_playerData.SelectedSpells.Contains(spell))
             {
@@ -322,7 +323,7 @@ namespace TurnBasedGame.UI
             UpdateDeckInfo();
         }
 
-        private void HandleSpellsChanged(List<SkillBase> spells)
+        private void HandleSpellsChanged(List<SpellCardData> spells)
         {
             RefreshSpellSlots();
             RefreshCollectionList();

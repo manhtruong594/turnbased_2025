@@ -178,6 +178,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -314,6 +315,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -690,6 +692,7 @@ GameObject:
   - component: {fileID: 4489093757665515773}
   - component: {fileID: 183361936321396682}
   - component: {fileID: 2164387748012845052}
+  - component: {fileID: 7524088634616033732}
   m_Layer: 5
   m_Name: ActionUnitPanel
   m_TagString: Untagged
@@ -764,7 +767,7 @@ MonoBehaviour:
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
-  m_PresetInfoIsWorld: 1
+  m_PresetInfoIsWorld: 0
 --- !u!114 &183361936321396682
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -794,6 +797,19 @@ CanvasGroup:
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
+--- !u!114 &7524088634616033732
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6988995364828149153}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87a1447794b733a4ba400e4788c18d92, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BillboardUI
+  mode: 1
 --- !u!1 &7081112960955627882
 GameObject:
   m_ObjectHideFlags: 0

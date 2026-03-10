@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using TurnBasedGame.Unit;
 using RedBjorn.ProtoTiles.Example;
 using TurnBasedGame.UI;
+using TurnBasedGame.SpellCard;
 
 namespace TurnBasedGame.Core
 {
@@ -27,6 +28,7 @@ namespace TurnBasedGame.Core
         [SerializeField] DiceUI _diceUI;
         [SerializeField] private PlayerUI _myUI;
         [SerializeField] private SpawnPanel _spawnPanel;
+        [SerializeField] private SpellCardPanel _spellCardPanel;
         private bool _isMyTurn;
         private List<UnitMove> _myUnits = new List<UnitMove>();
 
@@ -78,6 +80,7 @@ namespace TurnBasedGame.Core
         private void SetupUI()
         {
             _spawnPanel.Initialize(_playerData.SelectedDeck);
+            _spellCardPanel.Initialize(_playerData.SelectedSpells);
             _myUI.Setup(playerID.ToString());
             UpdateUI(false);
         }

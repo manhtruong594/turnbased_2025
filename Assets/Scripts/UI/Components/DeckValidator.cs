@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using TurnBasedGame.Unit;
 using TurnBasedGame.Skills;
 using RedBjorn.ProtoTiles.Example;
+using TurnBasedGame.SpellCard;
 
 namespace TurnBasedGame.UI
 {
@@ -30,7 +31,7 @@ namespace TurnBasedGame.UI
         /// <summary>Validate toàn bộ deck (units + spells).</summary>
         public static ValidationResult Validate(
             IReadOnlyList<UnitMove> units,
-            IReadOnlyList<SkillBase> spells)
+            IReadOnlyList<SpellCardData> spells)
         {
             if (units == null || units.Count < MinUnits)
                 return ValidationResult.Invalid($"Cần ít nhất {MinUnits} binh lính!");

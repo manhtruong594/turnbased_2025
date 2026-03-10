@@ -2,6 +2,7 @@ using UnityEngine.UIElements;
 using TurnBasedGame.Unit;
 using TurnBasedGame.Skills;
 using RedBjorn.ProtoTiles.Example;
+using TurnBasedGame.SpellCard;
 
 namespace TurnBasedGame.UI
 {
@@ -22,7 +23,7 @@ namespace TurnBasedGame.UI
         private readonly Label _placeholder;
 
         public UnitMove UnitData { get; private set; }
-        public SkillBase SpellData { get; private set; }
+        public SpellCardData SpellData { get; private set; }
         public bool IsEmpty => UnitData == null && SpellData == null;
 
         public DeckSlot()
@@ -60,15 +61,15 @@ namespace TurnBasedGame.UI
         }
 
         /// <summary>Gán spell vào slot.</summary>
-        public void BindSpell(SkillBase spell)
+        public void BindSpell(SpellCardData spell)
         {
             ClearSlot();
             SpellData = spell;
             if (spell == null) return;
 
-            _label.text = spell.SkillName;
-            if (spell.Icon != null)
-                _icon.style.backgroundImage = new StyleBackground(spell.Icon);
+            _label.text = spell.spellName;
+            if (spell.icon != null)
+                _icon.style.backgroundImage = new StyleBackground(spell.icon);
 
             UpdateVisual();
         }

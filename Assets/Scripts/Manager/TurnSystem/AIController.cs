@@ -75,10 +75,7 @@ namespace TurnBasedGame.Core
                 return false;
             }
 
-            // Chọn random unit
             var randomUnit = availableUnits[Random.Range(0, availableUnits.Count)];
-
-            // Thử spawn
             bool success = UnitSpawner.Instance.SpawnUnit(randomUnit, aiPlayerID);
 
             if (success)

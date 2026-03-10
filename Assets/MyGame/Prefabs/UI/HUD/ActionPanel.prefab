@@ -148,7 +148,7 @@ GameObject:
   - component: {fileID: 466759419840741340}
   - component: {fileID: 1001104497533083053}
   - component: {fileID: 5960142225204984339}
-  - component: {fileID: 4103789059759134958}
+  - component: {fileID: 6940333287373725381}
   m_Layer: 0
   m_Name: SpellPanel
   m_TagString: Untagged
@@ -214,7 +214,7 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &4103789059759134958
+--- !u!114 &6940333287373725381
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -223,15 +223,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 213079854636593468}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f5b8155a5f2afc34e8512ce8285492b9, type: 3}
+  m_Script: {fileID: 11500000, guid: 24f09545a06952c4ca4f71f3c1c68fad, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: 
-  availableUnits:
-  - {fileID: 662182742872618790, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}
-  - {fileID: 662182742872618790, guid: 5bbad2484b2ccdd4385e17d74927ac0f, type: 3}
-  - {fileID: 662182742872618790, guid: 9b70e9f742e2e02498b2d5aa25c4fb5f, type: 3}
-  buttonContainer: {fileID: 6241792350358678407}
-  spawnButtonPrefab: {fileID: 2712023832717952539, guid: f85694c38e848b14b9e0b7d20eb19d14, type: 3}
+  m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.SpellCard.SpellCardPanel
+  _cardContainer: {fileID: 0}
+  _cardButtonPrefab: {fileID: 0}
+  _ownerPlayer: 1
+  _actionLefts: {fileID: 0}
 --- !u!1 &307754459259850252
 GameObject:
   m_ObjectHideFlags: 0

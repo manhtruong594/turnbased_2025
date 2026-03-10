@@ -5,6 +5,7 @@ using RedBjorn.ProtoTiles.Example;
 using System;
 using TurnBasedGame.Unit;
 using TurnBasedGame.Capture;
+using TurnBasedGame.SpellCard;
 
 /// <summary>
 /// Mediator Pattern: Trung gian giao tiếp giữa các Manager
@@ -43,6 +44,10 @@ public class GameMediator : MonoBehaviour
     #region Capture Point Events
     public event Action<Vector3Int, PlayerID> OnCapturePointCaptured;
     public event Action<PlayerID> OnGameEnd;
+    #endregion
+
+    #region Spell Card Events
+    public event Action<SpellCardData, UnitMove, PlayerID> OnSpellCardUsed;
     #endregion
 
     private void Awake()
@@ -114,6 +119,11 @@ public class GameMediator : MonoBehaviour
     {
         turnManager.TriggerGameEnd(winner);
         OnGameEnd?.Invoke(winner);
+    }
+
+    public void NotifySpellCardUsed(SpellCardData card, UnitMove target, PlayerID caster)
+    {
+        OnSpellCardUsed?.Invoke(card, target, caster);
     }
 
     #endregion

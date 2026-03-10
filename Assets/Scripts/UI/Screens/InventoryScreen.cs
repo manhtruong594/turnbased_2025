@@ -6,6 +6,7 @@ using System.Linq;
 using TurnBasedGame.Unit;
 using TurnBasedGame.Skills;
 using RedBjorn.ProtoTiles.Example;
+using TurnBasedGame.SpellCard;
 
 namespace TurnBasedGame.UI
 {
@@ -49,7 +50,7 @@ namespace TurnBasedGame.UI
 
         // Selection tracking
         private UnitMove _selectedUnit;
-        private SkillBase _selectedSpell;
+        private SpellCardData _selectedSpell;
 
         // ─── Lifecycle ───
 
@@ -266,25 +267,25 @@ namespace TurnBasedGame.UI
             return result;
         }
 
-        private List<SkillBase> GetSortedSpells(string filter)
+        private List<SpellCardData> GetSortedSpells(string filter)
         {
-            var result = new List<SkillBase>();
+            var result = new List<SpellCardData>();
             var owned = _playerData.OwnedSpells;
 
             for (int i = 0; i < owned.Count; i++)
             {
                 var s = owned[i];
                 if (s == null) continue;
-                if (!string.IsNullOrEmpty(filter) && !s.SkillName.ToLowerInvariant().Contains(filter))
+                if (!string.IsNullOrEmpty(filter) && !s.spellName.ToLowerInvariant().Contains(filter))
                     continue;
                 result.Add(s);
             }
 
             result.Sort((a, b) => _currentSort switch
             {
-                SortMode.Cost => a.Cooldown.CompareTo(b.Cooldown),    // "Chi phí" maps to Cooldown for spells
-                SortMode.HP => b.Range.CompareTo(a.Range),            // "Máu" maps to Range for spells
-                _ => string.Compare(a.SkillName, b.SkillName, StringComparison.Ordinal)
+                SortMode.Cost => a.mpCost.CompareTo(b.mpCost),    // "Chi phí" maps to mpCost for spells
+                SortMode.HP => b.range.CompareTo(a.range),            // "Máu" maps to range for spells
+                _ => string.Compare(a.spellName, b.spellName, StringComparison.Ordinal)
             });
 
             return result;
@@ -302,7 +303,7 @@ namespace TurnBasedGame.UI
             ShowUnitDetail(unit);
         }
 
-        private void OnSpellCardClicked(SkillBase spell, SpellCardElement card)
+        private void OnSpellCardClicked(SpellCardData spell, SpellCardElement card)
         {
             _selectedSpell = spell;
             _selectedUnit = null;
@@ -330,7 +331,7 @@ namespace TurnBasedGame.UI
             _unitDetail?.Show();
         }
 
-        private void ShowSpellDetail(SkillBase spell)
+        private void ShowSpellDetail(SpellCardData spell)
         {
             SetDisplay(_detailPlaceholder, false);
             _unitDetail?.Hide();
@@ -387,7 +388,7 @@ namespace TurnBasedGame.UI
             if (_activeTab == CollectionTab.Units) RefreshGrid();
         }
 
-        private void HandleSpellAcquired(SkillBase _)
+        private void HandleSpellAcquired(SpellCardData _)
         {
             if (_activeTab == CollectionTab.Spells) RefreshGrid();
         }
