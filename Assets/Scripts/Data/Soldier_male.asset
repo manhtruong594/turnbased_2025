@@ -10,13 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 86ab2ddd49f3b30409500291ade8d6b0, type: 3}
-  m_Name: Basic Soldier
+  m_Name: Soldier_male
   m_EditorClassIdentifier: 
-  unitName: Basic Soldier
+  unitName: Archer
   description: 
+  Health: 100
   spawnCost: 3
-  moveRange: 2
+  moveRange: 5
   moveSpeed: 5
-  unitPrefab: {fileID: 5204393105807402248, guid: 9b70e9f742e2e02498b2d5aa25c4fb5f, type: 3}
+  attackRange: 2
+  attackDamage: 10
   icon: {fileID: 0}
-  owner: 1
