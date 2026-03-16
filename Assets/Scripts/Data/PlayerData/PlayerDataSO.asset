@@ -14,22 +14,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerDataSO
   AvalailableUnits:
   - {fileID: 662182742872618790, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}
-  - {fileID: 662182742872618790, guid: 5bbad2484b2ccdd4385e17d74927ac0f, type: 3}
-  - {fileID: 662182742872618790, guid: 9b70e9f742e2e02498b2d5aa25c4fb5f, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
   _playerName: Summoner
   _playerLevel: 1
   _xp: 0
   _gold: 100
   _ownedUnits:
   - {fileID: 662182742872618790, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}
-  - {fileID: 662182742872618790, guid: 5bbad2484b2ccdd4385e17d74927ac0f, type: 3}
-  - {fileID: 662182742872618790, guid: 9b70e9f742e2e02498b2d5aa25c4fb5f, type: 3}
   _ownedSpells:
   - {fileID: 11400000, guid: a4f17f060f59e8843807307f138992b7, type: 2}
   - {fileID: 11400000, guid: a4f17f060f59e8843807307f138992b7, type: 2}
   _selectedDeck:
   - {fileID: 662182742872618790, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}
-  - {fileID: 662182742872618790, guid: 5bbad2484b2ccdd4385e17d74927ac0f, type: 3}
   _selectedSpells:
   - {fileID: 11400000, guid: a4f17f060f59e8843807307f138992b7, type: 2}
   - {fileID: 11400000, guid: a4f17f060f59e8843807307f138992b7, type: 2}

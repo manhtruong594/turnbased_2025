@@ -18,13 +18,7 @@ namespace TurnBasedGame.Unit
         [Header("Animation Settings")]
         [SerializeField] private float defaultAttackSpeed = 1f;
         [SerializeField] private Transform _effectSpawnPoint;
-
-        private static readonly int IsMoving = Animator.StringToHash("IsMoving");
-        private static readonly int Attack = Animator.StringToHash("Attack");
-        private static readonly int Hit = Animator.StringToHash("Hit");
-        private static readonly int Death = Animator.StringToHash("Death");
-        private static readonly int AttackSpeed = Animator.StringToHash("AttackSpeed");
-        private static readonly int AttackType = Animator.StringToHash("SkillType");
+        [SerializeField] private float _transitionDuration = 0.1f;
 
         SkillBase _currentSkill;
         
@@ -33,13 +27,13 @@ namespace TurnBasedGame.Unit
         public void StartMoving()
         {
             if (animator == null) return;
-            animator.SetBool(IsMoving, true);
+            animator.SetBool(AnimationHashLib.IsMoving, true);
         }
 
         public void StopMoving()
         {
             if (animator == null) return;
-            animator.SetBool(IsMoving, false);
+            animator.SetBool(AnimationHashLib.IsMoving, false);
         }
 
         public void PlayAttack(SkillBase skill, float attackSpeed = -1f)
@@ -48,32 +42,21 @@ namespace TurnBasedGame.Unit
 
             if (attackSpeed < 0)
                 attackSpeed = defaultAttackSpeed;
-            animator.SetFloat(AttackSpeed, attackSpeed);
-            animator.SetTrigger(Attack);
-            animator.SetFloat(AttackType, (float)skill.Type);
+            //animator.SetFloat(AnimationHashLib.AttackSpeed, attackSpeed);
+            animator.CrossFadeInFixedTime(AnimationHashLib.GetHashAnimByAttackType(skill.Type), _transitionDuration);
             _currentSkill = skill;
         }
 
         public void PlayHit()
         {
             if (animator == null) return;
-            animator.SetTrigger(Hit);
+            animator.CrossFadeInFixedTime(AnimationHashLib.Hit, _transitionDuration);
         }
 
         public void PlayDeath()
         {
             if (animator == null) return;
-            animator.SetTrigger(Death);
-        }
-
-        public void ResetToIdle()
-        {
-            if (animator == null) return;
-
-            animator.SetBool(IsMoving, false);
-            animator.ResetTrigger(Attack);
-            animator.ResetTrigger(Hit);
-            animator.ResetTrigger(Death);
+            animator.CrossFadeInFixedTime(AnimationHashLib.Death, _transitionDuration);
         }
 
         #endregion

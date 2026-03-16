@@ -159,6 +159,7 @@ GameObject:
   - component: {fileID: 662182742872618790}
   - component: {fileID: 7572629158187435638}
   - component: {fileID: 1328495523500364131}
+  - component: {fileID: 5879793990705599363}
   m_Layer: 0
   m_Name: Knight
   m_TagString: Untagged
@@ -202,7 +203,7 @@ MonoBehaviour:
   _cancelMoveButton: {fileID: 2419698170991639223}
   unitData: {fileID: 11400000, guid: 705fcc605289b944192c93d9d79b7282, type: 2}
   _attackComponent: {fileID: 7572629158187435638}
-  _buffHandler: {fileID: 0}
+  _buffHandler: {fileID: 5879793990705599363}
   _healthBar: {fileID: 1328495523500364131}
   _unitAnimator: {fileID: 4399936470503347770}
   _actionPanel: {fileID: 3218505528879063607}
@@ -239,6 +240,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HealthBar
   healthBarRenderer: {fileID: 4219279390209745164}
+--- !u!114 &5879793990705599363
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5204393105807402248}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c25f8b306e254034f8eb1e64ba4d8926, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.SpellCard.BuffDebuffHandler
 --- !u!1 &8017086075023222230
 GameObject:
   m_ObjectHideFlags: 0

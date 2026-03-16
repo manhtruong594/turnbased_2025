@@ -64,10 +64,7 @@ namespace TurnBasedGame.SpellCard
         {
             ClearButtons();
 
-            if (SpellCardManager.Instance == null) return;
-            var hand = SpellCardManager.Instance.GetHand(PlayerID.Player1); // TODO: dynamic player ID
-
-            foreach (var card in hand)
+            foreach (var card in _spells)
             {
                 CreateCardButton(card);
             }
@@ -86,18 +83,17 @@ namespace TurnBasedGame.SpellCard
 
         private void CreateCardButton(SpellCardData card)
         {
-            // if (_cardButtonPrefab == null || _cardContainer == null) return;
+            if (_cardButtonPrefab == null || _cardContainer == null) return;
 
-            // var obj = Instantiate(_cardButtonPrefab, _cardContainer);
-            // var btn = obj.GetComponent<SpellCardButton>();
-            // if (btn == null)
-            // {
-            //     Destroy(obj);
-            //     return;
-            // }
+            var obj = Instantiate(_cardButtonPrefab, _cardContainer);
+            var btn = obj.GetComponent<SpellCardButton>();
+            if (btn == null)
+            {
+                Destroy(obj);
+                return;
+            }
 
-            // btn.Bind(card, () => OnCardClicked(card));
-            // _buttons.Add(btn);
+            btn.Bind(card, () => OnCardClicked(card));
         }
 
         private void OnCardClicked(SpellCardData card)
@@ -127,9 +123,9 @@ namespace TurnBasedGame.SpellCard
         [SerializeField] private Button _button;
         [SerializeField] private CanvasGroup _canvasGroup;
 
-        public SpellBase Data { get; private set; }
+        public SpellCardData Data { get; private set; }
 
-        public void Bind(SpellBase data, System.Action onClick)
+        public void Bind(SpellCardData data, System.Action onClick)
         {
             Data = data;
             // if (_nameText != null) _nameText.text = data.;
