@@ -82,13 +82,18 @@ namespace TurnBasedGame.Unit
 
         public void AnimEvent_AttackStart()
         {
-            if (_currentSkill != null)
+            if (_currentSkill == null || _currentSkill.VfxPrefab == null) return;
+            var spawnedObj = ObjectPoolManager.Instance.Spawn(_currentSkill.VfxPrefab);
+            if (!spawnedObj.TryGetComponent<Projectile>(out var projectile))
             {
-                var projectile = ObjectPoolManager.Instance.Spawn(_currentSkill.VfxPrefab).GetComponent<Projectile>();
-                projectile.transform.SetPositionAndRotation(_effectSpawnPoint.position, _effectSpawnPoint.rotation);
-                projectile.Launch(_effectSpawnPoint.position, _currentSkill.GetCurrentTargetWorldPosition());
-                projectile.OnReachTarget = OnHitTarget;
+                Debug.LogError($"[UnitAnimator] Failed to spawn Projectile from {_currentSkill.VfxPrefab.name}");
+                OnHitTarget();
+                return;
             }
+
+            projectile.transform.SetPositionAndRotation(_effectSpawnPoint.position, _effectSpawnPoint.rotation);
+            projectile.Launch(_effectSpawnPoint.position, _currentSkill.GetCurrentTargetWorldPosition());
+            projectile.OnReachTarget = OnHitTarget;
         }
         
         /// <summary>

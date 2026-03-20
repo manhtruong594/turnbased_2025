@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using TurnBasedGame.Unit;
 using TurnBasedGame.Skills;
-using RedBjorn.ProtoTiles.Example;
 using TurnBasedGame.SpellCard;
 
 namespace TurnBasedGame.UI
@@ -49,7 +48,7 @@ namespace TurnBasedGame.UI
         private SpellDetailPanel _spellDetail;
 
         // Selection tracking
-        private UnitMove _selectedUnit;
+        private UnitController _selectedUnit;
         private SpellCardData _selectedSpell;
 
         // ─── Lifecycle ───
@@ -243,9 +242,9 @@ namespace TurnBasedGame.UI
 
         // ─── Sorting ───
 
-        private List<UnitMove> GetSortedUnits(string filter)
+        private List<UnitController> GetSortedUnits(string filter)
         {
-            var result = new List<UnitMove>();
+            var result = new List<UnitController>();
             var owned = _playerData.OwnedUnits;
 
             for (int i = 0; i < owned.Count; i++)
@@ -293,7 +292,7 @@ namespace TurnBasedGame.UI
 
         // ─── Card Click → Detail ───
 
-        private void OnUnitCardClicked(UnitMove unit, UnitCardElement card)
+        private void OnUnitCardClicked(UnitController unit, UnitCardElement card)
         {
             _selectedUnit = unit;
             _selectedSpell = null;
@@ -321,7 +320,7 @@ namespace TurnBasedGame.UI
             _spellDetail?.Hide();
         }
 
-        private void ShowUnitDetail(UnitMove unit)
+        private void ShowUnitDetail(UnitController unit)
         {
             SetDisplay(_detailPlaceholder, false);
             _spellDetail?.Hide();
@@ -383,7 +382,7 @@ namespace TurnBasedGame.UI
 
         // ─── Data Event Handlers ───
 
-        private void HandleUnitAcquired(UnitMove _)
+        private void HandleUnitAcquired(UnitController _)
         {
             if (_activeTab == CollectionTab.Units) RefreshGrid();
         }

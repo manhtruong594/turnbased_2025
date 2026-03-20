@@ -1,6 +1,7 @@
 using RedBjorn.Utils;
 using System.Collections.Generic;
 using TurnBasedGame.Core;
+using TurnBasedGame.Unit;
 using UnityEngine;
 
 namespace RedBjorn.ProtoTiles.Example
@@ -24,8 +25,8 @@ namespace RedBjorn.ProtoTiles.Example
         AreaOutline _area;
         AreaOutline _attackArea;
         PathDrawer _path;
-        private UnitMove selectedUnit;
-        private UnitMove previousSelectedUnit;
+        private UnitController selectedUnit;
+        private UnitController previousSelectedUnit;
         TileEntity _tileClicked;
 
         #region  Unity Core and Initialization
@@ -213,7 +214,7 @@ namespace RedBjorn.ProtoTiles.Example
             }
         }
 
-        public void ResetAll(UnitMove unit)
+        public void ResetAll(UnitController unit)
         {
             if (selectedUnit != unit)
                 return;

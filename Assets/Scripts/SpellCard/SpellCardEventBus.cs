@@ -1,6 +1,6 @@
-using RedBjorn.ProtoTiles.Example;
 using TurnBasedGame.Core;
 using UnityEngine;
+using TurnBasedGame.Unit;
 
 namespace TurnBasedGame.SpellCard
 {
@@ -12,9 +12,9 @@ namespace TurnBasedGame.SpellCard
     {
         public static SpellCardEventBus Instance { get; private set; }
 
-        public event System.Action<SpellCardData, UnitMove, PlayerID> OnSpellCardUsed;
-        public event System.Action<ActiveBuff, UnitMove> OnBuffApplied;
-        public event System.Action<ActiveBuff, UnitMove> OnBuffExpired;
+        public event System.Action<SpellCardData, UnitController, PlayerID> OnSpellCardUsed;
+        public event System.Action<ActiveBuff, UnitController> OnBuffApplied;
+        public event System.Action<ActiveBuff, UnitController> OnBuffExpired;
 
         private void Awake()
         {
@@ -26,18 +26,18 @@ namespace TurnBasedGame.SpellCard
             Instance = this;
         }
 
-        public void TriggerSpellCardUsed(SpellCardData card, UnitMove target, PlayerID caster)
+        public void TriggerSpellCardUsed(SpellCardData card, UnitController target, PlayerID caster)
         {
             OnSpellCardUsed?.Invoke(card, target, caster);
             Debug.Log($"[SpellLog] {caster} dùng [{card.spellName}] | Effect: {card.effectType} ({card.effectValue}) | Target: {target.name}");
         }
 
-        public void TriggerBuffApplied(ActiveBuff buff, UnitMove unit)
+        public void TriggerBuffApplied(ActiveBuff buff, UnitController unit)
         {
             OnBuffApplied?.Invoke(buff, unit);
         }
 
-        public void TriggerBuffExpired(ActiveBuff buff, UnitMove unit)
+        public void TriggerBuffExpired(ActiveBuff buff, UnitController unit)
         {
             OnBuffExpired?.Invoke(buff, unit);
         }

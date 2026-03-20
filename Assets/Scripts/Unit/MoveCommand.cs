@@ -1,16 +1,16 @@
 using System.Collections.Generic;
 using RedBjorn.ProtoTiles;
-using RedBjorn.ProtoTiles.Example;
+using TurnBasedGame.Unit;
 using UnityEngine;
 
 namespace TurnBasedGame.Command
 {
     public class MoveCommand : ICommand
     {
-        private readonly UnitMove _unit;
+        private readonly UnitController _unit;
         private Vector3Int _previousPosition;
 
-        public MoveCommand(UnitMove unit)
+        public MoveCommand(UnitController unit)
         {
             _unit = unit;
         }

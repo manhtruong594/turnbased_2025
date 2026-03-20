@@ -1,7 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
 using TurnBasedGame.Unit;
-using RedBjorn.ProtoTiles.Example;
 using TurnBasedGame.ObjectPool;
 
 namespace TurnBasedGame.Skills
@@ -17,7 +16,7 @@ namespace TurnBasedGame.Skills
         [SerializeField] private int damage = 25;
         [SerializeField] private int aoeRadius = 1;
 
-        public override bool CanUse(UnitMove caster, Vector3Int targetPos)
+        public override bool CanUse(UnitController caster, Vector3Int targetPos)
         {
              if (!ValidateCooldown()) 
             {
@@ -36,7 +35,7 @@ namespace TurnBasedGame.Skills
             return true;
         }
 
-        protected override void ExecuteEffect(UnitMove caster, Vector3Int targetPos)
+        protected override void ExecuteEffect(UnitController caster, Vector3Int targetPos)
         {
             var map = GetMap();
             // Gây damage cho tất cả units trong AOE
@@ -79,7 +78,7 @@ namespace TurnBasedGame.Skills
             return tiles;
         }
 
-        protected override bool ValidateCustomConditions(UnitMove caster, Vector3Int targetPos)
+        protected override bool ValidateCustomConditions(UnitController caster, Vector3Int targetPos)
         {
             // Fireball có thể bắn vào ô trống
             return true;

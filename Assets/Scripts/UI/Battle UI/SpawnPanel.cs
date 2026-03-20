@@ -1,7 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
 using TurnBasedGame.Unit;
-using RedBjorn.ProtoTiles.Example;
 
 namespace TurnBasedGame.UI
 {
@@ -13,7 +12,7 @@ namespace TurnBasedGame.UI
     {
         [Header("Configuration")]
         [Tooltip("Danh sách các unit có thể spawn")]
-        [SerializeField] private List<UnitMove> availableUnits = new List<UnitMove>();
+        [SerializeField] private List<UnitController> availableUnits = new List<UnitController>();
 
         [Header("UI References")]
         [SerializeField] private Transform buttonContainer;
@@ -25,9 +24,9 @@ namespace TurnBasedGame.UI
         {
         }
 
-        public void Initialize(IReadOnlyList<UnitMove> units)
+        public void Initialize(IReadOnlyList<UnitController> units)
         {
-            availableUnits = new List<UnitMove>(units);
+            availableUnits = new List<UnitController>(units);
             GenerateSpawnButtons();
         }
 
@@ -56,7 +55,7 @@ namespace TurnBasedGame.UI
         /// <summary>
         /// Tạo một spawn button cho unit
         /// </summary>
-        private void CreateSpawnButton(UnitMove unit)
+        private void CreateSpawnButton(UnitController unit)
         {
             if (spawnButtonPrefab == null || buttonContainer == null)
             {

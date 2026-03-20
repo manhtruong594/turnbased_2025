@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using TurnBasedGame.Unit;
 using TurnBasedGame.Skills;
-using RedBjorn.ProtoTiles.Example;
 using TurnBasedGame.SpellCard;
 
 namespace TurnBasedGame.UI
@@ -30,7 +29,7 @@ namespace TurnBasedGame.UI
 
         /// <summary>Validate toàn bộ deck (units + spells).</summary>
         public static ValidationResult Validate(
-            IReadOnlyList<UnitMove> units,
+            IReadOnlyList<UnitController> units,
             IReadOnlyList<SpellCardData> spells)
         {
             if (units == null || units.Count < MinUnits)
@@ -52,7 +51,7 @@ namespace TurnBasedGame.UI
         }
 
         /// <summary>Tính tổng spawn cost của deck.</summary>
-        public static int CalculateTotalCost(IReadOnlyList<UnitMove> units)
+        public static int CalculateTotalCost(IReadOnlyList<UnitController> units)
         {
             if (units == null) return 0;
 

@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using TurnBasedGame.Unit;
 using TurnBasedGame.Skills;
 using System.Linq;
-using RedBjorn.ProtoTiles.Example;
 using TurnBasedGame.SpellCard;
 
 namespace TurnBasedGame.UI
@@ -262,7 +261,7 @@ namespace TurnBasedGame.UI
 
         // ─── Card Click Handlers ───
 
-        private void OnUnitCardClicked(UnitMove unit)
+        private void OnUnitCardClicked(UnitController unit)
         {
             if (_playerData.SelectedDeck.Contains(unit))
             {
@@ -316,7 +315,7 @@ namespace TurnBasedGame.UI
 
         // ─── Data Event Handlers ───
 
-        private void HandleDeckChanged(List<UnitMove> deck)
+        private void HandleDeckChanged(List<UnitController> deck)
         {
             RefreshUnitSlots();
             RefreshCollectionList();

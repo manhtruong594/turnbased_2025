@@ -1,7 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
 using TurnBasedGame.Unit;
-using RedBjorn.ProtoTiles.Example;
 
 namespace TurnBasedGame.Skills
 {
@@ -16,7 +15,7 @@ namespace TurnBasedGame.Skills
         [SerializeField] private int dmg = 10;
         [SerializeField] private bool useAttackStat = true;
 
-        protected override void ExecuteEffect(UnitMove caster, Vector3Int targetPos)
+        protected override void ExecuteEffect(UnitController caster, Vector3Int targetPos)
         {
             var target = MapManager.Instance?.GetUnitAtTile(targetPos);
             if (target == null || target.IsDead()) return;
@@ -25,7 +24,7 @@ namespace TurnBasedGame.Skills
             target.TakeDamage(finalDamage);
         }
         
-        private int CalculateDamage(UnitMove caster)
+        private int CalculateDamage(UnitController caster)
         {
             return dmg;
         }

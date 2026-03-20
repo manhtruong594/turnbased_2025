@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using TurnBasedGame.Unit;
 using RedBjorn.ProtoTiles;
-using RedBjorn.ProtoTiles.Example;
 using TurnBasedGame.Resources;
 
 namespace TurnBasedGame.Core
@@ -16,7 +15,7 @@ namespace TurnBasedGame.Core
     public class AIController : MonoBehaviour
     {
         [Header("AI Settings")]
-        [SerializeField] private List<UnitMove> availableUnits = new List<UnitMove>();
+        [SerializeField] private List<UnitController> availableUnits = new List<UnitController>();
         [SerializeField] private float actionDelay = 1f;
 
         private PlayerID aiPlayerID;
@@ -93,7 +92,7 @@ namespace TurnBasedGame.Core
         /// <summary>
         /// Thực hiện hành động cho 1 unit
         /// </summary>
-        private IEnumerator ExecuteUnitAction(UnitMove unit)
+        private IEnumerator ExecuteUnitAction(UnitController unit)
         {
             if (unit == null) yield break;
 
@@ -128,14 +127,14 @@ namespace TurnBasedGame.Core
         /// <summary>
         /// Tìm unit gần nhất của đối thủ
         /// </summary>
-        private UnitMove FindNearestOpponentUnit(UnitMove myUnit)
+        private UnitController FindNearestOpponentUnit(UnitController myUnit)
         {
             var opponentUnits = UnitSpawner.Instance.GetPlayerUnits(opponentOfAI);
 
             if (opponentUnits == null || opponentUnits.Count == 0)
                 return null;
 
-            UnitMove nearest = null;
+            UnitController nearest = null;
             float minDistance = float.MaxValue;
 
             foreach (var opponent in opponentUnits)
@@ -157,7 +156,7 @@ namespace TurnBasedGame.Core
         /// <summary>
         /// Kiểm tra có thể tấn công target không
         /// </summary>
-        private bool CanAttackTarget(UnitMove attacker, UnitMove target)
+        private bool CanAttackTarget(UnitController attacker, UnitController target)
         {
             return attacker.AttackComponent.CanAttack(target);
         }
@@ -165,7 +164,7 @@ namespace TurnBasedGame.Core
         /// <summary>
         /// Di chuyển về phía target
         /// </summary>
-        private IEnumerator MoveTowardsTarget(UnitMove myUnit, UnitMove target)
+        private IEnumerator MoveTowardsTarget(UnitController myUnit, UnitController target)
         {
             var map = MapManager.Instance.MapEntity;
             var myPos = myUnit.transform.position;
@@ -235,7 +234,7 @@ namespace TurnBasedGame.Core
         /// <summary>
         /// Tấn công target
         /// </summary>
-        private IEnumerator AttackTarget(UnitMove attacker, UnitMove target)
+        private IEnumerator AttackTarget(UnitController attacker, UnitController target)
         {
             Debug.Log($"AI tấn công: {attacker.name} -> {target.name}");
             attacker.AttackComponent.ExecuteAttack(target, true);

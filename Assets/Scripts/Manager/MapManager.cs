@@ -1,6 +1,5 @@
 using RedBjorn;
 using RedBjorn.ProtoTiles;
-using RedBjorn.ProtoTiles.Example;
 using UnityEngine;
 using System.Collections.Generic;
 using TurnBasedGame.Unit;
@@ -14,7 +13,7 @@ public class MapManager : BaseManager
     public MapEntity MapEntity { get; private set; }
 
     // Dictionary theo dõi units trên map theo vị trí grid
-    private Dictionary<Vector3Int, UnitMove> _unitPositions = new Dictionary<Vector3Int, UnitMove>();
+    private Dictionary<Vector3Int, UnitController> _unitPositions = new Dictionary<Vector3Int, UnitController>();
 
     void Awake()
     {
@@ -55,7 +54,7 @@ public class MapManager : BaseManager
     /// <summary>
     /// Đăng ký unit tại vị trí grid
     /// </summary>
-    public void RegisterUnit(Vector3Int gridPos, UnitMove unit)
+    public void RegisterUnit(Vector3Int gridPos, UnitController unit)
     {
         if (_unitPositions.ContainsKey(gridPos))
         {
@@ -75,7 +74,7 @@ public class MapManager : BaseManager
     /// <summary>
     /// Lấy unit tại vị trí grid cụ thể
     /// </summary>
-    public UnitMove GetUnitAtTile(Vector3Int gridPos)
+    public UnitController GetUnitAtTile(Vector3Int gridPos)
     {
         return _unitPositions.TryGetValue(gridPos, out var unit) ? unit : null;
     }

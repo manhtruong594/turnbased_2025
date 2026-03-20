@@ -23,6 +23,6 @@ MonoBehaviour:
   canTargetAllies: 0
   canTargetEnemies: 1
   canTargetSelf: 0
-  canTargetEmptyTile: 0
+  canTargetEmptyTile: 1
   dmg: 10
   useAttackStat: 1

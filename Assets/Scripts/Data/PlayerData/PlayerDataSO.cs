@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using RedBjorn.ProtoTiles.Example;
 using TurnBasedGame.Skills;
 using TurnBasedGame.SpellCard;
 using TurnBasedGame.Unit;
@@ -17,7 +16,7 @@ public class PlayerDataSO : ScriptableObject
     // ─── Backward Compatibility (battle system hiện tại) ───
 
     [Header("Battle Units (Legacy)")]
-    public List<UnitMove> AvalailableUnits = new();
+    public List<UnitController> AvalailableUnits = new();
 
     // ─── Profile ───
 
@@ -34,14 +33,14 @@ public class PlayerDataSO : ScriptableObject
     // ─── Collection (tất cả đã mở khóa) ───
 
     [Header("Owned Collection")]
-    [SerializeField] private List<UnitMove> _ownedUnits = new();
+    [SerializeField] private List<UnitController> _ownedUnits = new();
     [SerializeField] private List<SpellCardData> _ownedSpells = new();
 
     // ─── Deck (chọn cho trận đấu) ───
 
     [Header("Selected Deck")]
     [Tooltip("Units được chọn cho trận đấu tiếp theo (max 6)")]
-    [SerializeField] private List<UnitMove> _selectedDeck = new();
+    [SerializeField] private List<UnitController> _selectedDeck = new();
     [Tooltip("Spells được chọn cho trận đấu tiếp theo (max 4)")]
     [SerializeField] private List<SpellCardData> _selectedSpells = new();
 
@@ -57,11 +56,10 @@ public class PlayerDataSO : ScriptableObject
 
     public event Action<int> OnGoldChanged;
     public event Action<int, int> OnXPChanged; // (currentXP, level)
-    public event Action<List<UnitMove>> OnDeckChanged;
+    public event Action<List<UnitController>> OnDeckChanged;
     public event Action<List<SpellCardData>> OnSpellsChanged;
-    public event Action<UnitMove> OnUnitAcquired;
+    public event Action<UnitController> OnUnitAcquired;
     public event Action<SpellCardData> OnSpellAcquired;
-    public event Action<List<SpellCardData>> OnSpellCardsChanged;
 
     // ─── Properties ───
 
@@ -93,17 +91,17 @@ public class PlayerDataSO : ScriptableObject
         }
     }
 
-    public IReadOnlyList<UnitMove> OwnedUnits => _ownedUnits;
+    public IReadOnlyList<UnitController> OwnedUnits => _ownedUnits;
     public IReadOnlyList<SpellCardData> OwnedSpells => _ownedSpells;
-    public IReadOnlyList<UnitMove> SelectedDeck => _selectedDeck;
+    public IReadOnlyList<UnitController> SelectedDeck => _selectedDeck;
     public IReadOnlyList<SpellCardData> SelectedSpells => _selectedSpells;
 
     // ─── Collection Methods ───
 
-    public bool OwnsUnit(UnitMove unit) => _ownedUnits.Contains(unit);
+    public bool OwnsUnit(UnitController unit) => _ownedUnits.Contains(unit);
     public bool OwnsSpell(SpellCardData spell) => _ownedSpells.Contains(spell);
 
-    public void AddUnit(UnitMove unit)
+    public void AddUnit(UnitController unit)
     {
         if (unit == null || _ownedUnits.Contains(unit)) return;
         _ownedUnits.Add(unit);
@@ -119,7 +117,7 @@ public class PlayerDataSO : ScriptableObject
 
     // ─── Deck Methods ───
 
-    public bool AddToDeck(UnitMove unit)
+    public bool AddToDeck(UnitController unit)
     {
         if (unit == null || _selectedDeck.Count >= MaxDeckSize) return false;
         if (_selectedDeck.Contains(unit)) return false;
@@ -130,7 +128,7 @@ public class PlayerDataSO : ScriptableObject
         return true;
     }
 
-    public bool RemoveFromDeck(UnitMove unit)
+    public bool RemoveFromDeck(UnitController unit)
     {
         if (!_selectedDeck.Remove(unit)) return false;
         OnDeckChanged?.Invoke(_selectedDeck);

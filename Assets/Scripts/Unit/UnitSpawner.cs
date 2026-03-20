@@ -1,9 +1,9 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
-using TurnBasedGame.Core;
 using TurnBasedGame.Resources;
-using RedBjorn.ProtoTiles.Example;
+using TurnBasedGame.Unit;
+using TurnBasedGame.Core;
 
 namespace TurnBasedGame.Unit
 {
@@ -25,7 +25,7 @@ namespace TurnBasedGame.Unit
 
         private Dictionary<PlayerID, List<SpawnPoint>> playerSpawnPoints = new Dictionary<PlayerID, List<SpawnPoint>>();
         
-        private Dictionary<PlayerID, List<UnitMove>> playerUnits = new Dictionary<PlayerID, List<UnitMove>>();
+        private Dictionary<PlayerID, List<UnitController>> playerUnits = new Dictionary<PlayerID, List<UnitController>>();
 
         private void Awake()
         {
@@ -54,8 +54,8 @@ namespace TurnBasedGame.Unit
         private void InitializePlayerUnits()
         {
             playerUnits.Clear();
-            playerUnits[PlayerID.Player1] = new List<UnitMove>();
-            playerUnits[PlayerID.Player2] = new List<UnitMove>();
+            playerUnits[PlayerID.Player1] = new List<UnitController>();
+            playerUnits[PlayerID.Player2] = new List<UnitController>();
         }
 
         /// <summary>
@@ -92,7 +92,7 @@ namespace TurnBasedGame.Unit
         /// Spawn unit tại vị trí spawn point
         /// Kiểm tra MP và spawn point hợp lệ
         /// </summary>
-        public bool SpawnUnit(UnitMove unit, PlayerID owner, SpawnPoint spawnPoint = null)
+        public bool SpawnUnit(UnitController unit, PlayerID owner, SpawnPoint spawnPoint = null)
         { 
             if (spawnPoint == null)
             {
@@ -120,7 +120,7 @@ namespace TurnBasedGame.Unit
             // Lưu trữ unit vào dictionary theo owner
             if (!playerUnits.ContainsKey(owner))
             {
-                playerUnits[owner] = new List<UnitMove>();
+                playerUnits[owner] = new List<UnitController>();
             }
             playerUnits[owner].Add(unitClone);
             _gameMediator.NotifySpawnUnit(unitClone, unitClone.UnitData.spawnCost);
@@ -167,11 +167,11 @@ namespace TurnBasedGame.Unit
                 .ToList();
         }
 
-        public List<UnitMove> GetPlayerUnits(PlayerID player)
+        public List<UnitController> GetPlayerUnits(PlayerID player)
         {
             if (!playerUnits.ContainsKey(player))
             {
-                return new List<UnitMove>();
+                return new List<UnitController>();
             }
             return playerUnits[player];
         }

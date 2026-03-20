@@ -1,7 +1,6 @@
 using UnityEngine;
 using System;
 using TurnBasedGame.Unit;
-using RedBjorn.ProtoTiles.Example;
 
 namespace TurnBasedGame.Skills
 {
@@ -28,25 +27,25 @@ namespace TurnBasedGame.Skills
 
         #region Events
         /// <summary>Event khi skill được sử dụng</summary>
-        public event Action<ISkill, UnitMove, Vector3Int> OnSkillUsed;
+        public event Action<ISkill, UnitController, Vector3Int> OnSkillUsed;
         
         /// <summary>Event khi unit học skill mới</summary>
-        public event Action<ISkill, UnitMove> OnSkillLearned;
+        public event Action<ISkill, UnitController> OnSkillLearned;
         
         /// <summary>Event khi cooldown của skill kết thúc</summary>
         public event Action<ISkill> OnCooldownComplete;
         
         /// <summary>Event khi skill không thể sử dụng</summary>
-        public event Action<ISkill, UnitMove, string> OnSkillFailed;
+        public event Action<ISkill, UnitController, string> OnSkillFailed;
         #endregion
 
         #region Trigger Methods
-        public void TriggerSkillUsed(ISkill skill, UnitMove caster, Vector3Int targetPos)
+        public void TriggerSkillUsed(ISkill skill, UnitController caster, Vector3Int targetPos)
         {
             OnSkillUsed?.Invoke(skill, caster, targetPos);
         }
 
-        public void TriggerSkillLearned(ISkill skill, UnitMove learner)
+        public void TriggerSkillLearned(ISkill skill, UnitController learner)
         {
             OnSkillLearned?.Invoke(skill, learner);
         }
@@ -56,7 +55,7 @@ namespace TurnBasedGame.Skills
             OnCooldownComplete?.Invoke(skill);
         }
 
-        public void TriggerSkillFailed(ISkill skill, UnitMove caster, string reason)
+        public void TriggerSkillFailed(ISkill skill, UnitController caster, string reason)
         {
             OnSkillFailed?.Invoke(skill, caster, reason);
         }

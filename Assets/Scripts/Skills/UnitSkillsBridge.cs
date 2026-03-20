@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using TurnBasedGame.Unit;
-using RedBjorn.ProtoTiles.Example;
 using UnityEngine.UI;
 using TurnBasedGame.ObjectPool;
 

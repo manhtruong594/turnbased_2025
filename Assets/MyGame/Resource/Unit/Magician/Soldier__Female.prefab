@@ -1567,6 +1567,10 @@ PrefabInstance:
       propertyPath: unitData
       value: 
       objectReference: {fileID: 11400000, guid: cbc57313ae395b64f88cecd2923962d5, type: 2}
+    - target: {fileID: 3120644439800569440, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}
+      propertyPath: unitData
+      value: 
+      objectReference: {fileID: 11400000, guid: cbc57313ae395b64f88cecd2923962d5, type: 2}
     - target: {fileID: 3668627435138639126, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}
       propertyPath: m_Avatar
       value: 

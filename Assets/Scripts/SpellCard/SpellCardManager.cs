@@ -27,7 +27,7 @@ namespace TurnBasedGame.SpellCard
         // Events cho UI binding
         public event Action<SpellCardData> OnCardSelected;
         public event Action OnCardDeselected;
-        public event Action<SpellCardData, UnitMove> OnCardUsed;
+        public event Action<SpellCardData, UnitController> OnCardUsed;
         public event Action<PlayerID> OnHandChanged;
 
         private void Awake()
@@ -95,7 +95,7 @@ namespace TurnBasedGame.SpellCard
         /// <summary>
         /// Xác nhận sử dụng spell lên target. Gọi khi player click vào unit mục tiêu.
         /// </summary>
-        public bool TryUseCard(UnitMove target)
+        public bool TryUseCard(UnitController target)
         {
             if (!_isTargeting || _selectedCard == null) return false;
 
@@ -148,7 +148,7 @@ namespace TurnBasedGame.SpellCard
             return true;
         }
 
-        private bool ValidateTarget(SpellCardData card, PlayerID caster, UnitMove target)
+        private bool ValidateTarget(SpellCardData card, PlayerID caster, UnitController target)
         {
             if (target == null || target.IsDead()) return false;
 
@@ -168,7 +168,7 @@ namespace TurnBasedGame.SpellCard
 
         #region Effect Execution
 
-        private void ExecuteSpell(SpellCardData card, UnitMove caster, UnitMove target, PlayerID casterPlayer)
+        private void ExecuteSpell(SpellCardData card, UnitController caster, UnitController target, PlayerID casterPlayer)
         {
             var effect = SpellEffectFactory.Create(card.effectType);
             if (effect == null)
@@ -229,9 +229,9 @@ namespace TurnBasedGame.SpellCard
             }
         }
 
-        private List<UnitMove> GetAllUnitsOnMap()
+        private List<UnitController> GetAllUnitsOnMap()
         {
-            var result = new List<UnitMove>();
+            var result = new List<UnitController>();
             var p1Units = UnitSpawner.Instance?.GetPlayerUnits(PlayerID.Player1);
             var p2Units = UnitSpawner.Instance?.GetPlayerUnits(PlayerID.Player2);
             if (p1Units != null) result.AddRange(p1Units);

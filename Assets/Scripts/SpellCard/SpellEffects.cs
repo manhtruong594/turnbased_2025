@@ -1,6 +1,6 @@
-using RedBjorn.ProtoTiles.Example;
 using TurnBasedGame.Core;
 using UnityEngine;
+using TurnBasedGame.Unit;
 
 namespace TurnBasedGame.SpellCard
 {
@@ -10,7 +10,7 @@ namespace TurnBasedGame.SpellCard
     /// </summary>
     public interface ISpellEffect
     {
-        void Apply(SpellCardData data, PlayerID caster, UnitMove target);
+        void Apply(SpellCardData data, PlayerID caster, UnitController target);
     }
 
     /// <summary>
@@ -35,7 +35,7 @@ namespace TurnBasedGame.SpellCard
     public class SpellBase: ISpellEffect
     {
         SpellCardData _baseData;
-        public virtual void Apply(SpellCardData data, PlayerID caster, UnitMove target)
+        public virtual void Apply(SpellCardData data, PlayerID caster, UnitController target)
         {
             Debug.Log($"[Spell] {data.spellName}: Hiệu ứng mặc định, không làm gì cả.");
         }
@@ -44,7 +44,7 @@ namespace TurnBasedGame.SpellCard
     /// <summary>Hồi HP cho target.</summary>
     public class HealEffect : SpellBase
     {
-        public override void Apply(SpellCardData data, PlayerID caster, UnitMove target)
+        public override void Apply(SpellCardData data, PlayerID caster, UnitController target)
         {
             if (target == null || target.IsDead()) return;
 
@@ -60,7 +60,7 @@ namespace TurnBasedGame.SpellCard
     /// <summary>Thêm Shield buff giảm sát thương nhận vào.</summary>
     public class ShieldEffect : SpellBase
     {
-        public override void Apply(SpellCardData data, PlayerID caster, UnitMove target)
+        public override void Apply(SpellCardData data, PlayerID caster, UnitController target)
         {
             if (target == null || target.IsDead()) return;
 
@@ -76,7 +76,7 @@ namespace TurnBasedGame.SpellCard
     /// <summary>Root: cấm di chuyển trong N lượt.</summary>
     public class RootEffect : SpellBase
     {
-        public override void Apply(SpellCardData data, PlayerID caster, UnitMove target)
+        public override void Apply(SpellCardData data, PlayerID caster, UnitController target)
         {
             if (target == null || target.IsDead()) return;
 
@@ -92,7 +92,7 @@ namespace TurnBasedGame.SpellCard
     /// <summary>Tăng sát thương cho đơn vị đồng minh.</summary>
     public class DamageBuffEffect : SpellBase
     {
-        public override void Apply(SpellCardData data, PlayerID caster, UnitMove target)
+        public override void Apply(SpellCardData data, PlayerID caster, UnitController target)
         {
             if (target == null || target.IsDead()) return;
 
@@ -108,7 +108,7 @@ namespace TurnBasedGame.SpellCard
     /// <summary>Xóa tất cả debuff trên target.</summary>
     public class CleanseEffect : SpellBase
     {
-        public override void Apply(SpellCardData data, PlayerID caster, UnitMove target)
+        public override void Apply(SpellCardData data, PlayerID caster, UnitController target)
         {
             if (target == null || target.IsDead()) return;
 

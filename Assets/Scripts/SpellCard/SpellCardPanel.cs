@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using TurnBasedGame.Core;
 using TurnBasedGame.Resources;
+using TurnBasedGame.Unit;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -55,7 +56,7 @@ namespace TurnBasedGame.SpellCard
             RefreshCards();
         }
 
-        private void OnCardUsed(SpellCardData card, RedBjorn.ProtoTiles.Example.UnitMove target)
+        private void OnCardUsed(SpellCardData card, UnitController target)
         {
             RefreshCards();
         }

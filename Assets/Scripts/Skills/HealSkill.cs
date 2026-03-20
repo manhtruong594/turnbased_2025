@@ -1,7 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
 using TurnBasedGame.Unit;
-using RedBjorn.ProtoTiles.Example;
 
 namespace TurnBasedGame.Skills
 {
@@ -15,7 +14,7 @@ namespace TurnBasedGame.Skills
         [Header("Heal Settings")]
         [SerializeField] private int healAmount = 30;
 
-        protected override void ExecuteEffect(UnitMove caster, Vector3Int targetPos)
+        protected override void ExecuteEffect(UnitController caster, Vector3Int targetPos)
         {
             var target = MapManager.Instance?.GetUnitAtTile(targetPos);
             if (target == null || target.IsDead()) return;
@@ -40,7 +39,7 @@ namespace TurnBasedGame.Skills
             return new List<Vector3Int> { targetPos };
         }
 
-        protected override bool ValidateCustomConditions(UnitMove caster, Vector3Int targetPos)
+        protected override bool ValidateCustomConditions(UnitController caster, Vector3Int targetPos)
         {
             var target = MapManager.Instance?.GetUnitAtTile(targetPos);
             if (target == null) return false;

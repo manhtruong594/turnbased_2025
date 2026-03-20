@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using RedBjorn.ProtoTiles.Example;
-using TurnBasedGame.Core;
 using UnityEngine;
+using TurnBasedGame.Unit;
+using TurnBasedGame.Core;
 
 namespace TurnBasedGame.SpellCard
 {
@@ -40,14 +40,14 @@ namespace TurnBasedGame.SpellCard
     public class BuffDebuffHandler : MonoBehaviour
     {
         private readonly List<ActiveBuff> _activeBuffs = new();
-        private UnitMove _owner;
+        private UnitController _owner;
 
         public IReadOnlyList<ActiveBuff> ActiveBuffs => _activeBuffs;
 
         public event Action<ActiveBuff> OnBuffAdded;
         public event Action<ActiveBuff> OnBuffRemoved;
 
-        public void Init(UnitMove owner)
+        public void Init(UnitController owner)
         {
             _owner = owner;
             _activeBuffs.Clear();

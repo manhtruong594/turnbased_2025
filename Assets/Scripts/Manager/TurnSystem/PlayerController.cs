@@ -5,7 +5,6 @@ using System.Collections;
 using System;
 using System.Collections.Generic;
 using TurnBasedGame.Unit;
-using RedBjorn.ProtoTiles.Example;
 using TurnBasedGame.UI;
 using TurnBasedGame.SpellCard;
 
@@ -30,7 +29,7 @@ namespace TurnBasedGame.Core
         [SerializeField] private SpawnPanel _spawnPanel;
         [SerializeField] private SpellCardPanel _spellCardPanel;
         private bool _isMyTurn;
-        private List<UnitMove> _myUnits = new List<UnitMove>();
+        private List<UnitController> _myUnits = new List<UnitController>();
 
         private void Start()
         {

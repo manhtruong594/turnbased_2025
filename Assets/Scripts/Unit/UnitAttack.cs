@@ -2,9 +2,10 @@ using UnityEngine;
 using System;
 using System.Collections.Generic;
 using RedBjorn.ProtoTiles;
-using RedBjorn.ProtoTiles.Example;
 using UnityEngine.UI;
+using TurnBasedGame.Unit;
 using TurnBasedGame.Skills;
+using RedBjorn.ProtoTiles.Example;
 
 namespace TurnBasedGame.Unit
 {
@@ -35,10 +36,10 @@ namespace TurnBasedGame.Unit
         private ISkill _selectedSkill;
 
         MapEntity _cachedMap;
-        UnitMove _cachedUnitMove;
+        UnitController _cachedUnitMove;
 
         #region  Unity Methods and Initialization
-        public void Init(UnitRuntimeStats runtimeStats, UnitMove unitMove)
+        public void Init(UnitRuntimeStats runtimeStats, UnitController unitMove)
         {
             this.runtimeStats = runtimeStats;
             _cachedMap = runtimeStats.MapEntity;
@@ -123,7 +124,7 @@ namespace TurnBasedGame.Unit
         /// <summary>
         /// Thực hiện tấn công vào target
         /// </summary>
-        public void ExecuteAttack(UnitMove targetUnit, bool immidiate = false)
+        public void ExecuteAttack(UnitController targetUnit, bool immidiate = false)
         {
             if (immidiate && !CanAttack(targetUnit))
                 return;
@@ -156,7 +157,7 @@ namespace TurnBasedGame.Unit
             _skillsBridge.UpdateSkillButtonsCooldowns();
         }
 
-        public bool CanAttack(UnitMove targetUnit)
+        public bool CanAttack(UnitController targetUnit)
         {
             if (targetUnit == null || targetUnit.IsDead())
                 return false;

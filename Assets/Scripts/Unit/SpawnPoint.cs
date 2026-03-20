@@ -1,7 +1,7 @@
 using UnityEngine;
-using TurnBasedGame.Core;
-using RedBjorn.ProtoTiles.Example;
 using System;
+using TurnBasedGame.Unit;
+using TurnBasedGame.Core;
 
 namespace TurnBasedGame.Unit
 {
@@ -56,7 +56,7 @@ namespace TurnBasedGame.Unit
             GameMediator.Instance.OnUnitMoved -= HandleUnitMoved;
         }
         
-        private void HandleUnitMoved(UnitMove move, Vector3Int oldPos, Vector3Int newPos)
+        private void HandleUnitMoved(UnitController move, Vector3Int oldPos, Vector3Int newPos)
         {
             if (oldPos == gridPosition)
             {

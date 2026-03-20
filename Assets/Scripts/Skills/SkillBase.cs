@@ -1,11 +1,11 @@
 using UnityEngine;
 using System.Collections.Generic;
 using TurnBasedGame.Unit;
-using RedBjorn.ProtoTiles.Example;
 using TurnBasedGame.ObjectPool;
 using System.Collections;
 using Unity.VisualScripting;
 using System;
+using RedBjorn.ProtoTiles.Example;
 
 namespace TurnBasedGame.Skills
 {
@@ -49,10 +49,10 @@ namespace TurnBasedGame.Skills
         #endregion
 
         protected bool _isExecuting = false;
-        ValueTuple<UnitMove, Vector3Int> _currentExecutionContext;
+        ValueTuple<UnitController, Vector3Int> _currentExecutionContext;
 
         #region Template Method - Validation Pipeline
-        public virtual bool CanUse(UnitMove caster, Vector3Int targetPos)
+        public virtual bool CanUse(UnitController caster, Vector3Int targetPos)
         {
             if (!ValidateCooldown()) 
             {
@@ -81,13 +81,13 @@ namespace TurnBasedGame.Skills
             return currentCooldown <= 0;
         }
 
-        protected virtual bool ValidateRange(UnitMove caster, Vector3Int targetPos)
+        protected virtual bool ValidateRange(UnitController caster, Vector3Int targetPos)
         {
             var distance = MapManager.Instance.GetDistance(caster.currentGridPosition, targetPos);
             return distance <= range;
         }
 
-        protected virtual bool ValidateTarget(UnitMove caster, Vector3Int targetPos)
+        protected virtual bool ValidateTarget(UnitController caster, Vector3Int targetPos)
         {
             var targetUnit = MapManager.Instance?.GetUnitAtTile(targetPos);
             
@@ -105,27 +105,38 @@ namespace TurnBasedGame.Skills
             return false;
         }
 
-        protected virtual bool ValidateCustomConditions(UnitMove caster, Vector3Int targetPos)
+        protected virtual bool ValidateCustomConditions(UnitController caster, Vector3Int targetPos)
         {
             return true;
         }
         #endregion
 
         #region Template Method - Execution Pipeline
-        public void Execute(UnitMove caster, Vector3Int targetPos)
+        public void Execute(UnitController caster, Vector3Int targetPos)
         {
             Updater.Instance.StartCoroutine(ExcuteAsync(caster, targetPos));
         }
 
-        IEnumerator ExcuteAsync(UnitMove caster, Vector3Int targetPos)
+        const float EXECUTE_TIMEOUT = 10f;
+
+        IEnumerator ExcuteAsync(UnitController caster, Vector3Int targetPos)
         {
             AreaPathManager.Instance.IsLocked= true;
             _isExecuting = true;
             _currentExecutionContext = (caster, targetPos);
             caster.PerformSkill(this, targetPos);
             StartCooldown();
+
+            float elapsed = 0f;
             while (_isExecuting)
             {
+                elapsed += Time.deltaTime;
+                if (elapsed >= EXECUTE_TIMEOUT)
+                {
+                    Debug.LogError($"[{skillName}] OnHitTarget was never called! Forcing completion after {EXECUTE_TIMEOUT}s.");
+                    _isExecuting = false;
+                    break;
+                }
                 yield return null;
             }
             OnExecuteComplete(caster, targetPos);
@@ -146,7 +157,7 @@ namespace TurnBasedGame.Skills
             _isExecuting = false;
         }
 
-        protected virtual void OnExecuteComplete(UnitMove caster, Vector3Int targetPos)
+        protected virtual void OnExecuteComplete(UnitController caster, Vector3Int targetPos)
         {
             SkillEventBus.Instance?.TriggerSkillUsed(this, caster, targetPos);
             caster.FinishTurnActions();
@@ -166,7 +177,7 @@ namespace TurnBasedGame.Skills
         /// <summary>
         /// xử lý effect và tính toán tác động của skill
         /// </summary>
-        protected abstract void ExecuteEffect(UnitMove caster, Vector3Int targetPos);
+        protected abstract void ExecuteEffect(UnitController caster, Vector3Int targetPos);
         #endregion
 
         #region Cooldown Management

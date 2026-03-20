@@ -1,7 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
 using TurnBasedGame.Unit;
-using RedBjorn.ProtoTiles.Example;
 
 namespace TurnBasedGame.Skills
 {
@@ -19,8 +18,8 @@ namespace TurnBasedGame.Skills
         int CurrentCooldown { get; }
         int Range { get; }
 
-        bool CanUse(UnitMove caster, Vector3Int targetPos);
-        void Execute(UnitMove caster, Vector3Int targetPos);
+        bool CanUse(UnitController caster, Vector3Int targetPos);
+        void Execute(UnitController caster, Vector3Int targetPos);
         List<Vector3Int> GetAffectedTiles(Vector3Int targetPos);
         
         void ResetCooldown();

@@ -1,11 +1,11 @@
 using UnityEngine;
 using TurnBasedGame.Core;
 using TurnBasedGame.Resources;
-using RedBjorn.ProtoTiles.Example;
 using System;
 using TurnBasedGame.Unit;
 using TurnBasedGame.Capture;
 using TurnBasedGame.SpellCard;
+using RedBjorn.ProtoTiles.Example;
 
 /// <summary>
 /// Mediator Pattern: Trung gian giao tiếp giữa các Manager
@@ -33,12 +33,12 @@ public class GameMediator : MonoBehaviour
     #endregion
 
     #region  Visualize Path Events
-    public event Action<UnitMove> OnUnitSelected;
-    public event Action<UnitMove> OnUnitDeselected;
+    public event Action<UnitController> OnUnitSelected;
+    public event Action<UnitController> OnUnitDeselected;
     #endregion
 
     #region Unit Movement Events
-    public event Action<UnitMove, Vector3Int, Vector3Int> OnUnitMoved;
+    public event Action<UnitController, Vector3Int, Vector3Int> OnUnitMoved;
     #endregion
 
     #region Capture Point Events
@@ -47,7 +47,7 @@ public class GameMediator : MonoBehaviour
     #endregion
 
     #region Spell Card Events
-    public event Action<SpellCardData, UnitMove, PlayerID> OnSpellCardUsed;
+    public event Action<SpellCardData, UnitController, PlayerID> OnSpellCardUsed;
     #endregion
 
     private void Awake()
@@ -90,22 +90,22 @@ public class GameMediator : MonoBehaviour
         OnMPChanged?.Invoke(player, currentMP, maxMP);
     }
 
-    public void NotifySpawnUnit(UnitMove unit, int mpSpent)
+    public void NotifySpawnUnit(UnitController unit, int mpSpent)
     {
         mpManager.SpendMP(unit.GetOwner(), mpSpent);
     }
 
-    public void NotifyUnitSelected(UnitMove unit)
+    public void NotifyUnitSelected(UnitController unit)
     {
         OnUnitSelected?.Invoke(unit);
     }
 
-    public void NotifyUnitDeselected(UnitMove unit)
+    public void NotifyUnitDeselected(UnitController unit)
     {
         OnUnitDeselected?.Invoke(unit);
     }
 
-    public void NotifyUnitMoved(UnitMove unit, Vector3Int oldPos, Vector3Int newPos)
+    public void NotifyUnitMoved(UnitController unit, Vector3Int oldPos, Vector3Int newPos)
     {
         OnUnitMoved?.Invoke(unit, oldPos, newPos);
     }
@@ -121,7 +121,7 @@ public class GameMediator : MonoBehaviour
         OnGameEnd?.Invoke(winner);
     }
 
-    public void NotifySpellCardUsed(SpellCardData card, UnitMove target, PlayerID caster)
+    public void NotifySpellCardUsed(SpellCardData card, UnitController target, PlayerID caster)
     {
         OnSpellCardUsed?.Invoke(card, target, caster);
     }

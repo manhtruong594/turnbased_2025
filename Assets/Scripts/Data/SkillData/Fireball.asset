@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Skills.FireballSkill
   skillName: FireBall
   description: No description
-  skillType: 1
+  skillType: 3
   icon: {fileID: 21300000, guid: 062eeb9d5e8ba8f45a9ddfea52518f82, type: 3}
   cooldown: 3
   range: 2

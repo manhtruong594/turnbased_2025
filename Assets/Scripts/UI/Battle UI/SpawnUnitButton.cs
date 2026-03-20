@@ -4,7 +4,6 @@ using TMPro;
 using TurnBasedGame.Unit;
 using TurnBasedGame.Core;
 using TurnBasedGame.Resources;
-using RedBjorn.ProtoTiles.Example;
 
 namespace TurnBasedGame.UI
 {
@@ -15,7 +14,7 @@ namespace TurnBasedGame.UI
     public class SpawnUnitButton : MonoBehaviour
     {
         [Header("Unit Configuration")]
-        [SerializeField] private UnitMove unit;
+        [SerializeField] private UnitController unit;
 
         [Header("UI References")]
         [SerializeField] private Button spawnButton;
@@ -70,7 +69,7 @@ namespace TurnBasedGame.UI
         /// <summary>
         /// Set unit data cho button này
         /// </summary>
-        public void SetUnitData(UnitMove unitMove)
+        public void SetUnitData(UnitController unitMove)
         {
             unit = unitMove;
             UpdateUI();
