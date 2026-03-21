@@ -107,6 +107,7 @@ namespace TurnBasedGame.Unit
         IEnumerator Moving(List<TileEntity> path)
         {
             var nextIndex = 0;
+            AreaPathManager.Instance.IsLocked = true;
             _myTrans.position = runtimeStats.MapEntity.Settings.Projection(_myTrans.position);
             _actionPanel.SetActive(false);
             while (nextIndex < path.Count)
@@ -137,6 +138,7 @@ namespace TurnBasedGame.Unit
             OnCompleteMove?.Invoke();
             _cancelMoveButton.interactable = true;
             _unitAnimator.StopMoving();
+            AreaPathManager.Instance.IsLocked = false;
         }
 
         public void ChangeSelected(bool select)
@@ -148,7 +150,7 @@ namespace TurnBasedGame.Unit
 
         public void UndoMoveAction(Vector3Int previousPosition)
         {
-            // Di chuy?n v? v? tr� tru?c d�
+            // Di chuyển về vị trí trước đó
             _myTrans.position = runtimeStats.MapEntity.WorldPosition(previousPosition);
             UpdateGridPosition(previousPosition);
             runtimeStats.IsMoveCompleted = false;
@@ -157,7 +159,7 @@ namespace TurnBasedGame.Unit
         }
 
         /// <summary>
-        /// C?p nh?t v? tr� grid c?a unit tr�n MapManager
+        /// Cập nhật vị trí grid của unit trên MapManager
         /// </summary>
         public void UpdateGridPosition(Vector3Int newGridPos)
         {
@@ -197,6 +199,7 @@ namespace TurnBasedGame.Unit
         public float GetHealthPercent() => (float)runtimeStats.Health / runtimeStats.MaxHealth;
         public PlayerID GetOwner() => runtimeStats.Owner;
         public bool IsMoveDone() => runtimeStats.IsMoveCompleted;
+        public int GetCurrentDamage() => runtimeStats.BaseDamage;
         public bool CanMove()
         {
             if (runtimeStats.IsMoveCompleted || runtimeStats.IsInAttackMode) return false;
@@ -229,6 +232,13 @@ namespace TurnBasedGame.Unit
                 _unitAnimator.PlayHit();
             }
         }
+        
+        public void Heal(int healAmount)
+        {
+            runtimeStats.Health += healAmount;
+            runtimeStats.Health = Mathf.Clamp(runtimeStats.Health, 0, runtimeStats.MaxHealth);
+            _healthBar.UpdateHealthBar((float)runtimeStats.Health / runtimeStats.MaxHealth);
+        }
 
         IEnumerator DelayDead()
         {
@@ -255,6 +265,7 @@ namespace TurnBasedGame.Unit
     {
         public int Health;
         public int MaxHealth;
+        public int BaseDamage;
         public int MoveRange;
         public MapEntity MapEntity { get; private set; }
         public PlayerID Owner;
@@ -284,6 +295,7 @@ namespace TurnBasedGame.Unit
         {
             Health = baseData.Health;
             MaxHealth = baseData.Health;
+            BaseDamage = baseData.BaseDamage;
             MoveRange = Mathf.FloorToInt(baseData.moveRange);
             IsInAttackMode = false;
             IsMoveCompleted = false;

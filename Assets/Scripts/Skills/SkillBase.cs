@@ -24,7 +24,9 @@ namespace TurnBasedGame.Skills
         [SerializeField] protected int range = 1;
         public GameObject VfxPrefab;
         public GameObject VfxHitPrefab;
-
+        public bool HasDelayApplyEffect = false;
+        public float DelayApplyEffectTime = 0.5f;
+        
         [Header("Target Settings")]
         [SerializeField] protected bool canTargetAllies;
         [SerializeField] protected bool canTargetEnemies = true;
@@ -121,7 +123,6 @@ namespace TurnBasedGame.Skills
 
         IEnumerator ExcuteAsync(UnitController caster, Vector3Int targetPos)
         {
-            AreaPathManager.Instance.IsLocked= true;
             _isExecuting = true;
             _currentExecutionContext = (caster, targetPos);
             caster.PerformSkill(this, targetPos);
@@ -140,7 +141,6 @@ namespace TurnBasedGame.Skills
                 yield return null;
             }
             OnExecuteComplete(caster, targetPos);
-            AreaPathManager.Instance.IsLocked= false;
         }
  
         protected virtual void StartCooldown()
@@ -151,7 +151,7 @@ namespace TurnBasedGame.Skills
             }
         }
 
-        public void StartEffect()
+        public void ApplyEffect()
         {
             ExecuteEffect(_currentExecutionContext.Item1, _currentExecutionContext.Item2);
             _isExecuting = false;

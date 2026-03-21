@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 3c821cf311359b3469b5ffd53e4d3ffd
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 209087
+  packageName: ProtoTiles - turn based map creator
+  packageVersion: 1.1.3
+  assetPath: Assets/RedBjorn/ProtoTiles/Renderers/URP.unitypackage
+  uploadId: 871228

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using RedBjorn.ProtoTiles;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using TurnBasedGame.Unit;
 using TurnBasedGame.Skills;
 using RedBjorn.ProtoTiles.Example;
@@ -78,7 +79,7 @@ namespace TurnBasedGame.Unit
                 return;
 
             var mousePos = MyInput.GroundPosition(_cachedMap.Settings.Plane());
-            if (MyInput.GetOnWorldUp(_cachedMap.Settings.Plane()))
+            if (MyInput.GetOnWorldUp(_cachedMap.Settings.Plane()) && !EventSystem.current.IsPointerOverGameObject())
             {
                 var tileClicked = _cachedMap.Tile(mousePos);
                 if (tileClicked == null)

@@ -7,7 +7,7 @@ public class AnimationHashLib
     public static readonly int IsMoving = Animator.StringToHash("IsMoving");
     public static readonly int NormalAttack = Animator.StringToHash("Normal Attack");
     public static readonly int ActiveAttack = Animator.StringToHash("Active Attack");
-    public static readonly int PassiveAttack = Animator.StringToHash("Passive Skill");
+    public static readonly int BuffNDeBuff = Animator.StringToHash("Buff And Debuff");
     public static readonly int UltimateAttack = Animator.StringToHash("Ultimate Attack");
 
     public static readonly int Hit = Animator.StringToHash("Hit");
@@ -22,10 +22,9 @@ public class AnimationHashLib
         {
             SkillType.Normal => NormalAttack,
             SkillType.Active => ActiveAttack,
-            SkillType.Passive => PassiveAttack,
+            SkillType.BuffAndDebuff => BuffNDeBuff,
             SkillType.Ultimate => UltimateAttack,
-        {
-    }         _ => NormalAttack
+        _ => NormalAttack
         };
     }
 

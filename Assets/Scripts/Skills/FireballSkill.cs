@@ -13,7 +13,7 @@ namespace TurnBasedGame.Skills
     public class FireballSkill : SkillBase
     {
         [Header("Fireball Settings")]
-        [SerializeField] private int damage = 25;
+        [SerializeField] private float multipleDmg = 1.25f;
         [SerializeField] private int aoeRadius = 1;
 
         public override bool CanUse(UnitController caster, Vector3Int targetPos)
@@ -41,39 +41,25 @@ namespace TurnBasedGame.Skills
             // Gây damage cho tất cả units trong AOE
             var affectedTiles = map.Area(targetPos, aoeRadius);
             int hitCount = 0;
-            
+            int finalDamage = Mathf.RoundToInt(caster.GetCurrentDamage() * multipleDmg);
+
             foreach (var tilePos in affectedTiles)
             {
                 var unit = MapManager.Instance?.GetUnitAtTile(tilePos);
                 if (unit != null && !unit.IsDead() && unit.GetOwner() != caster.GetOwner())
                 {
-                    unit.TakeDamage(damage);
+                    unit.TakeDamage(finalDamage);
                     hitCount++;
                 }
             }
 
-            Debug.Log($"{caster.name} dùng Fireball gây {damage} damage cho {hitCount} mục tiêu!");
+            Debug.Log($"{caster.name} dùng Fireball gây {finalDamage} damage cho {hitCount} mục tiêu!");
         }
        
         public override List<Vector3Int> GetAffectedTiles(Vector3Int targetPos)
         {
             var tiles = new List<Vector3Int>();
             
-            // // Lấy tất cả tiles trong bán kính AOE
-            // for (int x = -aoeRadius; x <= aoeRadius; x++)
-            // {
-            //     for (int y = -aoeRadius; y <= aoeRadius; y++)
-            //     {
-            //         for (int z = -aoeRadius; z <= aoeRadius; z++)
-            //         {
-            //             var offset = new Vector3Int(x, y, z);
-            //             if (Mathf.Abs(x) + Mathf.Abs(y) + Mathf.Abs(z) <= aoeRadius)
-            //             {
-            //                 tiles.Add(targetPos + offset);
-            //             }
-            //         }
-            //     }
-            // }
             tiles = GetMap().Area(targetPos, aoeRadius);
             return tiles;
         }

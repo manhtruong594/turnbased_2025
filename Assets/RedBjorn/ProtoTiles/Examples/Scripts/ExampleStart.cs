@@ -5,7 +5,6 @@ namespace RedBjorn.ProtoTiles.Example
     public class ExampleStart : MonoBehaviour
     {
         public MapSettings Map;
-        public KeyCode GridToggle = KeyCode.G;
         public MapView MapView;
         public UnitMove Unit;
 
@@ -39,11 +38,19 @@ namespace RedBjorn.ProtoTiles.Example
                 Unit = FindObjectOfType<UnitMove>();
 #endif
             }
+            if (Unit)
+            {
+                Unit.Init(MapEntity);
+            }
+            else
+            {
+                Log.E("Can't find any Unit. Example level start incorrect");
+            }
         }
 
         void Update()
         {
-            if (Input.GetKeyUp(GridToggle))
+            if (MyInput.GetGKeyUp())
             {
                 MapEntity.GridToggle();
             }

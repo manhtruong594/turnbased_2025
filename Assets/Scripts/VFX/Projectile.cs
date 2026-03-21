@@ -18,29 +18,29 @@ namespace TurnBasedGame.VFX
         }
 
         [Header("Settings")]
-        [SerializeField] PooledObject pooledObject;
+        [SerializeField] protected PooledObject pooledObject;
         [SerializeField] private TrajectoryType trajectoryType = TrajectoryType.Linear;
-        [SerializeField] private float speed = 10f;
+        [SerializeField] protected float speed = 10f;
         [SerializeField] private float arcHeight = 3f; // Độ cao cầu vồng (chỉ dùng cho Arc)
         [SerializeField] private bool rotateToDirection = true;
 
         [Header("VFX")]
         [SerializeField] private ParticleSystem trailEffect;
-        [SerializeField] private GameObject hitEffectPrefab;
+        [SerializeField] protected GameObject hitEffectPrefab;
 
-        // Private state
-        private Vector3 _startPosition;
-        private Vector3 _targetPosition;
-        private float _progress;
-        private float _duration;
-        private bool _isFlying;
+        // Protected state
+        protected Vector3 _startPosition;
+        protected Vector3 _targetPosition;
+        protected float _progress;
+        protected float _duration;
+        protected bool _isFlying;
 
         // Events
         public Action OnReachTarget;
 
         public bool IsActive => _isFlying;
 
-        void Update()
+        protected virtual void Update()
         {
             if (!_isFlying) return;
 
@@ -56,14 +56,14 @@ namespace TurnBasedGame.VFX
             UpdateRotation();
         }
 
-        private void OnEnable()
+        protected virtual void OnEnable()
         {
             // Reset state khi spawn
             _isFlying = false;
             _progress = 0f;
         }
 
-        private void OnDisable()
+        protected virtual void OnDisable()
         {
             // Cleanup khi despawn
             _isFlying = false;
@@ -78,7 +78,7 @@ namespace TurnBasedGame.VFX
         /// <summary>
         /// Khởi động projectile với tham số tùy chỉnh
         /// </summary>
-        public void Launch(Vector3 start, Vector3 target, TrajectoryType type, float customSpeed = -1f, float customArcHeight = -1f)
+        public virtual void Launch(Vector3 start, Vector3 target, TrajectoryType type, float customSpeed = -1f, float customArcHeight = -1f)
         {
             _startPosition = start;
             _targetPosition = target;
@@ -171,7 +171,7 @@ namespace TurnBasedGame.VFX
             return (nextBasePos - currentPos).normalized;
         }
 
-        private void ReachTarget()
+        protected virtual void ReachTarget()
         {
             _isFlying = false;
             transform.position = _targetPosition;
@@ -182,7 +182,7 @@ namespace TurnBasedGame.VFX
             ObjectPoolManager.Instance.Despawn(pooledObject);
         }
 
-        private void SpawnHitEffect()
+        protected void SpawnHitEffect()
         {
             if (hitEffectPrefab == null) return;
 

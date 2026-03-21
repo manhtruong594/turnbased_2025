@@ -20,9 +20,10 @@ MonoBehaviour:
   range: 1
   VfxPrefab: {fileID: 0}
   VfxHitPrefab: {fileID: 0}
+  HasDelayApplyEffect: 1
+  DelayApplyEffectTime: 0.25
   canTargetAllies: 0
   canTargetEnemies: 1
   canTargetSelf: 0
   canTargetEmptyTile: 1
-  dmg: 10
-  useAttackStat: 1
+  multipleDmg: 1.25

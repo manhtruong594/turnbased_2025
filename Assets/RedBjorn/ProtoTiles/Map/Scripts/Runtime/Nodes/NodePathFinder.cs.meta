@@ -13,6 +13,6 @@ AssetOrigin:
   serializedVersion: 1
   productId: 209087
   packageName: ProtoTiles - turn based map creator
-  packageVersion: 1.1.2
+  packageVersion: 1.1.3
   assetPath: Assets/RedBjorn/ProtoTiles/Map/Scripts/Runtime/Nodes/NodePathFinder.cs
-  uploadId: 641656
+  uploadId: 871228

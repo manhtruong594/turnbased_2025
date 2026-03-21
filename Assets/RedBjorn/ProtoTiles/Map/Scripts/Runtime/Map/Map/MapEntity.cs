@@ -258,11 +258,6 @@ namespace RedBjorn.ProtoTiles
             return tileA == null || tileB == null ? float.MaxValue : DistanceFunc(tileA.Position, tileB.Position);
         }
 
-        public float Distance(Vector3Int tilePosA, Vector3Int tilePosB)
-        {
-            return DistanceFunc(tilePosA, tilePosB);
-        }
-        
         /// <summary>
         /// Distance between two tiles located at corresponding world space positions
         /// </summary>

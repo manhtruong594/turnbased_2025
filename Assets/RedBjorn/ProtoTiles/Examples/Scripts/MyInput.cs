@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UnityEngine.EventSystems;
 
 namespace RedBjorn.ProtoTiles.Example
 {
@@ -14,12 +13,27 @@ namespace RedBjorn.ProtoTiles.Example
 
         static FrameInfo LastFrame = new FrameInfo();
 
+        static Vector3 MousePosition
+        {
+            get
+            {
+                Vector3 result;
+#if ENABLE_INPUT_SYSTEM
+                result = UnityEngine.InputSystem.Mouse.current.position.value;
+#elif ENABLE_LEGACY_INPUT_MANAGER
+                result = Input.mousePosition;
+#endif
+                return result;
+            }
+        }
+
         static void Validate(Plane plane)
         {
             if (LastFrame.Frame != Time.frameCount)
             {
                 LastFrame.Frame = Time.frameCount;
-                if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out var hit, 100f))
+                RaycastHit hit;
+                if (Physics.Raycast(Camera.main.ScreenPointToRay(MousePosition), out hit, 100f))
                 {
                     LastFrame.OverObject = hit.collider.gameObject;
                 }
@@ -27,11 +41,11 @@ namespace RedBjorn.ProtoTiles.Example
                 {
                     LastFrame.OverObject = null;
                 }
-                var screenCenterRay = Camera.main.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
+                var screemCenterRay = Camera.main.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
                 float enter = 0f;
-                if (plane.Raycast(screenCenterRay, out enter))
+                if (plane.Raycast(screemCenterRay, out enter))
                 {
-                    LastFrame.CameraGroundPosition = screenCenterRay.GetPoint(enter);
+                    LastFrame.CameraGroundPosition = screemCenterRay.GetPoint(enter);
                 }
                 else
                 {
@@ -43,25 +57,44 @@ namespace RedBjorn.ProtoTiles.Example
         public static bool GetOnWorldDownFree(Plane plane)
         {
             Validate(plane);
-            return Input.GetMouseButtonDown(0);
+            var result = false;
+#if ENABLE_INPUT_SYSTEM
+            result = UnityEngine.InputSystem.Mouse.current.leftButton.wasPressedThisFrame;
+#elif ENABLE_LEGACY_INPUT_MANAGER
+            result = UnityEngine.Input.GetMouseButtonDown(0);
+#endif
+            return result;
         }
 
         public static bool GetOnWorldUpFree(Plane plane)
         {
             Validate(plane);
-            return Input.GetMouseButtonUp(0);
+            var result = false;
+#if ENABLE_INPUT_SYSTEM
+            result = UnityEngine.InputSystem.Mouse.current.leftButton.wasReleasedThisFrame;
+#elif ENABLE_LEGACY_INPUT_MANAGER
+            result = UnityEngine.Input.GetMouseButtonUp(0);
+#endif
+            return result;
         }
 
         public static bool GetOnWorldUp(Plane plane)
         {
             Validate(plane);
-            return !IsPointerOverUI() && Input.GetMouseButtonUp(0) && !CameraController.IsMovingByPlayer;
+            Debug.Log($"Mouse over object: {LastFrame.OverObject?.name ?? "None"}");
+            return GetOnWorldUpFree(plane) && !CameraController.IsMovingByPlayer;
         }
 
         public static bool GetOnWorldFree(Plane plane)
         {
             Validate(plane);
-            return Input.GetMouseButton(0);
+            var result = false;
+#if ENABLE_INPUT_SYSTEM
+            result = UnityEngine.InputSystem.Mouse.current.leftButton.isPressed;
+#elif ENABLE_LEGACY_INPUT_MANAGER
+            result = UnityEngine.Input.GetMouseButton(0);
+#endif
+            return result;
         }
 
         public static Vector3 CameraGroundPosition(Plane plane)
@@ -70,14 +103,9 @@ namespace RedBjorn.ProtoTiles.Example
             return LastFrame.CameraGroundPosition;
         }
 
-        public static bool IsPointerOverUI()
-        {
-            return EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
-        }
-        
         public static Vector3 GroundPosition(Plane plane)
         {
-            var mouseRay = Camera.main.ScreenPointToRay(Input.mousePosition);
+            var mouseRay = Camera.main.ScreenPointToRay(MousePosition);
             float enter = 0f;
             if (plane.Raycast(mouseRay, out enter))
             {
@@ -88,13 +116,24 @@ namespace RedBjorn.ProtoTiles.Example
 
         public static Vector3 GroundPositionCameraOffset(Plane plane)
         {
-            var mouseRay = Camera.main.ScreenPointToRay(Input.mousePosition);
+            var mouseRay = Camera.main.ScreenPointToRay(MousePosition);
             float enter = 0f;
             if (plane.Raycast(mouseRay, out enter))
             {
                 return mouseRay.GetPoint(enter) - Camera.main.transform.position;
             }
             return Vector3.zero;
+        }
+
+        public static bool GetGKeyUp()
+        {
+            var result = false;
+#if ENABLE_INPUT_SYSTEM
+            result = UnityEngine.InputSystem.Keyboard.current.gKey.wasReleasedThisFrame;
+#elif ENABLE_LEGACY_INPUT_MANAGER
+            result = UnityEngine.Input.GetKeyUp(UnityEngine.KeyCode.G);
+#endif
+            return result;
         }
     }
 }

@@ -61,11 +61,14 @@ namespace TurnBasedGame.Unit
 
         #endregion
 
-        private void OnHitTarget()
+        /// <summary>
+        /// event gọi khi attack trúng target, hoặc khi skill buff kích hoạt hiệu ứng
+        /// </summary>
+        private void OnApplyEffect()
         {
             if (_currentSkill != null)
             {
-                _currentSkill.StartEffect();
+                _currentSkill.ApplyEffect();
             }
         }
 
@@ -77,25 +80,52 @@ namespace TurnBasedGame.Unit
         /// </summary>
         public void AnimEvent_AttackHit()
         {
-            OnHitTarget();
+            OnApplyEffect();
         }
 
+        /// <summary>
+        /// Animation Event: Được gọi tại frame mà skill có projectile bắn ra
+        /// </summary>
         public void AnimEvent_AttackStart()
         {
             if (_currentSkill == null || _currentSkill.VfxPrefab == null) return;
             var spawnedObj = ObjectPoolManager.Instance.Spawn(_currentSkill.VfxPrefab);
             if (!spawnedObj.TryGetComponent<Projectile>(out var projectile))
             {
-                Debug.LogError($"[UnitAnimator] Failed to spawn Projectile from {_currentSkill.VfxPrefab.name}");
-                OnHitTarget();
                 return;
             }
 
             projectile.transform.SetPositionAndRotation(_effectSpawnPoint.position, _effectSpawnPoint.rotation);
             projectile.Launch(_effectSpawnPoint.position, _currentSkill.GetCurrentTargetWorldPosition());
-            projectile.OnReachTarget = OnHitTarget;
+            projectile.OnReachTarget = OnApplyEffect;
         }
         
+        /// <summary>
+        /// Animation Event: Được gọi tại frame mà skill có hiệu ứng xuất hiện (vd: slash vfx, buff vfx)
+        /// </summary>
+        public void AnimEvent_StartEffect()
+        {
+            if (_currentSkill == null || _currentSkill.VfxPrefab == null) return;
+            var spawnedObj = ObjectPoolManager.Instance.Spawn(_currentSkill.VfxPrefab);
+            spawnedObj.transform.SetPositionAndRotation(_effectSpawnPoint.position, _effectSpawnPoint.rotation);
+
+            if (_currentSkill.HasDelayApplyEffect)
+            {
+                StartCoroutine(DelayedEffect(spawnedObj));
+            }
+            else
+            {
+                spawnedObj.transform.SetPositionAndRotation(_effectSpawnPoint.position, _effectSpawnPoint.rotation);
+                OnApplyEffect();
+            }
+        }
+
+        private System.Collections.IEnumerator DelayedEffect(GameObject spawnedObj)
+        {
+            yield return new WaitForSeconds(_currentSkill.DelayApplyEffectTime);
+            OnApplyEffect();
+        }
+
         /// <summary>
         /// Animation Event: Được gọi khi attack animation hoàn thành
         /// Thêm event này vào Attack Animation Clip tại frame cuối

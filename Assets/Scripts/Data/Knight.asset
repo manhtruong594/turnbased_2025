@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   unitName: Knight
   description: 
+  Health: 100
+  BaseDamage: 10
   spawnCost: 3
-  moveRange: 3
+  moveRange: 10
   moveSpeed: 5
-  unitPrefab: {fileID: 5204393105807402248, guid: 5bbad2484b2ccdd4385e17d74927ac0f, type: 3}
   icon: {fileID: 0}
-  owner: 1

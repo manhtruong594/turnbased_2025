@@ -12,7 +12,7 @@ namespace TurnBasedGame.Skills
     public class HealSkill : SkillBase
     {
         [Header("Heal Settings")]
-        [SerializeField] private int healAmount = 30;
+        [SerializeField] private float multiple = 1.5f;
 
         protected override void ExecuteEffect(UnitController caster, Vector3Int targetPos)
         {
@@ -20,18 +20,8 @@ namespace TurnBasedGame.Skills
             if (target == null || target.IsDead()) return;
 
             // Heal target
-            // int currentHealth = target.runtimeStats.Health;
-            // int maxHealth = target.runtimeStats.MaxHealth;
-            // int actualHeal = Mathf.Min(healAmount, maxHealth - currentHealth);
-            
-            // target.runtimeStats.Health = Mathf.Min(currentHealth + healAmount, maxHealth);
-            // // Spawn VFX nếu có
-            // if (healVFX != null)
-            // {
-            //     Instantiate(healVFX, target.transform.position, Quaternion.identity);
-            // }
-
-            // Debug.Log($"{caster.name} hồi {actualHeal} HP cho {target.name}!");
+            int healAmount = Mathf.RoundToInt(caster.GetCurrentDamage() * multiple);
+            target.Heal(healAmount);
         }
 
         public override List<Vector3Int> GetAffectedTiles(Vector3Int targetPos)

@@ -2,7 +2,6 @@
 
 namespace RedBjorn.ProtoTiles.Example
 {
-    [DefaultExecutionOrder(1000)]
     public class CameraController : MonoBehaviour
     {
         [SerializeField]
@@ -14,20 +13,34 @@ namespace RedBjorn.ProtoTiles.Example
         public static bool IsMovingByPlayer;
 
         MapEntity CachedMap;
-
-        void OnEnable()
+        MapEntity Map
         {
-            CachedMap = MapManager.Instance.MapEntity;
+            get
+            {
+                if (CachedMap == null)
+                {
+#if UNITY_2023_1_OR_NEWER
+                    var example = FindFirstObjectByType<ExampleStart>();
+#else
+                    var example = FindObjectOfType<ExampleStart>();
+#endif
+                    if (example)
+                    {
+                        CachedMap = example.MapEntity;
+                    }
+                }
+                return CachedMap;
+            }
         }
-        
+
         void LateUpdate()
         {
-            if (MyInput.GetOnWorldDownFree(CachedMap.Settings.Plane()))
+            if (MyInput.GetOnWorldDownFree(Map.Settings.Plane()))
             {
-                HoldPosition = MyInput.GroundPositionCameraOffset(CachedMap.Settings.Plane());
+                HoldPosition = MyInput.GroundPositionCameraOffset(Map.Settings.Plane());
                 ClickPosition = transform.position;
             }
-            else if (MyInput.GetOnWorldUpFree(CachedMap.Settings.Plane()))
+            else if (MyInput.GetOnWorldUpFree(Map.Settings.Plane()))
             {
                 HoldPosition = null;
                 ClickPosition = null;
@@ -44,7 +57,7 @@ namespace RedBjorn.ProtoTiles.Example
         {
             if (HoldPosition.HasValue)
             {
-                var delta = HoldPosition.Value - MyInput.GroundPositionCameraOffset(CachedMap.Settings.Plane());
+                var delta = HoldPosition.Value - MyInput.GroundPositionCameraOffset(Map.Settings.Plane());
                 transform.position += delta;
                 transform.position = ClickPosition.Value + delta;
                 if (!IsMovingByPlayer)

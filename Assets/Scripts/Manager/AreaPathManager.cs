@@ -197,12 +197,14 @@ namespace RedBjorn.ProtoTiles.Example
                 _attackArea.Show(border, _cachedMap);
             HideMoveArea();
             HidePath();
+            IsLocked = true;
         }
 
         public void HideAttackArea()
         {
             if (_attackArea != null)
                 _attackArea.Hide();
+            IsLocked = false;
         }
 
         public void RealeaseSelectedUnit()

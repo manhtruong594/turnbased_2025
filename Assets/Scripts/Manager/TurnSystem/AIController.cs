@@ -17,7 +17,9 @@ namespace TurnBasedGame.Core
         [Header("AI Settings")]
         [SerializeField] private List<UnitController> availableUnits = new List<UnitController>();
         [SerializeField] private float actionDelay = 1f;
+        [SerializeField] private int maxUnit = 3;
 
+        private int _currentUnitCount = 0;
         private PlayerID aiPlayerID;
         private PlayerID opponentOfAI;
 
@@ -25,6 +27,7 @@ namespace TurnBasedGame.Core
         {
             opponentOfAI = mainPlayer;
             aiPlayerID = mainPlayer == PlayerID.Player1 ? PlayerID.Player2 : PlayerID.Player1;
+            _currentUnitCount = 0;
         }
 
         /// <summary>
@@ -68,9 +71,8 @@ namespace TurnBasedGame.Core
         /// </summary>
         private bool TrySpawnRandomUnit()
         {
-            if (availableUnits == null || availableUnits.Count == 0)
+            if (_currentUnitCount >= maxUnit || availableUnits == null || availableUnits.Count == 0)
             {
-                Debug.LogWarning("AI không có unit để spawn!");
                 return false;
             }
 
@@ -79,6 +81,7 @@ namespace TurnBasedGame.Core
 
             if (success)
             {
+                _currentUnitCount++;
                 Debug.Log($"AI đã spawn {randomUnit.UnitData.unitName}");
             }
             else

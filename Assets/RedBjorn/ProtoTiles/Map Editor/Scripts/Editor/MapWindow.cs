@@ -380,7 +380,7 @@ namespace RedBjorn.ProtoTiles
                 var buttonRemoveStyle = Skin.customStyles[5];
                 var buttonTypeNormal = Skin.customStyles[9];
                 var buttonTypeSelected = Skin.customStyles[10];
-                var presetBackground = Skin.customStyles[11];
+                var presetBackground = EditorGUIUtility.isProSkin ? Skin.customStyles[12] : Skin.customStyles[11];
                 ScrollPos = EditorGUILayout.BeginScrollView(ScrollPos);
                 var labelWidth = EditorGUIUtility.labelWidth;
 

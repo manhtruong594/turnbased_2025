@@ -12,8 +12,7 @@ namespace TurnBasedGame.Skills
     public class NormalAttackSkill : SkillBase
     {
         [Header("Attack Settings")]
-        [SerializeField] private int dmg = 10;
-        [SerializeField] private bool useAttackStat = true;
+        [SerializeField] private float multipleDmg = 1.25f;
 
         protected override void ExecuteEffect(UnitController caster, Vector3Int targetPos)
         {
@@ -26,7 +25,7 @@ namespace TurnBasedGame.Skills
         
         private int CalculateDamage(UnitController caster)
         {
-            return dmg;
+            return Mathf.RoundToInt(caster.GetCurrentDamage() * multipleDmg);
         }
         
         public override List<Vector3Int> GetAffectedTiles(Vector3Int targetPos)

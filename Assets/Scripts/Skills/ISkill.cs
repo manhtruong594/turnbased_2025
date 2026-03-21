@@ -32,6 +32,7 @@ namespace TurnBasedGame.Skills
         Normal,      // Skill đánh thường (không cooldown, không mana)
         Active,      // Skill chủ động
         Passive,     // Skill bị động (tự kích hoạt)
-        Ultimate     // Skill ultimate
+        Ultimate,     // Skill ultimate
+        BuffAndDebuff,   // Skill tăng cường hoặc làm suy yếu
     }
 }

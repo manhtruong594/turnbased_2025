@@ -13,11 +13,6 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "PlayerDataSO", menuName = "TurnBased/PlayerDataSO", order = 1)]
 public class PlayerDataSO : ScriptableObject
 {
-    // ─── Backward Compatibility (battle system hiện tại) ───
-
-    [Header("Battle Units (Legacy)")]
-    public List<UnitController> AvalailableUnits = new();
-
     // ─── Profile ───
 
     [Header("Player Profile")]

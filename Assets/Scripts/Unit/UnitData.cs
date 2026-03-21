@@ -15,7 +15,8 @@ namespace TurnBasedGame.Unit
         [TextArea(2, 4)]
         public string description;
         public int Health = 100;
-
+        public int BaseDamage = 10;
+        
         [Range(1, 20)]
         public int spawnCost = 3;
 

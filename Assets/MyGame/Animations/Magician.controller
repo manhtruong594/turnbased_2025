@@ -642,7 +642,7 @@ AnimatorStateMachine:
   m_ChildStates:
   - serializedVersion: 1
     m_State: {fileID: 8132762868083760671}
-    m_Position: {x: 550, y: -80, z: 0}
+    m_Position: {x: 490, y: -70, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 2134245047217239763}
     m_Position: {x: 770, y: -200, z: 0}
@@ -675,7 +675,7 @@ AnimatorStateMachine:
     m_Position: {x: 770, y: 240, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 133910778169299847}
-    m_Position: {x: 330, y: -80, z: 0}
+    m_Position: {x: 280, y: -70, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 8570612837155274370}
     m_Position: {x: 780, y: -280, z: 0}
@@ -684,13 +684,13 @@ AnimatorStateMachine:
     m_Position: {x: 0, y: 230, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 1903331542646023256}
-    m_Position: {x: 110, y: -70, z: 0}
+    m_Position: {x: 70, y: -70, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -734852425895038934}
-    m_Position: {x: 60, y: -150, z: 0}
+    m_Position: {x: 20, y: -150, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -8397665592260655275}
-    m_Position: {x: 10, y: -230, z: 0}
+    m_Position: {x: -30, y: -230, z: 0}
   m_ChildStateMachines: []
   m_AnyStateTransitions: []
   m_EntryTransitions: []
@@ -730,7 +730,7 @@ AnimatorState:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Passive Skill
+  m_Name: Buff And Debuff
   m_Speed: 1
   m_CycleOffset: 0
   m_Transitions:
