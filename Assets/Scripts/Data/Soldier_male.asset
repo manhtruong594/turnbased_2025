@@ -12,12 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86ab2ddd49f3b30409500291ade8d6b0, type: 3}
   m_Name: Soldier_male
   m_EditorClassIdentifier: 
-  unitName: Archer
+  unitName: Axe Soldier
   description: 
   Health: 100
+  BaseDamage: 10
   spawnCost: 3
   moveRange: 5
   moveSpeed: 5
-  attackRange: 2
-  attackDamage: 10
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 5e2805d1479227b499602a8f62f9a0e7, type: 3}

@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using TurnBasedGame.Unit;
+using System;
 
 namespace TurnBasedGame.Skills
 {
@@ -34,5 +35,15 @@ namespace TurnBasedGame.Skills
         Passive,     // Skill bị động (tự kích hoạt)
         Ultimate,     // Skill ultimate
         BuffAndDebuff,   // Skill tăng cường hoặc làm suy yếu
+    }
+
+    [Flags]
+    public enum TargetType
+    {
+        None = 0,
+        Ally = 1 << 0,
+        Enemy = 1 << 1,
+        Self = 1 << 2,
+        EmptyTile = 1 << 3,
     }
 }

@@ -1,3 +1,4 @@
+using RedBjorn.ProtoTiles;
 using UnityEngine;
 
 public class BaseManager : MonoBehaviour
@@ -10,6 +11,10 @@ public class BaseManager : MonoBehaviour
 
     public virtual void Initialize(GameMediator mediator)
     {
-        SetMediator (mediator);
+        SetMediator(mediator);
+    }
+
+    public virtual void SetCachedMap(MapEntity map)
+    {
     }
 }

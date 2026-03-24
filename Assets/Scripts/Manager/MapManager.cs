@@ -37,11 +37,6 @@ public class MapManager : BaseManager
         }
     }
 
-    void Start()
-    {
-
-    }
-
     void Update()
     {
         if (Input.GetKeyUp(GridToggle))
@@ -79,6 +74,21 @@ public class MapManager : BaseManager
         return _unitPositions.TryGetValue(gridPos, out var unit) ? unit : null;
     }
 
+    public List<UnitController> GetUnitsInRange(TileEntity centerTile, int range)
+    {
+        var unitsInRange = new List<UnitController>();
+        var tilesInRange = MapEntity.Area(centerTile.Position, range);
+        foreach (var tilePos in tilesInRange)
+        {
+            var unit = GetUnitAtTile(tilePos);
+            if (unit != null && !unit.IsDead())
+            {
+                unitsInRange.Add(unit);
+            }
+        }
+        return unitsInRange;
+    }
+ 
     /// <summary>
     /// Kiểm tra tile có unit hay không
     /// </summary>

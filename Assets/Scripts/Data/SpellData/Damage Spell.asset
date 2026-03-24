@@ -10,16 +10,23 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e0c76128c4113b94ead3f348ac466dc1, type: 3}
-  m_Name: NewSpellCard
+  m_Name: Damage Spell
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.SpellCard.SpellCardData
+  spellName: Root Spell
   description: 
   icon: {fileID: 0}
-  mpCost: 2
+  mpCost: 1
   consumeOnUse: 1
-  targetType: 0
-  range: 3
-  effectType: 0
-  effectValue: 20
-  effectDuration: 2
+  targetType: 4
+  range: 0
+  spellEffect:
+    rid: 4443656999019741297
   castVfxPrefab: {fileID: 0}
   impactVfxPrefab: {fileID: 0}
+  references:
+    version: 2
+    RefIds:
+    - rid: 4443656999019741297
+      type: {class: DamageEffect, ns: TurnBasedGame.SpellCard, asm: Assembly-CSharp}
+      data:
+        damage: 4

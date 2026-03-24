@@ -79,7 +79,7 @@ namespace TurnBasedGame.Core
         private void SetupUI()
         {
             _spawnPanel.Initialize(_playerData.SelectedDeck);
-            _spellCardPanel.Initialize(_playerData.SelectedSpells);
+            _spellCardPanel.Initialize(_playerData.SelectedSpells, playerID);
             _myUI.Setup(playerID.ToString());
             UpdateUI(false);
         }

@@ -227,7 +227,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.SpellCard.SpellCardPanel
   _cardContainer: {fileID: 6241792350358678407}
-  _cardButtonPrefab: {fileID: 2900610191088611823, guid: bf8b789a1df42ea4f9e05fe03f2510cb, type: 3}
+  _cardButtonPrefab: {fileID: 7355735807187133584, guid: bf8b789a1df42ea4f9e05fe03f2510cb, type: 3}
   _actionLefts: {fileID: 11400000, guid: cbd043b1c76ecce41bcaaeeaa43b0cea, type: 2}
 --- !u!1 &307754459259850252
 GameObject:

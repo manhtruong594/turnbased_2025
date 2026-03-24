@@ -20,8 +20,11 @@ MonoBehaviour:
   range: 2
   VfxPrefab: {fileID: 100000, guid: 52db3c21c94acaa41b862887018925a2, type: 3}
   VfxHitPrefab: {fileID: 0}
+  HasDelayApplyEffect: 0
+  DelayApplyEffectTime: 0.5
   canTargetAllies: 1
   canTargetEnemies: 0
   canTargetSelf: 1
   canTargetEmptyTile: 1
+  targetTypes: 13
   multiple: 1.5

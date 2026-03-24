@@ -1,3 +1,5 @@
+using TurnBasedGame.Core;
+using TurnBasedGame.Unit;
 using UnityEngine;
 
 namespace TurnBasedGame.SpellCard
@@ -24,13 +26,23 @@ namespace TurnBasedGame.SpellCard
         [Range(0, 10)] public int range = 3;
 
         [Header("Effect")]
-        public SpellEffectType effectType;
-        [Range(0, 100)] public int effectValue = 20;
-        [Range(0, 5)] public int effectDuration = 2;
+        [SerializeReference, SpellEffectSelector]
+        public ISpellEffect spellEffect;
 
         [Header("Visual")]
         public GameObject castVfxPrefab;
         public GameObject impactVfxPrefab;
+
+        public void Cast(PlayerID caster, UnitController target)
+        {
+            if (spellEffect == null)
+            {
+                Debug.LogWarning($"[SpellCard] {spellName} không có hiệu ứng để cast.");
+                return;
+            }
+
+            spellEffect.Apply(caster, target);
+        }
     }
 
     public enum SpellTargetType
@@ -43,12 +55,34 @@ namespace TurnBasedGame.SpellCard
         AnyUnit
     }
 
-    public enum SpellEffectType
+    public enum StatusEffectType
     {
+        None,
+        // Buffs
         Heal,
         Shield,
-        Root,
         DamageBuff,
-        Cleanse
+        Cleanse,
+        // Debuffs
+        Burn,
+        Poison,
+        Slow,
+        Weaken,
+        Root,
+    }
+
+    public static class StatusEffectTypeExtensions
+    {
+        public static bool IsDebuff(this StatusEffectType type) => type switch
+        {
+            StatusEffectType.Burn    => true,
+            StatusEffectType.Poison  => true,
+            StatusEffectType.Slow    => true,
+            StatusEffectType.Weaken  => true,
+            StatusEffectType.Root    => true,
+            _                        => false,
+        };
+
+        public static bool IsBuff(this StatusEffectType type) => !type.IsDebuff() && type != StatusEffectType.None;
     }
 }

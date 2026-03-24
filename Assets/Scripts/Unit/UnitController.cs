@@ -182,7 +182,7 @@ namespace TurnBasedGame.Unit
         public void OnTurnBegin()
         {
             _attackComponent.ReduceSkillsCooldowns();
-            _buffHandler?.TickBuffs();
+            _buffHandler?.TickEffects();
             ResetComponents();
         }
     

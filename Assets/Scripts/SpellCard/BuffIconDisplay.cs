@@ -20,15 +20,15 @@ namespace TurnBasedGame.SpellCard
         [SerializeField] private Sprite healIcon;
         [SerializeField] private Sprite damageBuffIcon;
 
-        private readonly Dictionary<SpellEffectType, GameObject> _activeIcons = new();
+        private readonly Dictionary<StatusEffectType, GameObject> _activeIcons = new();
 
         private void OnEnable()
         {
             if (_handler == null) _handler = GetComponentInParent<BuffDebuffHandler>();
             if (_handler != null)
             {
-                _handler.OnBuffAdded += OnBuffAdded;
-                _handler.OnBuffRemoved += OnBuffRemoved;
+                _handler.OnEffectAdded += OnEffectAdded;
+                _handler.OnEffectRemoved += OnEffectRemoved;
             }
         }
 
@@ -36,42 +36,42 @@ namespace TurnBasedGame.SpellCard
         {
             if (_handler != null)
             {
-                _handler.OnBuffAdded -= OnBuffAdded;
-                _handler.OnBuffRemoved -= OnBuffRemoved;
+                _handler.OnEffectAdded -= OnEffectAdded;
+                _handler.OnEffectRemoved -= OnEffectRemoved;
             }
         }
 
-        private void OnBuffAdded(ActiveBuff buff)
+        private void OnEffectAdded(ActiveStatusEffect effect)
         {
-            if (_activeIcons.ContainsKey(buff.Type)) return;
+            if (_activeIcons.ContainsKey(effect.Type)) return;
             if (_buffIconPrefab == null || _iconContainer == null) return;
 
             var iconObj = Instantiate(_buffIconPrefab, _iconContainer);
             var image = iconObj.GetComponent<Image>();
             if (image != null)
             {
-                image.sprite = GetIconForType(buff.Type);
+                image.sprite = GetIconForType(effect.Type);
             }
-            _activeIcons[buff.Type] = iconObj;
+            _activeIcons[effect.Type] = iconObj;
         }
 
-        private void OnBuffRemoved(ActiveBuff buff)
+        private void OnEffectRemoved(ActiveStatusEffect effect)
         {
-            if (_activeIcons.TryGetValue(buff.Type, out var iconObj))
+            if (_activeIcons.TryGetValue(effect.Type, out var iconObj))
             {
                 Destroy(iconObj);
-                _activeIcons.Remove(buff.Type);
+                _activeIcons.Remove(effect.Type);
             }
         }
 
-        private Sprite GetIconForType(SpellEffectType type)
+        private Sprite GetIconForType(StatusEffectType type)
         {
             return type switch
             {
-                SpellEffectType.Shield => shieldIcon,
-                SpellEffectType.Root => rootIcon,
-                SpellEffectType.Heal => healIcon,
-                SpellEffectType.DamageBuff => damageBuffIcon,
+                StatusEffectType.Shield => shieldIcon,
+                StatusEffectType.Heal => healIcon,
+                StatusEffectType.DamageBuff => damageBuffIcon,
+                StatusEffectType.Root => rootIcon,
                 _ => null
             };
         }

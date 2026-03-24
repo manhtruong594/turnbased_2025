@@ -5,8 +5,8 @@
 Hệ thống Core Gameloop quản lý vòng lặp trò chơi chính trong game Turn-Based Strategy, điều phối các phase của trận đấu từ khởi tạo đến kết thúc. Hệ thống được xây dựng theo kiến trúc modular với các design patterns để dễ bảo trì và mở rộng.
 
 ### Phiên bản
-- **Version**: 1.0
-- **Last Updated**: 2025-02-11
+- **Version**: 2.0
+- **Last Updated**: 2026-03-24
 - **Engine**: Unity 2022.3+
 
 ---
@@ -19,6 +19,10 @@ Hệ thống Core Gameloop quản lý vòng lặp trò chơi chính trong game T
 ┌─────────────────────────────────────────────────────────────┐
 │                      GAME MEDIATOR                          │
 │             (Mediator Pattern - Event Bus)                  │
+│  OnPlayerTurnStarted, OnPlayerTurnEnded, OnMPChanged,      │
+│  OnUnitSelected, OnUnitDeselected, OnUnitMoved,            │
+│  OnCapturePointCaptured, OnGameEnd, OnSpellCardUsed,       │
+│  OnHandChanged                                             │
 └─────────────────┬───────────────────────────────────────────┘
                   │
         ┌─────────┴──────────┐
@@ -27,14 +31,21 @@ Hệ thống Core Gameloop quản lý vòng lặp trò chơi chính trong game T
 ┌──────────────┐    ┌──────────────────┐
 │ TurnManager  │    │  PlayerController│
 │ (FSM)        │◄───┤  (Input/Logic)   │
-└──────┬───────┘    └──────────────────┘
+└──────┬───────┘    └────────┬─────────┘
+       │                     │
+       │              ┌──────┴──────┐
+       │              ▼             ▼
+       │       ┌────────────┐ ┌──────────────┐
+       │       │AIController│ │ SpellCard    │
+       │       │(Strategy)  │ │ Manager      │
+       │       └────────────┘ └──────────────┘
        │
-       ├──────────────┬────────────────┬──────────────┐
-       ▼              ▼                ▼              ▼
-┌──────────┐   ┌──────────┐    ┌──────────┐   ┌──────────┐
-│MPManager │   │MapManager│    │UnitSpawner│  │AreaPath │
-│(Resource)│   │(Grid Sys)│    │(Factory) │   │Manager  │
-└──────────┘   └──────────┘    └──────────┘   └──────────┘
+       ├──────────────┬────────────────┬──────────────┬──────────────┐
+       ▼              ▼                ▼              ▼              ▼
+┌──────────┐   ┌──────────┐    ┌──────────┐   ┌──────────┐  ┌────────────┐
+│MPManager │   │MapManager│    │UnitSpawner│   │AreaPath  │  │CapturePoint│
+│(Resource)│   │(Grid Sys)│    │(Factory)  │   │Manager   │  │Manager     │
+└──────────┘   └──────────┘    └──────────┘   └──────────┘  └────────────┘
 ```
 
 ### Core Components
@@ -43,12 +54,14 @@ Hệ thống Core Gameloop quản lý vòng lặp trò chơi chính trong game T
 |-----------|---------|-------------|
 | **GameMediator** | Mediator | Trung gian giao tiếp giữa các manager, giảm coupling |
 | **TurnManager** | State Machine | Quản lý states và điều phối turn flow |
-| **PlayerController** | Controller | Xử lý input và logic cho người chơi |
+| **PlayerController** | Controller | Xử lý input, logic cho người chơi, quản lý AI |
 | **AIController** | Strategy | Điều khiển hành vi AI |
 | **MPManager** | Singleton | Quản lý tài nguyên MP cho cả 2 player |
-| **MapManager** | Singleton | Quản lý grid map và tracking units |
+| **MapManager** | Spatial Index | Quản lý grid map, tracking units theo vị trí |
 | **UnitSpawner** | Factory | Spawn và quản lý units |
-| **AreaPathManager** | Singleton | Visualize movement area và pathfinding |
+| **AreaPathManager** | Visualization | Visualize movement/attack/spell area và pathfinding |
+| **CapturePointManager** | Singleton | Quản lý điểm chiếm đóng (victory condition) |
+| **ObjectPoolManager** | Object Pool | Object pooling cho VFX, skill buttons, etc. |
 
 ---
 
@@ -63,14 +76,20 @@ sequenceDiagram
     participant MM as MapManager
     participant MPM as MPManager
     participant US as UnitSpawner
+    participant APM as AreaPathManager
+    participant SCM as SpellCardManager
+    participant CPM as CapturePointManager
     
-    GM->>TM: Initialize()
-    GM->>MM: Initialize()
-    GM->>MPM: Initialize()
-    GM->>US: Initialize()
+    GM->>TM: Initialize(mediator)
+    GM->>MM: Initialize(mediator)
+    GM->>MPM: Initialize(mediator)
+    GM->>US: Initialize(mediator)
+    GM->>APM: Initialize(mediator)
+    GM->>SCM: Initialize(mediator)
+    GM->>CPM: Initialize(mediator)
     
     Note over TM: State = Initialization
-    TM->>TM: StartFirstTurn()
+    TM->>TM: StartFirstTurn() (via Invoke)
     Note over TM: State = Player1Turn
     TM->>GM: NotifyPlayerTurnStarted(Player1)
 ```
@@ -78,28 +97,33 @@ sequenceDiagram
 **Các bước thực hiện:**
 
 1. **GameMediator.Start()**
-   - Khởi tạo tất cả managers theo thứ tự
-   - Thiết lập reference giữa các managers
+   - Khởi tạo tất cả managers theo thứ tự qua `Initialize(mediator)`
+   - Mỗi manager nhận reference đến GameMediator
    - Setup event subscriptions
 
 2. **TurnManager.Initialize()**
    - Set `turnCount = 0`
    - Set `currentPlayer = StartingPlayer`
    - Change state → `TurnState.Initialization`
-   - Delay và chuyển sang turn đầu tiên
+   - `Invoke(StartFirstTurn)` để chuyển sang turn đầu tiên
 
 3. **MPManager.Initialize()**
    - Reset MP của cả 2 players về `startingMP`
-   - Notify UI cập nhật MP display
+   - Notify UI cập nhật MP display qua `NotifyMPChanged()`
 
 4. **MapManager.Awake()**
-   - Khởi tạo `MapEntity` từ `MapSettings`
+   - Khởi tạo `MapEntity` từ `MapSettings` và `MapView`
    - Initialize grid visualization
-   - Clear unit tracking dictionary
+   - Initialize `_unitPositions` dictionary
 
 5. **UnitSpawner.Initialize()**
-   - Tìm và phân loại spawn points theo owner
+   - Tìm và phân loại `SpawnPoint` theo owner
    - Initialize unit tracking dictionaries
+   - SpawnPoints subscribe vào `OnUnitMoved` event
+
+6. **AreaPathManager.Initialize()**
+   - `EnsureCreated()` spawn area/path prefab instances
+   - Cache map reference
 
 ### 2. Turn Loop
 
@@ -117,7 +141,8 @@ stateDiagram-v2
         [*] --> SpawnUnit
         SpawnUnit --> MoveUnit
         MoveUnit --> AttackUnit
-        AttackUnit --> [*]
+        AttackUnit --> UseSpellCard
+        UseSpellCard --> [*]
     }
 ```
 
@@ -148,7 +173,10 @@ private IEnumerator OnMyTurnStarted()
     // 3. Reset trạng thái của tất cả units
     foreach (var unit in _myUnits)
     {
-        unit.OnTurnBegin(); // Reset IsMoveCompleted, IsActionCompleted
+        unit.OnTurnBegin();
+        // → ReduceSkillsCooldowns()
+        // → _buffHandler.TickEffects() (apply Burn/Poison, giảm duration)
+        // → ResetComponents() (IsMoveCompleted, IsActionCompleted = false)
     }
     
     // 4. Tính thời gian cho lượt
@@ -161,6 +189,7 @@ private IEnumerator OnMyTurnStarted()
 - Increment `turnCount`
 - Reset unit states: `IsMoveCompleted = false`, `IsActionCompleted = false`
 - Reduce skill cooldowns: `ReduceSkillsCooldowns()`
+- Tick status effects: `BuffDebuffHandler.TickEffects()` (Burn/Poison damage, duration giảm)
 - Calculate turn timer: `flatTime + (unitCount × 10)`
 - Trigger event: `OnPlayerTurnStarted`
 
@@ -176,16 +205,19 @@ sequenceDiagram
     participant US as UnitSpawner
     participant MPM as MPManager
     participant MM as MapManager
-    participant Unit as UnitMove
+    participant Unit as UnitController
+    participant SP as SpawnPoint
     
     UI->>US: SpawnUnit(unitPrefab, owner)
     US->>MPM: HasEnoughMP(owner, cost)?
     alt Đủ MP
-        US->>US: GetAvailableSpawnPoint()
+        US->>US: GetAvailableSpawnPoint(owner)
         US->>Unit: Instantiate(unitPrefab)
         Unit->>Unit: Init(owner, gridPos)
         Unit->>MM: RegisterUnit(gridPos, this)
-        US->>MPM: SpendMP(owner, cost)
+        SP->>SP: MarkAsOccupied()
+        US->>GM: NotifySpawnUnit(unit, cost)
+        GM->>MPM: SpendMP(owner, cost)
         MPM-->>UI: NotifyMPChanged
     else Không đủ MP
         US-->>UI: Return false
@@ -210,7 +242,7 @@ sequenceDiagram
 sequenceDiagram
     participant Player
     participant APM as AreaPathManager
-    participant Unit as UnitMove
+    participant Unit as UnitController
     participant CI as CommandInvoker
     participant MC as MoveCommand
     
@@ -223,14 +255,14 @@ sequenceDiagram
     Unit->>CI: ExecuteCommand(moveCommand)
     CI->>MC: Execute()
     MC->>Unit: MoveCommand() - StartCoroutine
-    Note over Unit: Moving animation
+    Note over Unit: Moving animation (UnitAnimator)
     Unit->>Unit: UpdateGridPosition(newPos)
     Unit->>Unit: IsMoveCompleted = true
 ```
 
 **Chi tiết Implementation:**
 
-**UnitMove.Move()** - Nhận path và callback
+**UnitController.Move()** - Nhận path và callback
 ```csharp
 public void Move(List<TileEntity> path, Action onComplete = null)
 {
@@ -244,22 +276,27 @@ public void Move(List<TileEntity> path, Action onComplete = null)
 ```csharp
 public class MoveCommand : ICommand
 {
+    private readonly UnitController _unit;
+    private Vector3Int _previousPosition;
+
     public void Execute()
     {
-        _receiver.MoveCommand();
+        _previousPosition = _unit.currentGridPosition;
+        _unit.MoveCommand();
     }
     
     public void Undo()
     {
-        _receiver.UndoMoveAction(_previousPosition);
+        _unit.UndoMoveAction(_previousPosition);
     }
 }
 ```
 
-**UnitMove.Moving()** - Coroutine di chuyển
+**UnitController.Moving()** - Coroutine di chuyển
 ```csharp
 IEnumerator Moving(List<TileEntity> path)
 {
+    // UnitAnimator.StartMoving()
     foreach (var tile in path)
     {
         // Smooth movement với lerp
@@ -269,9 +306,13 @@ IEnumerator Moving(List<TileEntity> path)
             yield return null;
         }
     }
+    // UnitAnimator.StopMoving()
     
     // Cập nhật vị trí mới trên MapManager
     UpdateGridPosition(path[path.Count - 1].Position);
+    // → MapManager.UnregisterUnit(oldPos)
+    // → MapManager.RegisterUnit(newPos, this)
+    // → GameMediator.NotifyUnitMoved(this, oldPos, newPos)
     IsMoveCompleted = true;
     OnCompleteMove?.Invoke();
 }
@@ -287,60 +328,124 @@ IEnumerator Moving(List<TileEntity> path)
 ```mermaid
 sequenceDiagram
     participant Player
-    participant Unit as UnitMove
+    participant Unit as UnitController
     participant UA as UnitAttack
-    participant Skill as ISkill
+    participant Skill as SkillBase
+    participant Anim as UnitAnimator
     participant Target as TargetUnit
     
-    Player->>UA: Click Attack Button
+    Player->>UA: Click Skill Button
+    UA->>UA: OnSkillButtonClicked(skill)
     UA->>UA: EnterAttackMode()
     UA->>APM: ShowAttackArea(range)
     
-    Player->>UA: Click Target Tile
+    Player->>UA: Click Target Tile (Update loop)
     UA->>Skill: CanUse(unit, targetPos)?
     alt Can Use
-        Skill->>Skill: Execute(unit, targetPos)
-        Skill->>Unit: PerformSkill(skill, targetPos)
-        Note over Unit: Play animation
+        Skill->>Skill: ValidateCooldown()
+        Skill->>Skill: ValidateRange()
+        Skill->>Skill: ValidateTarget()
+        Skill->>Anim: PlayAttack(skill)
+        Note over Anim: Animation Event triggers
+        Anim->>Skill: ApplyEffect()
+        Skill->>Skill: ExecuteEffect(caster, targetPos)
         Skill->>Target: TakeDamage(damage)
-        Target->>Target: UpdateHealth()
-        Skill->>Skill: SetCooldown(duration)
-        UA->>UA: IsActionCompleted = true
+        Skill->>Skill: StartCooldown()
+        Skill->>Unit: FinishTurnActions()
     else Cannot Use
         Note over UA: Show error / do nothing
     end
 ```
 
-**Skill System - Strategy Pattern:**
+**Skill System - Strategy + Template Method Pattern:**
 
 ```csharp
 public interface ISkill
 {
+    string SkillName { get; }
+    string Description { get; }
+    SkillType Type { get; }
+    Sprite Icon { get; }
     int Range { get; }
     int Cooldown { get; }
-    bool CanUse(UnitMove caster, Vector3Int targetPos);
-    void Execute(UnitMove caster, Vector3Int targetPos);
+    int CurrentCooldown { get; }
+    
+    bool CanUse(UnitController caster, Vector3Int targetPos);
+    void Execute(UnitController caster, Vector3Int targetPos);
+    List<Vector3Int> GetAffectedTiles(Vector3Int targetPos);
+    void ResetCooldown();
+    void ReduceCooldown();
+    ISkill Clone();
+}
+
+public enum SkillType
+{
+    Normal,          // Không cooldown
+    Active,          // Cast thủ công
+    Passive,         // Auto-trigger
+    Ultimate,        // Ultimate ability
+    BuffAndDebuff,   // Status effects
+}
+
+[Flags]
+public enum TargetType
+{
+    None = 0,
+    Ally = 1 << 0,      // Target đồng minh
+    Enemy = 1 << 1,     // Target kẻ địch
+    Self = 1 << 2,      // Target bản thân
+    EmptyTile = 1 << 3, // Target tile trống
+}
+```
+
+**SkillBase (ScriptableObject) - Template Method:**
+```csharp
+public abstract class SkillBase : ScriptableObject, ISkill
+{
+    [SerializeField] protected string skillName;
+    [SerializeField] protected SkillType skillType;
+    [SerializeField] protected int cooldown, range;
+    [SerializeField] protected TargetType targetTypes;
+    public GameObject VfxPrefab, VfxHitPrefab;
+    public bool HasDelayApplyEffect;
+    public float DelayApplyEffectTime;
+
+    // Template Method: validation pipeline
+    public virtual bool CanUse(UnitController caster, Vector3Int targetPos)
+    {
+        return ValidateCooldown()
+            && ValidateRange(caster, targetPos)
+            && ValidateTarget(caster, targetPos)
+            && ValidateCustomConditions(caster, targetPos);
+    }
+
+    // Execute → animation → animation event → ApplyEffect() → ExecuteEffect()
+    public void Execute(UnitController caster, Vector3Int targetPos);
+    protected abstract void ExecuteEffect(UnitController caster, Vector3Int targetPos);
+    protected abstract List<Vector3Int> GetAffectedTiles(Vector3Int targetPos);
 }
 ```
 
 **Các loại Skills:**
-- **NormalAttackSkill**: Basic attack, no cooldown
-- **FireballSkill**: AOE damage, 3 turn cooldown
-- **HealSkill**: Heal target ally, 2 turn cooldown
+- **NormalAttackSkill**: Basic attack, no cooldown, `BaseDamage × multipleDmg`
+- **FireballSkill**: AOE damage, cooldown, `aoeRadius` tiles, skip target validation (hit empty)
+- **HealSkill**: Heal target ally, cooldown, `BaseDamage × multiple`
 
 **Attack Flow:**
-1. Player click skill button → `OnSkillButtonClicked(skill)`
-2. `EnterAttackMode()`: Show attack area visualization
-3. Player click target tile
-4. Check `skill.CanUse()`:
-   - Target in range?
-   - Skill off cooldown?
-   - Valid target? (enemy for attack, ally for heal)
-5. Execute skill:
-   - Play animation: `_unitAnimator.PlayAttack(skill)`
-   - Apply damage/heal: `targetUnit.TakeDamage(damage)`
-   - Set cooldown: `skill.SetCooldown()`
-   - Mark action completed
+1. Player click skill button → `UnitAttack.OnSkillButtonClicked(skill)`
+2. `EnterAttackMode()`: Show attack area, dim action panel
+3. `UnitAttack.Update()` lắng nghe click target tile
+4. Check `skill.CanUse()` (Template Method pipeline):
+   - `ValidateCooldown()` — skill off cooldown? (Normal type bypass)
+   - `ValidateRange()` — target in range?
+   - `ValidateTarget()` — target type matches? (Ally/Enemy/Self/EmptyTile flags)
+   - `ValidateCustomConditions()` — custom logic (e.g., HealSkill: target alive & not full HP)
+5. `skill.Execute()` → start async execution:
+   - `caster.PerformSkill(skill, targetPos)` — face target, play attack animation
+   - `StartCooldown()` — set cooldown
+   - Wait for `ApplyEffect()` từ animation event (max 10s timeout)
+   - `ExecuteEffect()` — apply damage/heal
+   - `OnExecuteComplete()` → `SkillEventBus.OnSkillUsed` + `caster.FinishTurnActions()`
 
 #### 2.3. Turn End Phase
 
@@ -394,6 +499,7 @@ private IEnumerator OnMyTurnEnded()
         // - Set IsActionCompleted = true
         // - Exit attack mode
         // - Deselect unit
+        // - Reset AreaPathManager
     }
 }
 ```
@@ -411,7 +517,7 @@ private void SwitchToNextPlayer()
 
 ### 3. AI Turn
 
-AI có turn riêng với logic tự động:
+AI có turn riêng, được gọi từ `PlayerController.WaitOpponentTurn()`:
 
 ```mermaid
 sequenceDiagram
@@ -419,27 +525,32 @@ sequenceDiagram
     participant PC as PlayerController
     participant AI as AIController
     participant US as UnitSpawner
-    participant Unit as AIUnit
+    participant Unit as UnitController
     
-    TM->>PC: NotifyPlayerTurnStarted(Player2)
-    PC->>AI: ExecuteAITurn()
+    TM->>PC: NotifyPlayerTurnStarted(AIPlayer)
+    PC->>PC: WaitOpponentTurn()
+    PC->>TM: SetTimeFixedTimeInTurn(30)
+    PC->>AI: yield ExecuteAITurn()
     
-    Note over AI: Delay 1s
+    Note over AI: Delay actionDelay
     AI->>MPM: AddMP(AI, 3)
     AI->>AI: TrySpawnRandomUnit()
+    Note over AI: Check maxUnit limit
     
     AI->>US: GetPlayerUnits(AI)
     loop For each AI unit
         AI->>AI: FindNearestOpponentUnit()
         alt Can Attack Target
-            AI->>Unit: AttackTarget()
+            AI->>Unit: ExecuteAttack(target)
         else Need Movement
-            AI->>Unit: MoveTowardsTarget()
-            AI->>Unit: AttackTarget() (if in range)
+            AI->>AI: MoveTowardsTarget()
+            AI->>Unit: Move(path closest to target)
+            AI->>Unit: ExecuteAttack() (if in range)
         end
-        Note over AI: Delay 1s
+        Note over AI: Delay actionDelay
     end
     
+    AI->>Unit: FinishTurnActions() for all
     AI->>TM: EndCurrentTurn()
 ```
 
@@ -453,7 +564,7 @@ public IEnumerator ExecuteAITurn()
     // 1. Cộng MP mỗi lượt
     MPManager.Instance.AddMP(aiPlayerID, 3);
     
-    // 2. Thử spawn random unit
+    // 2. Thử spawn random unit (kiểm tra maxUnit)
     bool spawned = TrySpawnRandomUnit();
     if (spawned) yield return new WaitForSeconds(actionDelay);
     
@@ -478,7 +589,7 @@ public IEnumerator ExecuteAITurn()
 **AI Decision Logic:**
 
 ```csharp
-private IEnumerator ExecuteUnitAction(UnitMove unit)
+private IEnumerator ExecuteUnitAction(UnitController unit)
 {
     // 1. Tìm target gần nhất
     var targetUnit = FindNearestOpponentUnit(unit);
@@ -491,7 +602,7 @@ private IEnumerator ExecuteUnitAction(UnitMove unit)
     }
     else
     {
-        // 3. Di chuyển về phía target
+        // 3. Di chuyển về phía target (tìm tile gần target nhất trong move range)
         yield return StartCoroutine(MoveTowardsTarget(unit, targetUnit));
         
         // 4. Tấn công sau khi di chuyển (nếu có thể)
@@ -501,27 +612,44 @@ private IEnumerator ExecuteUnitAction(UnitMove unit)
 }
 ```
 
+**AIController Settings:**
+```csharp
+[SerializeField] List<UnitController> availableUnits;  // Pool AI units
+[SerializeField] float actionDelay = 1f;                // Delay giữa actions
+[SerializeField] int maxUnit = 3;                        // Giới hạn unit trên bàn
+```
+
 **AI Features:**
-- Spawn random unit nếu có đủ MP
+- Spawn random unit nếu có đủ MP và chưa đạt `maxUnit`
+- `Initialize(PlayerID mainPlayer)` → set `aiPlayerID` = opposite of main player
 - Tìm target gần nhất bằng distance calculation
-- Di chuyển về phía target nếu ngoài attack range
-- Tấn công khi trong range
-- Có action delay giữa mỗi hành động (1s)
+- Di chuyển về phía target: tìm tile walkable gần target nhất trong move range
+- Tấn công khi trong range qua `UnitAttack.CanAttack()` / `ExecuteAttack()`
+- Có action delay giữa mỗi hành động
 
 ### 4. Game End Condition
 
 ```csharp
-private void CheckGameEndCondition()
+// Thông qua GameMediator
+GameMediator.Instance.NotifyGameEnd(winnerPlayer);
+// → TurnManager.TriggerGameEnd(winner)
+// → ChangeState(TurnState.GameEnd)
+// → OnGameEnd?.Invoke(winner)
+```
+
+**TurnManager.TriggerGameEnd():**
+```csharp
+public void TriggerGameEnd(PlayerID winner)
 {
-    var p1Units = UnitSpawner.Instance.GetPlayerUnits(PlayerID.Player1);
-    var p2Units = UnitSpawner.Instance.GetPlayerUnits(PlayerID.Player2);
-    
-    if (p1Units.Count == 0 || p2Units.Count == 0)
-    {
-        ChangeState(TurnState.GameEnd);
-    }
+    _winner = winner;
+    CancelInvoke();  // Cancel pending SwitchToNextPlayer
+    ChangeState(TurnState.GameEnd);
 }
 ```
+
+**Điều kiện kết thúc:**
+- Khi 1 player hết units hoặc CapturePoint bị chiếm
+- `GameMediator` gọi `NotifyGameEnd(winner)` → `TurnManager.TriggerGameEnd()`
 
 ---
 
@@ -541,15 +669,22 @@ public enum TurnState
 
 ### Unit States
 
-Mỗi unit có các state flags trong `UnitRuntimeStats`:
+Mỗi unit có các state flags trong `UnitRuntimeStats` (nested class trong `UnitController`):
 
 ```csharp
 public class UnitRuntimeStats
 {
-    public bool IsInAttackMode;      // Đang ở chế độ attack
-    public bool IsMoveCompleted;     // Đã di chuyển xong
-    public bool IsActionCompleted;   // Đã hoàn thành action
-    public bool IsDead;              // Unit đã chết
+    public int Health;                   // Current HP
+    public int MaxHealth;                // Max HP
+    public int BaseDamage;               // Base damage
+    public int MoveRange;                // Movement range
+    public MapEntity MapEntity;          // Map reference
+    public PlayerID Owner;               // Unit owner
+    public Action OnFinishTurn;          // Callback
+    public bool IsInAttackMode;          // Đang ở chế độ attack
+    public bool IsMoveCompleted;         // Đã di chuyển xong
+    public bool IsActionCompleted;       // Đã hoàn thành action
+    public bool IsDead;                  // Unit đã chết
 }
 ```
 
@@ -576,7 +711,8 @@ stateDiagram-v2
 ```csharp
 // Có thể di chuyển?
 public bool CanMove() => 
-    !IsMoveCompleted && !IsInAttackMode;
+    !IsMoveCompleted && !IsInAttackMode 
+    && !(_buffHandler != null && _buffHandler.IsRooted());
 
 // Có thể tấn công?
 public bool CanAttack() => 
@@ -600,22 +736,39 @@ public bool IsActionFinished() =>
 ```csharp
 public class GameMediator : MonoBehaviour
 {
+    // Serialized References
+    [SerializeField] TurnManager turnManager;
+    [SerializeField] MPManager mpManager;
+    [SerializeField] MapManager mapManager;
+    [SerializeField] UnitSpawner unitSpawner;
+    [SerializeField] AreaPathManager areaPathManager;
+    [SerializeField] CapturePointManager capturePointManager;
+    [SerializeField] SpellCardManager spellCardManager;
+
     // Events
     public event Action<PlayerID> OnPlayerTurnStarted;
     public event Action<PlayerID> OnPlayerTurnEnded;
     public event Action<PlayerID, int, int> OnMPChanged;
-    public event Action<UnitMove> OnUnitSelected;
-    
+    public event Action<UnitController> OnUnitSelected;
+    public event Action<UnitController> OnUnitDeselected;
+    public event Action<UnitController, Vector3Int, Vector3Int> OnUnitMoved;
+    public event Action<Vector3Int, PlayerID> OnCapturePointCaptured;
+    public event Action<PlayerID> OnGameEnd;
+    public event Action<SpellCardData, PlayerID> OnSpellCardUsed;
+    public event Action<PlayerID> OnHandChanged;
+
     // Notify Methods
-    public void NotifyPlayerTurnStarted(PlayerID player)
-    {
-        OnPlayerTurnStarted?.Invoke(player);
-    }
-    
-    public void NotifySpawnUnit(UnitMove unit, int mpSpent)
-    {
-        mpManager.SpendMP(unit.GetOwner(), mpSpent);
-    }
+    public void NotifyPlayerTurnStarted(PlayerID player);
+    public void NotifyPlayerTurnEnded(PlayerID player);
+    public void NotifyMPChanged(PlayerID player, int currentMP, int maxMP);
+    public void NotifySpawnUnit(UnitController unit, int mpSpent);
+    public void NotifyUnitSelected(UnitController unit);
+    public void NotifyUnitDeselected(UnitController unit);
+    public void NotifyUnitMoved(UnitController unit, Vector3Int oldPos, Vector3Int newPos);
+    public void NotifyCapturePointCaptured(Vector3Int position, PlayerID newOwner);
+    public void NotifyGameEnd(PlayerID winner);
+    public void NotifySpellCardUsed(SpellCardData card, PlayerID caster);
+    public void NotifyHandChanged(PlayerID player);
 }
 ```
 

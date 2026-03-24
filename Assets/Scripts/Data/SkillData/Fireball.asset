@@ -20,9 +20,12 @@ MonoBehaviour:
   range: 2
   VfxPrefab: {fileID: 5681976723181098187, guid: 0a1f2274c09342443a1b556d27eab448, type: 3}
   VfxHitPrefab: {fileID: 7826723565402596215, guid: da7a6b99fef0a3243bad5a1867ab80af, type: 3}
+  HasDelayApplyEffect: 0
+  DelayApplyEffectTime: 0.5
   canTargetAllies: 0
   canTargetEnemies: 1
   canTargetSelf: 0
   canTargetEmptyTile: 1
-  damage: 25
+  targetTypes: 10
+  multipleDmg: 1.25
   aoeRadius: 2

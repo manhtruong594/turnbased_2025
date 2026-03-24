@@ -87,7 +87,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -103,6 +103,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -149,7 +150,7 @@ GameObject:
   - component: {fileID: 2890707585325703503}
   - component: {fileID: 7355735807187133584}
   m_Layer: 0
-  m_Name: Card
+  m_Name: SpellCard
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -224,13 +225,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 2900610191088611823}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8ee05781afb6b674f9aff4e882398750, type: 3}
+  m_Script: {fileID: 11500000, guid: d5d8fcb881ad0f74497f0131e07431d2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CardUI
   titleText: {fileID: 5452713003157609217}
   descText: {fileID: 8505043665168197525}
   costText: {fileID: 190790653313444326}
   costBg: {fileID: 1318920410756731313}
+  spellData: {fileID: 0}
 --- !u!1 &3041734892704248430
 GameObject:
   m_ObjectHideFlags: 0
@@ -394,7 +396,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -410,6 +412,7 @@ MonoBehaviour:
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -530,7 +533,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -546,6 +549,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0

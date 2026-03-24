@@ -3,8 +3,6 @@ using TurnBasedGame.Core;
 using TurnBasedGame.Resources;
 using TurnBasedGame.Unit;
 using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
 
 namespace TurnBasedGame.SpellCard
 {
@@ -16,132 +14,102 @@ namespace TurnBasedGame.SpellCard
     {
         [Header("References")]
         [SerializeField] private Transform _cardContainer;
-        [SerializeField] private GameObject _cardButtonPrefab;
+        [SerializeField] private SpellCardBase _cardButtonPrefab;
         [SerializeField] private IntReference _actionLefts;
 
-        private List<SpellCardData> _spells = new();
+        private readonly List<SpellCardBase> _spells = new();
+        private PlayerID _ownerPlayer;
 
-        // private void OnEnable()
-        // {
-        //     if (SpellCardManager.Instance != null)
-        //     {
-        //         SpellCardManager.Instance.OnHandChanged += OnHandChanged;
-        //         SpellCardManager.Instance.OnCardUsed += OnCardUsed;
-        //     }
-        //     RefreshCards();
-        // }
+        public void Initialize(IReadOnlyList<SpellCardData> spells, PlayerID owner)
+        {
+            _ownerPlayer = owner;
 
-        // private void OnDisable()
-        // {
-        //     if (SpellCardManager.Instance != null)
-        //     {
-        //         SpellCardManager.Instance.OnHandChanged -= OnHandChanged;
-        //         SpellCardManager.Instance.OnCardUsed -= OnCardUsed;
-        //     }
-        // }
+            // Đồng bộ hand với SpellCardManager
+            SpellCardManager.Instance?.InitializeHand(owner, spells);
 
+            if (GameMediator.Instance != null)
+            {
+                GameMediator.Instance.OnHandChanged += OnHandChanged;
+                GameMediator.Instance.OnSpellCardUsed += OnCardUsed;
+            }
+
+            ClearButtons();
+            foreach (var spell in spells)
+            {
+                if (spell == null) continue;
+                var obj = Instantiate(_cardButtonPrefab, _cardContainer);
+                if (obj != null)
+                {
+                    obj.Setup(spell, owner);
+                    _spells.Add(obj);
+                }
+            }
+            UpdateInteractable();
+        }
+
+        /// <summary>Overload giữ tương thích ngược, mặc định Player1.</summary>
         public void Initialize(IReadOnlyList<SpellCardData> spells)
         {
-            if (SpellCardManager.Instance != null)
+            Initialize(spells, PlayerID.Player1);
+        }
+
+        private void OnDestroy()
+        {
+            if (GameMediator.Instance != null)
             {
-                SpellCardManager.Instance.OnHandChanged += OnHandChanged;
-                SpellCardManager.Instance.OnCardUsed += OnCardUsed;
+                GameMediator.Instance.OnHandChanged -= OnHandChanged;
+                GameMediator.Instance.OnSpellCardUsed -= OnCardUsed;
             }
-            _spells = new List<SpellCardData>(spells);
-            RefreshCards();
         }
 
         private void OnHandChanged(PlayerID player)
         {
-            RefreshCards();
+            if (player != _ownerPlayer) return;
+            RebuildFromHand();
         }
 
-        private void OnCardUsed(SpellCardData card, UnitController target)
+        private void OnCardUsed(SpellCardData card, PlayerID caster)
         {
-            RefreshCards();
-        }
-
-        public void RefreshCards()
-        {
-            ClearButtons();
-
-            foreach (var card in _spells)
-            {
-                CreateCardButton(card);
-            }
             UpdateInteractable();
         }
 
         public void UpdateInteractable()
         {
-            // foreach (var btn in _spells)
-            // {
-            //     bool canUse = SpellCardManager.Instance != null
-            //         && SpellCardManager.Instance.CanUseCard(btn.Data, PlayerID.Player1); // TODO: dynamic player ID
-            //     btn.SetInteractable(canUse);
-            // }
-        }
-
-        private void CreateCardButton(SpellCardData card)
-        {
-            if (_cardButtonPrefab == null || _cardContainer == null) return;
-
-            var obj = Instantiate(_cardButtonPrefab, _cardContainer);
-            var btn = obj.GetComponent<SpellCardButton>();
-            if (btn == null)
+            foreach (var btn in _spells)
             {
-                Destroy(obj);
-                return;
+                if (btn == null || btn.Data == null) continue;
+                bool canUse = SpellCardManager.Instance != null
+                    && SpellCardManager.Instance.CanUseCard(btn.Data, _ownerPlayer);
+                btn.SetInteractable(canUse);
             }
-
-            btn.Bind(card, () => OnCardClicked(card));
         }
 
-        private void OnCardClicked(SpellCardData card)
+        private void RebuildFromHand()
         {
-            SpellCardManager.Instance?.SelectCard(card, PlayerID.Player1); // TODO: dynamic player ID
+            ClearButtons();
+            var hand = SpellCardManager.Instance?.GetHand(_ownerPlayer);
+            if (hand == null) return;
+
+            foreach (var spell in hand)
+            {
+                if (spell == null) continue;
+                var obj = Instantiate(_cardButtonPrefab, _cardContainer);
+                if (obj != null)
+                {
+                    obj.Setup(spell, _ownerPlayer);
+                    _spells.Add(obj);
+                }
+            }
+            UpdateInteractable();
         }
 
         private void ClearButtons()
         {
-            // foreach (var btn in _buttons)
-            // {
-            //     if (btn != null) Destroy(btn.gameObject);
-            // }
-            // _buttons.Clear();
-        }
-    }
-
-    /// <summary>
-    /// Button UI đại diện cho 1 spell card trong panel.
-    /// Hiển thị icon, tên, MP cost, trạng thái khả dụng.
-    /// </summary>
-    public class SpellCardButton : MonoBehaviour
-    {
-        [SerializeField] private Image _iconImage;
-        [SerializeField] private TextMeshProUGUI _nameText;
-        [SerializeField] private TextMeshProUGUI _costText;
-        [SerializeField] private Button _button;
-        [SerializeField] private CanvasGroup _canvasGroup;
-
-        public SpellCardData Data { get; private set; }
-
-        public void Bind(SpellCardData data, System.Action onClick)
-        {
-            Data = data;
-            // if (_nameText != null) _nameText.text = data.;
-            // if (_costText != null) _costText.text = data.MpCost.ToString();
-            // if (_iconImage != null && data.icon != null) _iconImage.sprite = data.icon;
-
-            _button.onClick.RemoveAllListeners();
-            _button.onClick.AddListener(() => onClick?.Invoke());
-        }
-
-        public void SetInteractable(bool interactable)
-        {
-            _button.interactable = interactable;
-            if (_canvasGroup != null)
-                _canvasGroup.alpha = interactable ? 1f : 0.5f;
+            foreach (var btn in _spells)
+            {
+                if (btn != null) Destroy(btn.gameObject);
+            }
+            _spells.Clear();
         }
     }
 }

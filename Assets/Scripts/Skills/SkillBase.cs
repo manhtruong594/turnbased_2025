@@ -22,16 +22,15 @@ namespace TurnBasedGame.Skills
         [SerializeField] protected Sprite icon;
         [SerializeField] protected int cooldown;
         [SerializeField] protected int range = 1;
+
+        [Header("Effects Settings")]
         public GameObject VfxPrefab;
         public GameObject VfxHitPrefab;
         public bool HasDelayApplyEffect = false;
         public float DelayApplyEffectTime = 0.5f;
         
         [Header("Target Settings")]
-        [SerializeField] protected bool canTargetAllies;
-        [SerializeField] protected bool canTargetEnemies = true;
-        [SerializeField] protected bool canTargetSelf;
-        [SerializeField] protected bool canTargetEmptyTile;
+        [SerializeField] protected TargetType targetTypes;
 
         protected int currentCooldown;
 
@@ -44,10 +43,10 @@ namespace TurnBasedGame.Skills
         public int CurrentCooldown => currentCooldown;
         public int Range => range;
 
-        public bool CanTargetAllies => canTargetAllies;
-        public bool CanTargetEnemies => canTargetEnemies;
-        public bool CanTargetSelf => canTargetSelf;
-        public bool CanTargetEmptyTile => canTargetEmptyTile;
+        public bool CanTargetAllies => (targetTypes & TargetType.Ally) != 0;
+        public bool CanTargetEnemies => (targetTypes & TargetType.Enemy) != 0;
+        public bool CanTargetSelf => (targetTypes & TargetType.Self) != 0;
+        public bool CanTargetEmptyTile => (targetTypes & TargetType.EmptyTile) != 0;
         #endregion
 
         protected bool _isExecuting = false;
@@ -94,15 +93,15 @@ namespace TurnBasedGame.Skills
             var targetUnit = MapManager.Instance?.GetUnitAtTile(targetPos);
             
             if (targetUnit == null)
-                return canTargetEmptyTile;
+                return CanTargetEmptyTile;
 
             if (targetUnit == caster || targetUnit.IsDead())
-                return canTargetSelf;
+                return CanTargetSelf;
 
             bool isSameOwner = targetUnit.GetOwner() == caster.GetOwner();
             
-            if (isSameOwner && canTargetAllies) return true;
-            if (!isSameOwner && canTargetEnemies) return true;
+            if (isSameOwner && CanTargetAllies) return true;
+            if (!isSameOwner && CanTargetEnemies) return true;
 
             return false;
         }

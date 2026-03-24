@@ -22,6 +22,7 @@ public class GameMediator : MonoBehaviour
     [SerializeField] private UnitSpawner unitSpawner;
     [SerializeField] private AreaPathManager areaPathManager;
     [SerializeField] private CapturePointManager capturePointManager;
+    [SerializeField] private SpellCardManager spellCardManager;
 
     #region Turn Events
     public event Action<PlayerID> OnPlayerTurnStarted;
@@ -47,7 +48,8 @@ public class GameMediator : MonoBehaviour
     #endregion
 
     #region Spell Card Events
-    public event Action<SpellCardData, UnitController, PlayerID> OnSpellCardUsed;
+    public event Action<SpellCardData, PlayerID> OnSpellCardUsed;
+    public event Action<PlayerID> OnHandChanged;
     #endregion
 
     private void Awake()
@@ -67,6 +69,7 @@ public class GameMediator : MonoBehaviour
         mapManager.Initialize(this);
         unitSpawner.Initialize(this);
         areaPathManager.Initialize(this);
+        spellCardManager.SetCachedMap(mapManager.MapEntity);    // spell card sẽ được initialize trong PlayerController
         areaPathManager.SetCachedMap(mapManager.MapEntity);
 
         if (capturePointManager != null)
@@ -121,9 +124,14 @@ public class GameMediator : MonoBehaviour
         OnGameEnd?.Invoke(winner);
     }
 
-    public void NotifySpellCardUsed(SpellCardData card, UnitController target, PlayerID caster)
+    public void NotifySpellCardUsed(SpellCardData card, PlayerID caster)
     {
-        OnSpellCardUsed?.Invoke(card, target, caster);
+        OnSpellCardUsed?.Invoke(card, caster);
+    }
+    
+    public void NotifyHandChanged(PlayerID player)
+    {
+        OnHandChanged?.Invoke(player);
     }
 
     #endregion

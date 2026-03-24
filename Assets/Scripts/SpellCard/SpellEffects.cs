@@ -1,122 +1,120 @@
+using System;
 using TurnBasedGame.Core;
-using UnityEngine;
 using TurnBasedGame.Unit;
+using UnityEngine;
 
 namespace TurnBasedGame.SpellCard
 {
     /// <summary>
     /// Strategy Pattern - Interface cho logic xử lý hiệu ứng spell.
-    /// Mỗi SpellEffectType tương ứng 1 implementation.
+    /// Mỗi loại spell implement interface này với params riêng.
+    /// Dùng [SerializeReference] + custom PropertyDrawer để chọn trong Inspector.
     /// </summary>
     public interface ISpellEffect
     {
-        void Apply(SpellCardData data, PlayerID caster, UnitController target);
+        void Apply(PlayerID caster, UnitController target);
     }
 
-    /// <summary>
-    /// Factory tạo ISpellEffect từ SpellEffectType.
-    /// </summary>
-    public static class SpellEffectFactory
+    public abstract class SpellBuffEffct: ISpellEffect
     {
-        public static ISpellEffect Create(SpellEffectType type)
-        {
-            return type switch
-            {
-                SpellEffectType.Heal => new HealEffect(),
-                SpellEffectType.Shield => new ShieldEffect(),
-                SpellEffectType.Root => new RootEffect(),
-                SpellEffectType.DamageBuff => new DamageBuffEffect(),
-                SpellEffectType.Cleanse => new CleanseEffect(),
-                _ => null
-            };
-        }
+        public abstract void Apply(PlayerID caster, UnitController target);
     }
     
-    public class SpellBase: ISpellEffect
-    {
-        SpellCardData _baseData;
-        public virtual void Apply(SpellCardData data, PlayerID caster, UnitController target)
-        {
-            Debug.Log($"[Spell] {data.spellName}: Hiệu ứng mặc định, không làm gì cả.");
-        }
-    }
-
     /// <summary>Hồi HP cho target.</summary>
-    public class HealEffect : SpellBase
+    [Serializable]
+    public class HealEffect : ISpellEffect
     {
-        public override void Apply(SpellCardData data, PlayerID caster, UnitController target)
+        [Range(1, 200)] public int healAmount = 20;
+
+        public void Apply(PlayerID caster, UnitController target)
         {
             if (target == null || target.IsDead()) return;
+            if (target.GetHealthPercent() >= 1f) return;
 
-            float currentPercent = target.GetHealthPercent();
-            if (currentPercent >= 1f) return;
-
-            // Heal bằng cách gây "sát thương âm" 
-            target.TakeDamage(-data.effectValue);
-            Debug.Log($"[Spell] {data.spellName}: Hồi {data.effectValue} HP cho {target.name}");
+            target.Heal(healAmount);
+            Debug.Log($"[Spell] Heal: Hồi {healAmount} HP cho {target.name}");
         }
     }
 
     /// <summary>Thêm Shield buff giảm sát thương nhận vào.</summary>
-    public class ShieldEffect : SpellBase
+    [Serializable]
+    public class ShieldEffect : ISpellEffect
     {
-        public override void Apply(SpellCardData data, PlayerID caster, UnitController target)
+        [Range(1, 100)] public int shieldValue = 20;
+        [Range(1, 10)] public int duration = 2;
+
+        public void Apply(PlayerID caster, UnitController target)
         {
             if (target == null || target.IsDead()) return;
-
-            var handler = target.GetComponent<BuffDebuffHandler>();
+            var handler = target.BuffHandler;
             if (handler == null) return;
 
-            var buff = new ActiveBuff(SpellEffectType.Shield, data.effectValue, data.effectDuration, caster);
-            handler.AddBuff(buff);
-            Debug.Log($"[Spell] {data.spellName}: Tăng {data.effectValue} giáp cho {target.name} trong {data.effectDuration} lượt");
-        }
-    }
-
-    /// <summary>Root: cấm di chuyển trong N lượt.</summary>
-    public class RootEffect : SpellBase
-    {
-        public override void Apply(SpellCardData data, PlayerID caster, UnitController target)
-        {
-            if (target == null || target.IsDead()) return;
-
-            var handler = target.GetComponent<BuffDebuffHandler>();
-            if (handler == null) return;
-
-            var buff = new ActiveBuff(SpellEffectType.Root, 0, data.effectDuration, caster);
-            handler.AddBuff(buff);
-            Debug.Log($"[Spell] {data.spellName}: Trói chân {target.name} trong {data.effectDuration} lượt");
+            handler.AddEffect(new ActiveStatusEffect(StatusEffectType.Shield, shieldValue, duration, caster));
+            Debug.Log($"[Spell] Shield: +{shieldValue} giáp cho {target.name} trong {duration} lượt");
         }
     }
 
     /// <summary>Tăng sát thương cho đơn vị đồng minh.</summary>
-    public class DamageBuffEffect : SpellBase
+    [Serializable]
+    public class DamageBuffEffect : ISpellEffect
     {
-        public override void Apply(SpellCardData data, PlayerID caster, UnitController target)
+        [Range(1, 100)] public int damageBonus = 20;
+        [Range(1, 10)] public int duration = 2;
+
+        public void Apply(PlayerID caster, UnitController target)
         {
             if (target == null || target.IsDead()) return;
-
-            var handler = target.GetComponent<BuffDebuffHandler>();
+            var handler = target.BuffHandler;
             if (handler == null) return;
 
-            var buff = new ActiveBuff(SpellEffectType.DamageBuff, data.effectValue, data.effectDuration, caster);
-            handler.AddBuff(buff);
-            Debug.Log($"[Spell] {data.spellName}: Tăng {data.effectValue} sát thương cho {target.name} trong {data.effectDuration} lượt");
+            handler.AddEffect(new ActiveStatusEffect(StatusEffectType.DamageBuff, damageBonus, duration, caster));
+            Debug.Log($"[Spell] DamageBuff: +{damageBonus} damage cho {target.name} trong {duration} lượt");
         }
     }
 
-    /// <summary>Xóa tất cả debuff trên target.</summary>
-    public class CleanseEffect : SpellBase
+    /// <summary>Xóa tất cả buff/debuff trên target.</summary>
+    [Serializable]
+    public class CleanseEffect : ISpellEffect
     {
-        public override void Apply(SpellCardData data, PlayerID caster, UnitController target)
+        public void Apply(PlayerID caster, UnitController target)
         {
             if (target == null || target.IsDead()) return;
-
-            var handler = target.GetComponent<BuffDebuffHandler>();
+            var handler = target.BuffHandler;
             if (handler == null) return;
 
-            handler.RemoveBuffByType(SpellEffectType.Root);
-            Debug.Log($"[Spell] {data.spellName}: Thanh tẩy debuff cho {target.name}");
+            handler.ClearAll();
+            Debug.Log($"[Spell] Cleanse: Thanh tẩy debuff cho {target.name}");
         }
     }
+
+    /// <summary>Root: cấm di chuyển trong N lượt.</summary>
+    [Serializable]
+    public class RootEffect : ISpellEffect
+    {
+        [Range(1, 5)] public int duration = 2;
+
+        public void Apply(PlayerID caster, UnitController target)
+        {
+            if (target == null || target.IsDead()) return;
+            var handler = target.BuffHandler;
+            if (handler == null) return;
+
+            handler.AddEffect(new ActiveStatusEffect(StatusEffectType.Root, 0, duration, caster));
+            Debug.Log($"[Spell] Root: Cấm di chuyển {target.name} trong {duration} lượt");
+        }
+    }
+
+    [Serializable]
+    public class DamageEffect : ISpellEffect
+    {
+        public int damage = 2;
+
+        public void Apply(PlayerID caster, UnitController target)
+        {
+            if (target == null || target.IsDead()) return;
+            target.TakeDamage(damage);
+            Debug.Log($"[Spell] Damage: Gây {damage} damage cho {target.name}");
+        }
+    }
+
 }

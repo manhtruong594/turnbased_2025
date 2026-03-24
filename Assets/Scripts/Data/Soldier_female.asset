@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86ab2ddd49f3b30409500291ade8d6b0, type: 3}
   m_Name: Soldier_female
   m_EditorClassIdentifier: 
-  unitName: Basic Soldier
+  unitName: Magician
   description: 
+  Health: 100
+  BaseDamage: 10
   spawnCost: 3
   moveRange: 2
   moveSpeed: 5
-  unitPrefab: {fileID: 5204393105807402248, guid: 9b70e9f742e2e02498b2d5aa25c4fb5f, type: 3}
-  icon: {fileID: 0}
-  owner: 1
+  icon: {fileID: 21300000, guid: 72cdd1b1bb49d5f47bd5d2b3ecd3e851, type: 3}

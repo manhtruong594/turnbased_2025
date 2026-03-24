@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using RedBjorn.ProtoTiles;
 using RedBjorn.ProtoTiles.Example;
 using TurnBasedGame.Core;
 using TurnBasedGame.Resources;
 using TurnBasedGame.Unit;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace TurnBasedGame.SpellCard
 {
@@ -27,8 +29,7 @@ namespace TurnBasedGame.SpellCard
         // Events cho UI binding
         public event Action<SpellCardData> OnCardSelected;
         public event Action OnCardDeselected;
-        public event Action<SpellCardData, UnitController> OnCardUsed;
-        public event Action<PlayerID> OnHandChanged;
+        MapEntity _cachedMap;
 
         private void Awake()
         {
@@ -40,6 +41,30 @@ namespace TurnBasedGame.SpellCard
             Instance = this;
         }
 
+        void Update()
+        {
+            if (!_isTargeting) return;
+            var mousePos = MyInput.GroundPosition(_cachedMap.Settings.Plane());
+            if (MyInput.GetOnWorldUp(_cachedMap.Settings.Plane()) && !EventSystem.current.IsPointerOverGameObject())
+            {
+                var tileClicked = _cachedMap.Tile(mousePos);
+                if (tileClicked == null)
+                    return;
+                if (TryUseCard(tileClicked))
+                {
+                    GameMediator.Instance?.NotifySpellCardUsed(_selectedCard, _currentCaster);
+                    Debug.Log($"[Spell] {_currentCaster} dùng {_selectedCard.spellName}");
+                    DeselectCard();
+                    return;
+                }
+                else
+                {
+                    DeselectCard();
+                    Debug.Log("Cannot use spell on this tile.");
+                }
+            }
+
+        }
         /// <summary>
         /// Khởi tạo hand cho player từ danh sách spell đã chọn trước trận.
         /// Gọi khi trận đấu bắt đầu.
@@ -55,7 +80,7 @@ namespace TurnBasedGame.SpellCard
                 }
             }
             _playerHands[player] = hand;
-            OnHandChanged?.Invoke(player);
+            GameMediator.Instance?.NotifyHandChanged(player);
         }
 
         public IReadOnlyList<SpellCardData> GetHand(PlayerID player)
@@ -94,49 +119,55 @@ namespace TurnBasedGame.SpellCard
 
         /// <summary>
         /// Xác nhận sử dụng spell lên target. Gọi khi player click vào unit mục tiêu.
+        /// Với AllAllies/AllEnemies, target là một unit đại diện — spell tự apply lên tất cả.
         /// </summary>
-        public bool TryUseCard(UnitController target)
+        public bool TryUseCard(TileEntity target)
         {
             if (!_isTargeting || _selectedCard == null) return false;
-
-            if (!ValidateTarget(_selectedCard, _currentCaster, target))
-            {
-                Debug.LogWarning($"[Spell] Target không hợp lệ cho {_selectedCard.spellName}");
-                return false;
-            }
 
             // Trừ MP
             if (!MPManager.Instance.SpendMP(_currentCaster, _selectedCard.mpCost))
             {
                 Debug.LogWarning($"[Spell] Không đủ MP để dùng {_selectedCard.spellName}");
-                DeselectCard();
                 return false;
             }
-
             // Trừ action
-            if (_actionLefts != null)
-                _actionLefts.Value--;
+            // if (_actionLefts != null)
+            //     _actionLefts.Value--;
 
-            // Kích hoạt effect
-            ExecuteSpell(_selectedCard, null, target, _currentCaster);
+            if (_selectedCard.range == 0)
+            {
+                // range = 0 nghĩa là ảnh hưởng toàn bản đồ, không cần check khoảng cách
+                var allUnits = GetAllUnitsOnMap();
+                foreach (var unit in allUnits)
+                {
+                    if (ValidateTarget(_selectedCard, _currentCaster, unit))
+                        ExecuteSpell(_selectedCard, null, unit, _currentCaster);
+                }
+            }
+            else if (IsMultiTarget(_selectedCard.targetType))
+            {
+                var unitsInRange = MapManager.Instance.GetUnitsInRange(target, _selectedCard.range);
+                foreach (var unit in unitsInRange)
+                {
+                    if (ValidateTarget(_selectedCard, _currentCaster, unit))
+                    {
+                        ExecuteSpell(_selectedCard, null, unit, _currentCaster);
+                    }
+                }
+            }
+            else
+            {
+                ExecuteSpell(_selectedCard, null, MapManager.Instance.GetUnitAtTile(target.Position), _currentCaster);
+            }
 
             // Xóa card nếu tiêu hao
             if (_selectedCard.consumeOnUse)
             {
                 RemoveCardFromHand(_currentCaster, _selectedCard);
             }
-
-            var usedCard = _selectedCard;
-            DeselectCard();
-            OnCardUsed?.Invoke(usedCard, target);
-
-            GameMediator.Instance?.NotifySpellCardUsed(usedCard, target, _currentCaster);
-            Debug.Log($"[Spell] {_currentCaster} dùng {usedCard.spellName} lên {target.name}");
             return true;
         }
-
-        public bool IsTargeting => _isTargeting;
-        public SpellCardData SelectedCard => _selectedCard;
 
         #region Validation
 
@@ -154,14 +185,24 @@ namespace TurnBasedGame.SpellCard
 
             bool isFriendly = target.GetOwner() == caster;
 
-            return card.targetType switch
+            bool ownerValid = card.targetType switch
             {
                 SpellTargetType.SingleAlly => isFriendly,
                 SpellTargetType.SingleEnemy => !isFriendly,
                 SpellTargetType.Self => isFriendly,
+                SpellTargetType.AllAllies => isFriendly,
+                SpellTargetType.AllEnemies => !isFriendly,
                 SpellTargetType.AnyUnit => true,
                 _ => false
             };
+
+            if (!ownerValid) return false;
+            return true;
+        }
+
+        private bool IsMultiTarget(SpellTargetType type)
+        {
+            return type == SpellTargetType.AllAllies || type == SpellTargetType.AllEnemies || type == SpellTargetType.AnyUnit;
         }
 
         #endregion
@@ -170,23 +211,21 @@ namespace TurnBasedGame.SpellCard
 
         private void ExecuteSpell(SpellCardData card, UnitController caster, UnitController target, PlayerID casterPlayer)
         {
-            var effect = SpellEffectFactory.Create(card.effectType);
-            if (effect == null)
+            if (card.spellEffect == null)
             {
-                Debug.LogError($"[Spell] Không tìm thấy effect cho type {card.effectType}");
+                Debug.LogError($"[Spell] Chưa gán effect cho {card.spellName}");
                 return;
             }
 
-            // Spawn VFX cast
             SpawnVfx(card.castVfxPrefab, caster != null ? caster.transform.position : target.transform.position);
-            // Spawn VFX impact
             SpawnVfx(card.impactVfxPrefab, target.transform.position);
 
-            effect.Apply(card,casterPlayer, target);
+            card.Cast(casterPlayer, target);
         }
 
         private void SpawnVfx(GameObject vfxPrefab, Vector3 position)
         {
+            // todo: spawn VFX với pooling để tối ưu hiệu năng
             if (vfxPrefab == null) return;
             var vfx = Instantiate(vfxPrefab, position, Quaternion.identity);
             Destroy(vfx, 3f);
@@ -200,7 +239,7 @@ namespace TurnBasedGame.SpellCard
         {
             if (!_playerHands.TryGetValue(player, out var hand)) return;
             hand.Remove(card);
-            OnHandChanged?.Invoke(player);
+            GameMediator.Instance?.NotifyHandChanged(player);
         }
 
         #endregion
@@ -224,9 +263,7 @@ namespace TurnBasedGame.SpellCard
             }
 
             if (validPositions.Count > 0)
-            {
                 AreaPathManager.Instance?.ShowAttackArea(validPositions);
-            }
         }
 
         private List<UnitController> GetAllUnitsOnMap()
@@ -240,5 +277,10 @@ namespace TurnBasedGame.SpellCard
         }
 
         #endregion
+
+        public override void SetCachedMap(MapEntity map)
+        {
+            _cachedMap = map;
+        }
     }
 }

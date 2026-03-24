@@ -17,6 +17,7 @@ namespace RedBjorn.ProtoTiles.Example
         [Header("Prefabs")]
         public AreaOutline AreaPrefab;
         public AreaOutline AttackAreaPrefab;
+        public AreaOutline SpellAreaPrefab;
         public PathDrawer PathPrefab;
         public bool IsLocked = false;
 
@@ -24,6 +25,7 @@ namespace RedBjorn.ProtoTiles.Example
 
         AreaOutline _area;
         AreaOutline _attackArea;
+        AreaOutline _spellArea;
         PathDrawer _path;
         private UnitController selectedUnit;
         private UnitController previousSelectedUnit;
@@ -57,6 +59,11 @@ namespace RedBjorn.ProtoTiles.Example
             {
                 _attackArea = Spawner.Spawn(AttackAreaPrefab, Vector3.zero, Quaternion.identity);
                 _attackArea.Hide();
+            }
+            if (_spellArea == null && SpellAreaPrefab != null)
+            {
+                _spellArea = Spawner.Spawn(SpellAreaPrefab, Vector3.zero, Quaternion.identity);
+                _spellArea.Hide();
             }
             if (_path == null && PathPrefab != null)
             {
@@ -207,6 +214,23 @@ namespace RedBjorn.ProtoTiles.Example
             IsLocked = false;
         }
 
+        public void ShowSpellArea(List<Vector3> border)
+        {
+            if (_spellArea != null)
+                _spellArea.Show(border, _cachedMap);
+            HideMoveArea();
+            HidePath();
+            HideAttackArea();
+            IsLocked = true;
+        }
+
+        public void HideSpellArea()
+        {
+            if (_spellArea != null)
+                _spellArea.Hide();
+            IsLocked = false;
+        }
+
         public void RealeaseSelectedUnit()
         {
             if (selectedUnit != null)
@@ -230,7 +254,7 @@ namespace RedBjorn.ProtoTiles.Example
             if (_path != null) _path.IsEnabled = false;
         }
 
-        public void SetCachedMap(MapEntity map)
+        public override void SetCachedMap(MapEntity map)
         {
             _cachedMap = map;
         }

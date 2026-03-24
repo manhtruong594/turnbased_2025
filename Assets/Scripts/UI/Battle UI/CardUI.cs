@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.EventSystems;
+using TurnBasedGame.SpellCard;
 
 public class CardUI : MonoBehaviour, IPointerClickHandler
 {
@@ -10,11 +11,11 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
     public TextMeshProUGUI costText;
     public Image costBg;
 
-    public void Setup()
+    public virtual void Setup(SpellCardData data)
     {
     }
 
-    public void OnPointerClick(PointerEventData eventData)
+    public virtual void OnPointerClick(PointerEventData eventData)
     {
        
     }

@@ -21,7 +21,7 @@ namespace TurnBasedGame.Unit
         [SerializeField] private float _transitionDuration = 0.1f;
 
         SkillBase _currentSkill;
-        
+
         #region Animation Control
 
         public void StartMoving()
@@ -99,28 +99,30 @@ namespace TurnBasedGame.Unit
             projectile.Launch(_effectSpawnPoint.position, _currentSkill.GetCurrentTargetWorldPosition());
             projectile.OnReachTarget = OnApplyEffect;
         }
-        
+
         /// <summary>
         /// Animation Event: Được gọi tại frame mà skill có hiệu ứng xuất hiện (vd: slash vfx, buff vfx)
         /// </summary>
         public void AnimEvent_StartEffect()
         {
-            if (_currentSkill == null || _currentSkill.VfxPrefab == null) return;
-            var spawnedObj = ObjectPoolManager.Instance.Spawn(_currentSkill.VfxPrefab);
-            spawnedObj.transform.SetPositionAndRotation(_effectSpawnPoint.position, _effectSpawnPoint.rotation);
+            if (_currentSkill == null) return;
+            if (_currentSkill.VfxPrefab != null)
+            {
+                var spawnedObj = ObjectPoolManager.Instance.Spawn(_currentSkill.VfxPrefab);
+                spawnedObj.transform.SetPositionAndRotation(_effectSpawnPoint.position, _effectSpawnPoint.rotation);
+            }
 
             if (_currentSkill.HasDelayApplyEffect)
             {
-                StartCoroutine(DelayedEffect(spawnedObj));
+                StartCoroutine(DelayedEffect());
             }
             else
             {
-                spawnedObj.transform.SetPositionAndRotation(_effectSpawnPoint.position, _effectSpawnPoint.rotation);
                 OnApplyEffect();
             }
         }
 
-        private System.Collections.IEnumerator DelayedEffect(GameObject spawnedObj)
+        private System.Collections.IEnumerator DelayedEffect()
         {
             yield return new WaitForSeconds(_currentSkill.DelayApplyEffectTime);
             OnApplyEffect();

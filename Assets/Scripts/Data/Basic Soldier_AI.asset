@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86ab2ddd49f3b30409500291ade8d6b0, type: 3}
   m_Name: Basic Soldier_AI
   m_EditorClassIdentifier: 
-  unitName: Basic Soldier__
+  unitName: Enemy
   description: 
+  Health: 100
+  BaseDamage: 10
   spawnCost: 3
   moveRange: 2
   moveSpeed: 5
-  unitPrefab: {fileID: 5204393105807402248, guid: 7efec5699575aa24f86336ee966420e2, type: 3}
   icon: {fileID: 0}
-  owner: 2

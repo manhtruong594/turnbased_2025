@@ -55,7 +55,7 @@ MonoBehaviour:
   _actionCanvasGroup: {fileID: 5935454900314583146}
   startingSkills:
   - {fileID: 11400000, guid: c8301b7a126a8b247a11efd55082b802, type: 2}
-  - {fileID: 11400000, guid: 264d50d6fa6498c459c5e1b5ba81b661, type: 2}
+  - {fileID: 11400000, guid: 445081f33d81048419415946e7004b92, type: 2}
   - {fileID: 11400000, guid: 17cbaea1db222d24db000283a3f68aab, type: 2}
   skillButtonPrefab: {fileID: 6131648088992773535, guid: 2cc31421d5ee23044aed87af651491df, type: 3}
   skillButtonContainer: {fileID: 1905263602909234083}
@@ -264,6 +264,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 3791382581847649467}
     m_Modifications:
+    - target: {fileID: 4663250052121342117, guid: 3fc8a414e7149ea468e5e6450c42da8e, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6988995364828149153, guid: 3fc8a414e7149ea468e5e6450c42da8e, type: 3}
       propertyPath: m_Name
       value: Canvas

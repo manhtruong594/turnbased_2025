@@ -7,17 +7,16 @@ using TurnBasedGame.Core;
 namespace TurnBasedGame.SpellCard
 {
     /// <summary>
-    /// Buff/Debuff đang active trên một unit.
-    /// Chứa thông tin hiệu ứng và thời gian còn lại.
+    /// Status effect (buff hoặc debuff) đang active trên một unit.
     /// </summary>
-    public class ActiveBuff
+    public struct ActiveStatusEffect
     {
-        public SpellEffectType Type { get; }
+        public StatusEffectType Type { get; }
         public int Value { get; }
         public int RemainingTurns { get; private set; }
         public PlayerID SourcePlayer { get; }
 
-        public ActiveBuff(SpellEffectType type, int value, int duration, PlayerID source)
+        public ActiveStatusEffect(StatusEffectType type, int value, int duration, PlayerID source)
         {
             Type = type;
             Value = value;
@@ -25,7 +24,7 @@ namespace TurnBasedGame.SpellCard
             SourcePlayer = source;
         }
 
-        /// <returns>true nếu buff hết hạn</returns>
+        /// <returns>true nếu effect hết hạn</returns>
         public bool TickTurn()
         {
             RemainingTurns--;
@@ -39,127 +38,142 @@ namespace TurnBasedGame.SpellCard
     /// </summary>
     public class BuffDebuffHandler : MonoBehaviour
     {
-        private readonly List<ActiveBuff> _activeBuffs = new();
+        private readonly List<ActiveStatusEffect> _activeEffects = new();
         private UnitController _owner;
 
-        public IReadOnlyList<ActiveBuff> ActiveBuffs => _activeBuffs;
+        public IReadOnlyList<ActiveStatusEffect> ActiveEffects => _activeEffects;
 
-        public event Action<ActiveBuff> OnBuffAdded;
-        public event Action<ActiveBuff> OnBuffRemoved;
+        public event Action<ActiveStatusEffect> OnEffectAdded;
+        public event Action<ActiveStatusEffect> OnEffectRemoved;
 
         public void Init(UnitController owner)
         {
             _owner = owner;
-            _activeBuffs.Clear();
+            _activeEffects.Clear();
         }
 
-        public void AddBuff(ActiveBuff buff)
+        public void AddEffect(ActiveStatusEffect effect)
         {
-            // Cùng loại buff thì thay thế (refresh duration)
-            RemoveBuffByType(buff.Type);
-            _activeBuffs.Add(buff);
-            OnBuffAdded?.Invoke(buff);
-            Debug.Log($"[Buff] {_owner.name} nhận {buff.Type} ({buff.Value}) trong {buff.RemainingTurns} lượt");
+            // Cùng loại thì thay thế (refresh duration)
+            RemoveByType(effect.Type);
+            _activeEffects.Add(effect);
+            OnEffectAdded?.Invoke(effect);
+            Debug.Log($"[Effect] {_owner.name} nhận {effect.Type} ({effect.Value}) trong {effect.RemainingTurns} lượt");
         }
 
         /// <summary>
-        /// Gọi ở đầu mỗi lượt của unit này. Giảm duration, xóa buff hết hạn.
+        /// Gọi ở đầu lượt: áp dụng hiệu ứng theo thời gian (Burn, Poison, Slow...).
+        /// Phải gọi TRƯỚC TickEffects để lượt cuối vẫn có hiệu lực.
         /// </summary>
-        public void TickBuffs()
+        public void ApplyTickEffects(ActiveStatusEffect effect)
         {
-            for (int i = _activeBuffs.Count - 1; i >= 0; i--)
+            switch (effect.Type)
             {
-                if (_activeBuffs[i].TickTurn())
-                {
-                    var expired = _activeBuffs[i];
-                    _activeBuffs.RemoveAt(i);
-                    OnBuffRemoved?.Invoke(expired);
-                    Debug.Log($"[Buff] {_owner.name} hết hiệu ứng {expired.Type}");
-                }
+                case StatusEffectType.Burn:
+                    _owner.TakeDamage(effect.Value);
+                    Debug.Log($"[Tick] {_owner.name} bị Burn gây {effect.Value} sát thương");
+                    break;
+
+                case StatusEffectType.Poison:
+                    // Poison: sát thương tăng dần theo số lượt đã chịu (Value = base dmg)
+                    int poisonDmg = Mathf.Max(1, effect.Value * (effect.RemainingTurns == 0 ? 1 : effect.Value));
+                    _owner.TakeDamage(poisonDmg);
+                    Debug.Log($"[Tick] {_owner.name} bị Poison gây {poisonDmg} sát thương");
+                    break;
+
+                    // Slow / Weaken / Root: không gây damage theo thời gian, chỉ cần tồn tại
+                    // Thêm case mới ở đây khi có hiệu ứng tick mới
+
             }
         }
 
         /// <summary>
-        /// Tổng giáp bonus từ tất cả Shield buff.
+        /// Gọi ở đầu mỗi lượt của unit này. Giảm duration, xóa effect hết hạn.
         /// </summary>
+        public void TickEffects()
+        {
+            for (int i = _activeEffects.Count - 1; i >= 0; i--)
+            {
+                if (_activeEffects[i].TickTurn())
+                {
+                    ApplyTickEffects(_activeEffects[i]);
+                    var expired = _activeEffects[i];
+                    _activeEffects.RemoveAt(i);
+                    OnEffectRemoved?.Invoke(expired);
+                    Debug.Log($"[Effect] {_owner.name} hết hiệu ứng {expired.Type}");
+                }
+            }
+        }
+
         public int GetShieldValue()
         {
             int total = 0;
-            foreach (var buff in _activeBuffs)
-            {
-                if (buff.Type == SpellEffectType.Shield)
-                    total += buff.Value;
-            }
+            foreach (var e in _activeEffects)
+                if (e.Type == StatusEffectType.Shield) total += e.Value;
             return total;
         }
 
-        /// <summary>
-        /// Tổng bonus damage từ DamageBuff.
-        /// </summary>
         public int GetDamageBonus()
         {
             int total = 0;
-            foreach (var buff in _activeBuffs)
-            {
-                if (buff.Type == SpellEffectType.DamageBuff)
-                    total += buff.Value;
-            }
+            foreach (var e in _activeEffects)
+                if (e.Type == StatusEffectType.DamageBuff) total += e.Value;
             return total;
         }
 
-        /// <summary>
-        /// Unit có đang bị Root (cấm di chuyển) không.
-        /// </summary>
-        public bool IsRooted()
+        public bool IsRooted() => HasEffect(StatusEffectType.Root);
+
+        /// <summary>Lấy tất cả debuff đang active trên unit.</summary>
+        public List<ActiveStatusEffect> GetDebuffs()
         {
-            foreach (var buff in _activeBuffs)
-            {
-                if (buff.Type == SpellEffectType.Root)
-                    return true;
-            }
+            var result = new List<ActiveStatusEffect>();
+            foreach (var e in _activeEffects)
+                if (e.Type.IsDebuff()) result.Add(e);
+            return result;
+        }
+
+        /// <summary>Lấy tất cả buff đang active trên unit.</summary>
+        public List<ActiveStatusEffect> GetBuffs()
+        {
+            var result = new List<ActiveStatusEffect>();
+            foreach (var e in _activeEffects)
+                if (e.Type.IsBuff()) result.Add(e);
+            return result;
+        }
+
+        public bool HasEffect(StatusEffectType type)
+        {
+            foreach (var e in _activeEffects)
+                if (e.Type == type) return true;
             return false;
         }
 
-        public bool HasBuff(SpellEffectType type)
+        public void RemoveByType(StatusEffectType type)
         {
-            foreach (var buff in _activeBuffs)
+            for (int i = _activeEffects.Count - 1; i >= 0; i--)
             {
-                if (buff.Type == type)
-                    return true;
-            }
-            return false;
-        }
-
-        public void RemoveBuffByType(SpellEffectType type)
-        {
-            for (int i = _activeBuffs.Count - 1; i >= 0; i--)
-            {
-                if (_activeBuffs[i].Type == type)
+                if (_activeEffects[i].Type == type)
                 {
-                    var removed = _activeBuffs[i];
-                    _activeBuffs.RemoveAt(i);
-                    OnBuffRemoved?.Invoke(removed);
+                    var removed = _activeEffects[i];
+                    _activeEffects.RemoveAt(i);
+                    OnEffectRemoved?.Invoke(removed);
                 }
             }
         }
 
-        public void ClearAllBuffs()
+        public void ClearAll()
         {
-            for (int i = _activeBuffs.Count - 1; i >= 0; i--)
+            for (int i = _activeEffects.Count - 1; i >= 0; i--)
             {
-                var removed = _activeBuffs[i];
-                _activeBuffs.RemoveAt(i);
-                OnBuffRemoved?.Invoke(removed);
+                var removed = _activeEffects[i];
+                _activeEffects.RemoveAt(i);
+                OnEffectRemoved?.Invoke(removed);
             }
         }
 
-        /// <summary>
-        /// Tính sát thương cuối cùng sau khi áp dụng Shield.
-        /// </summary>
         public float ModifyIncomingDamage(float rawDamage)
         {
-            int shield = GetShieldValue();
-            return Mathf.Max(0, rawDamage - shield);
+            return Mathf.Max(0, rawDamage - GetShieldValue());
         }
     }
 }
