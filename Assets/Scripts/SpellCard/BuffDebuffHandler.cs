@@ -121,7 +121,7 @@ namespace TurnBasedGame.SpellCard
             return total;
         }
 
-        public bool IsRooted() => HasEffect(StatusEffectType.Root);
+        public bool IsRooted() => HasEffect(StatusEffectType.Root) || HasEffect(StatusEffectType.Stun);
 
         /// <summary>Lấy tất cả debuff đang active trên unit.</summary>
         public List<ActiveStatusEffect> GetDebuffs()

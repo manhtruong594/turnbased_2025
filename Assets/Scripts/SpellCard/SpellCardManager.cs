@@ -21,15 +21,20 @@ namespace TurnBasedGame.SpellCard
         [Header("Settings")]
         [SerializeField] private IntReference _actionLefts;
 
+        [Header("Confirm UI")]
+        [SerializeField] private SpellCardConfirmUI _confirmUI;
+
         private readonly Dictionary<PlayerID, List<SpellCardData>> _playerHands = new();
         private SpellCardData _selectedCard;
         private PlayerID _currentCaster;
         private bool _isTargeting;
+        private bool _isConfirming;
 
         // Events cho UI binding
         public event Action<SpellCardData> OnCardSelected;
         public event Action OnCardDeselected;
         MapEntity _cachedMap;
+        TileEntity _cachedTile;
 
         private void Awake()
         {
@@ -39,32 +44,51 @@ namespace TurnBasedGame.SpellCard
                 return;
             }
             Instance = this;
+
+            if (_confirmUI != null)
+            {
+                _confirmUI.OnConfirmed += OnConfirmCard;
+                _confirmUI.OnCanceled += OnCancelCard;
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (_confirmUI != null)
+            {
+                _confirmUI.OnConfirmed -= OnConfirmCard;
+                _confirmUI.OnCanceled -= OnCancelCard;
+            }
         }
 
         void Update()
         {
-            if (!_isTargeting) return;
+            if (!_isTargeting || _isConfirming) return;
             var mousePos = MyInput.GroundPosition(_cachedMap.Settings.Plane());
             if (MyInput.GetOnWorldUp(_cachedMap.Settings.Plane()) && !EventSystem.current.IsPointerOverGameObject())
             {
+                if (EventSystem.current.IsPointerOverGameObject())
+                {
+                    DeselectCard();
+                    return;
+                }
                 var tileClicked = _cachedMap.Tile(mousePos);
                 if (tileClicked == null)
                     return;
-                if (TryUseCard(tileClicked))
-                {
-                    GameMediator.Instance?.NotifySpellCardUsed(_selectedCard, _currentCaster);
-                    Debug.Log($"[Spell] {_currentCaster} dùng {_selectedCard.spellName}");
-                    DeselectCard();
-                    return;
-                }
-                else
-                {
-                    DeselectCard();
-                    Debug.Log("Cannot use spell on this tile.");
-                }
-            }
 
+                ShowConfirmUI(tileClicked);
+            }
+            ShowSpellRange(_selectedCard, _currentCaster);
         }
+
+        private void ShowConfirmUI(TileEntity tileClicked)
+        {
+            if (_confirmUI == null) return;
+            _isConfirming = true;
+            _cachedTile = tileClicked;
+            _confirmUI.Show(_selectedCard, new RectTransform()); // todo: truyền rect của card gốc để có animation bay từ đó
+        }
+
         /// <summary>
         /// Khởi tạo hand cho player từ danh sách spell đã chọn trước trận.
         /// Gọi khi trận đấu bắt đầu.
@@ -91,30 +115,57 @@ namespace TurnBasedGame.SpellCard
         /// <summary>
         /// Player chọn 1 spell card từ UI => bắt đầu chế độ chọn target.
         /// </summary>
-        public void SelectCard(SpellCardData card, PlayerID caster)
+        public void SelectCard(SpellCardData card, PlayerID caster, RectTransform sourceCardRect = null)
         {
             if (card == null) return;
+            if (_isConfirming) return;
             if (!CanUseCard(card, caster))
             {
                 Debug.LogWarning($"[Spell] Không đủ điều kiện dùng {card.spellName}");
                 return;
             }
-
+            if (_isTargeting)
+            {
+                DeselectCard();
+            }
             _selectedCard = card;
             _currentCaster = caster;
-            _isTargeting = true;
             OnCardSelected?.Invoke(card);
-
-            // Hiển thị vùng target hợp lệ
-            ShowValidTargets(card, caster);
+            _isTargeting = true;
         }
 
         public void DeselectCard()
         {
             _selectedCard = null;
             _isTargeting = false;
-            AreaPathManager.Instance?.HideAttackArea();
+            _isConfirming = false;
+            _confirmUI?.Hide();
+            AreaPathManager.Instance?.HideSpellArea();
             OnCardDeselected?.Invoke();
+        }
+
+        private void OnConfirmCard()
+        {
+            if (TryUseCard(_cachedTile))
+            {
+                GameMediator.Instance?.NotifySpellCardUsed(_selectedCard, _currentCaster);
+                Debug.Log($"[Spell] {_currentCaster} dùng {_selectedCard.spellName}");
+                _isConfirming = false;
+                _isTargeting = false;
+                DeselectCard();
+            }
+            else
+            {
+                Debug.Log("Cannot use spell on this tile.");
+                OnCancelCard();
+            }
+        }
+
+        private void OnCancelCard()
+        {
+            _isConfirming = false;
+            _isTargeting = false;
+            DeselectCard();
         }
 
         /// <summary>
@@ -131,9 +182,6 @@ namespace TurnBasedGame.SpellCard
                 Debug.LogWarning($"[Spell] Không đủ MP để dùng {_selectedCard.spellName}");
                 return false;
             }
-            // Trừ action
-            // if (_actionLefts != null)
-            //     _actionLefts.Value--;
 
             if (_selectedCard.range == 0)
             {
@@ -175,7 +223,7 @@ namespace TurnBasedGame.SpellCard
         {
             if (card == null) return false;
             if (!MPManager.Instance.HasEnoughMP(player, card.mpCost)) return false;
-            if (_actionLefts != null && _actionLefts.Value <= 0) return false;
+            //if (_actionLefts != null && _actionLefts.Value <= 0) return false;
             return true;
         }
 
@@ -246,24 +294,20 @@ namespace TurnBasedGame.SpellCard
 
         #region Target Visualization
 
-        private void ShowValidTargets(SpellCardData card, PlayerID caster)
+        private void ShowSpellRange(SpellCardData card, PlayerID caster)
         {
-            var allUnits = GetAllUnitsOnMap();
-            var validPositions = new List<Vector3>();
-            var map = MapManager.Instance?.MapEntity;
-            if (map == null) return;
+            if (card == null) return;
 
-            foreach (var unit in allUnits)
+            var mousePos = MyInput.GroundPosition(_cachedMap.Settings.Plane());
+            var tile = _cachedMap.Tile(mousePos);
+            if (tile == null)
             {
-                if (unit == null || unit.IsDead()) continue;
-                if (ValidateTarget(card, caster, unit))
-                {
-                    validPositions.Add(map.WorldPosition(unit.currentGridPosition));
-                }
+                AreaPathManager.Instance?.HideSpellArea();
+                return;
             }
 
-            if (validPositions.Count > 0)
-                AreaPathManager.Instance?.ShowAttackArea(validPositions);
+            var border = _cachedMap.WalkableBorder(tile.Position, card.range > 0 ? card.range : 100);
+            AreaPathManager.Instance?.ShowSpellArea(border);
         }
 
         private List<UnitController> GetAllUnitsOnMap()

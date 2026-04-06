@@ -23,6 +23,7 @@ MonoBehaviour:
   _ownedSpells:
   - {fileID: 11400000, guid: a4f17f060f59e8843807307f138992b7, type: 2}
   - {fileID: 11400000, guid: 3bdac095735eadd4eb3b093605319980, type: 2}
+  - {fileID: 11400000, guid: 41460af04a662ac4385e25ea070ccfe2, type: 2}
   _selectedDeck:
   - {fileID: 3120644439800569440, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}
   - {fileID: 8842524188240618694, guid: 912108a999088264d855276813539510, type: 3}
@@ -30,3 +31,4 @@ MonoBehaviour:
   _selectedSpells:
   - {fileID: 11400000, guid: a4f17f060f59e8843807307f138992b7, type: 2}
   - {fileID: 11400000, guid: 3bdac095735eadd4eb3b093605319980, type: 2}
+  - {fileID: 11400000, guid: 41460af04a662ac4385e25ea070ccfe2, type: 2}

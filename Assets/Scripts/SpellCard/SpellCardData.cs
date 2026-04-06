@@ -69,6 +69,7 @@ namespace TurnBasedGame.SpellCard
         Slow,
         Weaken,
         Root,
+        Stun,
     }
 
     public static class StatusEffectTypeExtensions

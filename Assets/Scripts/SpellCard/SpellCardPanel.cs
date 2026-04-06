@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using TurnBasedGame.Core;
 using TurnBasedGame.Resources;
@@ -14,10 +15,10 @@ namespace TurnBasedGame.SpellCard
     {
         [Header("References")]
         [SerializeField] private Transform _cardContainer;
-        [SerializeField] private SpellCardBase _cardButtonPrefab;
+        [SerializeField] private SpellCardItem _cardButtonPrefab;
         [SerializeField] private IntReference _actionLefts;
 
-        private readonly List<SpellCardBase> _spells = new();
+        private readonly List<SpellCardItem> _spells = new();
         private PlayerID _ownerPlayer;
 
         public void Initialize(IReadOnlyList<SpellCardData> spells, PlayerID owner)
@@ -31,6 +32,7 @@ namespace TurnBasedGame.SpellCard
             {
                 GameMediator.Instance.OnHandChanged += OnHandChanged;
                 GameMediator.Instance.OnSpellCardUsed += OnCardUsed;
+                GameMediator.Instance.OnMPChanged += CheckMPChanged;
             }
 
             ClearButtons();
@@ -47,11 +49,6 @@ namespace TurnBasedGame.SpellCard
             UpdateInteractable();
         }
 
-        /// <summary>Overload giữ tương thích ngược, mặc định Player1.</summary>
-        public void Initialize(IReadOnlyList<SpellCardData> spells)
-        {
-            Initialize(spells, PlayerID.Player1);
-        }
 
         private void OnDestroy()
         {
@@ -59,6 +56,7 @@ namespace TurnBasedGame.SpellCard
             {
                 GameMediator.Instance.OnHandChanged -= OnHandChanged;
                 GameMediator.Instance.OnSpellCardUsed -= OnCardUsed;
+                GameMediator.Instance.OnMPChanged -= CheckMPChanged;
             }
         }
 
@@ -73,6 +71,10 @@ namespace TurnBasedGame.SpellCard
             UpdateInteractable();
         }
 
+        private void CheckMPChanged(PlayerID player, int currentMP, int maxMP)
+        {
+            if (player == _ownerPlayer) UpdateInteractable();
+        }
         public void UpdateInteractable()
         {
             foreach (var btn in _spells)

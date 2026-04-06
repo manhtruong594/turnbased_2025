@@ -117,4 +117,19 @@ namespace TurnBasedGame.SpellCard
         }
     }
 
+    [Serializable]
+    public class StunEffect : ISpellEffect
+    {
+        [Range(1, 5)] public int duration = 1;
+
+        public void Apply(PlayerID caster, UnitController target)
+        {
+            if (target == null || target.IsDead()) return;
+            var handler = target.BuffHandler;
+            if (handler == null) return;
+
+            handler.AddEffect(new ActiveStatusEffect(StatusEffectType.Stun, 0, duration, caster));
+            Debug.Log($"[Spell] Stun: Choáng {target.name} trong {duration} lượt");
+        }
+    }
 }

@@ -7,6 +7,7 @@ using TurnBasedGame.Command;
 using TurnBasedGame.Core;
 using TurnBasedGame.Skills;
 using TurnBasedGame.SpellCard;
+using TurnBasedGame.UI;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -231,6 +232,7 @@ namespace TurnBasedGame.Unit
             {
                 _unitAnimator.PlayHit();
             }
+            FloatingTextSpawner.Instance?.SpawnDamage(transform.position, (int)damage);
         }
         
         public void Heal(int healAmount)
@@ -238,6 +240,7 @@ namespace TurnBasedGame.Unit
             runtimeStats.Health += healAmount;
             runtimeStats.Health = Mathf.Clamp(runtimeStats.Health, 0, runtimeStats.MaxHealth);
             _healthBar.UpdateHealthBar((float)runtimeStats.Health / runtimeStats.MaxHealth);
+            FloatingTextSpawner.Instance?.SpawnHeal(transform.position, healAmount);
         }
 
         IEnumerator DelayDead()

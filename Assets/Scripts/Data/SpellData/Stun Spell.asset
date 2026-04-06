@@ -10,24 +10,24 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e0c76128c4113b94ead3f348ac466dc1, type: 3}
-  m_Name: Damage Spell
+  m_Name: Stun Spell
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.SpellCard.SpellCardData
-  spellName: Damage Spell
-  description: "G\xE2y 4 damage cho ke\u0309 \u0111i\u0323ch tr\xEAn toa\u0300n ba\u0309n
-    \u0111\xF4\u0300"
-  icon: {fileID: 21300000, guid: e5da668c6557abb47a17a303cf69943f, type: 3}
-  mpCost: 1
+  spellName: Stun Spell
+  description: "La\u0300m choa\u0301ng ke\u0309 \u0111i\u0323ch trong 1 turn, ke\u0309
+    \u0111i\u0323ch bi\u0323 choa\u0301ng kh\xF4ng th\xEA\u0309 ha\u0300nh \u0111\xF4\u0323ng"
+  icon: {fileID: 21300000, guid: 325d33c6d266f0e448f60efb34dde7b1, type: 3}
+  mpCost: 2
   consumeOnUse: 1
   targetType: 4
-  range: 0
+  range: 3
   spellEffect:
-    rid: 4443656999019741297
+    rid: 2528320529774149916
   castVfxPrefab: {fileID: 0}
   impactVfxPrefab: {fileID: 0}
   references:
     version: 2
     RefIds:
-    - rid: 4443656999019741297
-      type: {class: DamageEffect, ns: TurnBasedGame.SpellCard, asm: Assembly-CSharp}
+    - rid: 2528320529774149916
+      type: {class: StunEffect, ns: TurnBasedGame.SpellCard, asm: Assembly-CSharp}
       data:
-        damage: 4
+        duration: 1

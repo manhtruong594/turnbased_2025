@@ -13,12 +13,13 @@ MonoBehaviour:
   m_Name: Root Spell
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.SpellCard.SpellCardData
   spellName: Root Spell
-  description: 
-  icon: {fileID: 0}
+  description: "Tro\u0301i ch\xE2n ke\u0309 \u0111i\u0323ch trong 2 turn, ke\u0309
+    \u0111i\u0323ch bi\u0323 tro\u0301i ch\xE2n kh\xF4ng th\xEA\u0309 di chuy\xEA\u0309n"
+  icon: {fileID: 21300000, guid: 434b9ec91260129489414ae404c6e3fc, type: 3}
   mpCost: 2
   consumeOnUse: 1
   targetType: 4
-  range: 0
+  range: 4
   spellEffect:
     rid: 4443656999019741286
   castVfxPrefab: {fileID: 0}
