@@ -40,6 +40,7 @@ namespace TurnBasedGame.SpellCard
     {
         private readonly List<ActiveStatusEffect> _activeEffects = new();
         private UnitController _owner;
+        [SerializeField] private BuffIconDisplay _iconDisplay;
 
         public IReadOnlyList<ActiveStatusEffect> ActiveEffects => _activeEffects;
 
@@ -50,6 +51,13 @@ namespace TurnBasedGame.SpellCard
         {
             _owner = owner;
             _activeEffects.Clear();
+            if (_iconDisplay != null)
+            {
+                OnEffectAdded -= _iconDisplay.OnEffectAdded;
+                OnEffectRemoved -= _iconDisplay.OnEffectRemoved;
+                OnEffectAdded += _iconDisplay.OnEffectAdded;
+                OnEffectRemoved += _iconDisplay.OnEffectRemoved;
+            }
         }
 
         public void AddEffect(ActiveStatusEffect effect)
@@ -94,13 +102,17 @@ namespace TurnBasedGame.SpellCard
         {
             for (int i = _activeEffects.Count - 1; i >= 0; i--)
             {
-                if (_activeEffects[i].TickTurn())
+                var effect = _activeEffects[i];
+                ApplyTickEffects(effect);
+                if (effect.TickTurn())
                 {
-                    ApplyTickEffects(_activeEffects[i]);
-                    var expired = _activeEffects[i];
                     _activeEffects.RemoveAt(i);
-                    OnEffectRemoved?.Invoke(expired);
-                    Debug.Log($"[Effect] {_owner.name} hết hiệu ứng {expired.Type}");
+                    OnEffectRemoved?.Invoke(effect);
+                    Debug.Log($"[Effect] {_owner.name} hết hiệu ứng {effect.Type}");
+                }
+                else
+                {
+                    _activeEffects[i] = effect; // Write back mutated struct
                 }
             }
         }

@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0523717f09ab0c4e8b9b33173389543, type: 3}
+  m_Name: BuffIconData
+  m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.SpellCard.BuffIconData
+  _entries:
+  - type: 2
+    icon: {fileID: 21300000, guid: 1815ea71c4e799e45b0db8899c240c4a, type: 3}
+    color: {r: 0.058490515, g: 1, b: 0.15432762, a: 1}
+  - type: 9
+    icon: {fileID: 21300000, guid: e6d90fea7c6f7be4fb361575b0b18ab6, type: 3}
+    color: {r: 1, g: 0.15907308, b: 0.103773475, a: 1}
+  - type: 10
+    icon: {fileID: 21300000, guid: e5da668c6557abb47a17a303cf69943f, type: 3}
+    color: {r: 1, g: 0.16078432, b: 0.101960786, a: 1}

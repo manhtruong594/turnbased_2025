@@ -1,79 +1,52 @@
 using System.Collections.Generic;
+using TurnBasedGame.ObjectPool;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace TurnBasedGame.SpellCard
 {
     /// <summary>
-    /// UI hiển thị icon buff/debuff trên đầu unit.
-    /// Tự động cập nhật khi buff thay đổi.
+    /// UI hiển thị danh sách icon buff/debuff trên đầu unit.
+    /// Tự đồng bộ khi effect thêm/xoá, cập nhật số lượt còn lại mỗi turn.
     /// </summary>
     public class BuffIconDisplay : MonoBehaviour
     {
         [SerializeField] private Transform _iconContainer;
-        [SerializeField] private GameObject _buffIconPrefab;
-        [SerializeField] private BuffDebuffHandler _handler;
+        [SerializeField] private BuffIconEntry _buffIconPrefab;
+        [SerializeField] private BuffIconData _iconData;
 
-        [Header("Icons theo loại")]
-        [SerializeField] private Sprite shieldIcon;
-        [SerializeField] private Sprite rootIcon;
-        [SerializeField] private Sprite healIcon;
-        [SerializeField] private Sprite damageBuffIcon;
+        private readonly Dictionary<StatusEffectType, BuffIconEntry> _activeIcons = new();
 
-        private readonly Dictionary<StatusEffectType, GameObject> _activeIcons = new();
-
-        private void OnEnable()
+        public void Init()
         {
-            if (_handler == null) _handler = GetComponentInParent<BuffDebuffHandler>();
-            if (_handler != null)
-            {
-                _handler.OnEffectAdded += OnEffectAdded;
-                _handler.OnEffectRemoved += OnEffectRemoved;
-            }
         }
 
-        private void OnDisable()
-        {
-            if (_handler != null)
-            {
-                _handler.OnEffectAdded -= OnEffectAdded;
-                _handler.OnEffectRemoved -= OnEffectRemoved;
-            }
-        }
-
-        private void OnEffectAdded(ActiveStatusEffect effect)
+        public void OnEffectAdded(ActiveStatusEffect effect)
         {
             if (_activeIcons.ContainsKey(effect.Type)) return;
-            if (_buffIconPrefab == null || _iconContainer == null) return;
-
-            var iconObj = Instantiate(_buffIconPrefab, _iconContainer);
-            var image = iconObj.GetComponent<Image>();
-            if (image != null)
-            {
-                image.sprite = GetIconForType(effect.Type);
-            }
-            _activeIcons[effect.Type] = iconObj;
+            CreateIcon(effect);
         }
 
-        private void OnEffectRemoved(ActiveStatusEffect effect)
+        public void OnEffectRemoved(ActiveStatusEffect effect)
         {
-            if (_activeIcons.TryGetValue(effect.Type, out var iconObj))
+            if (_activeIcons.TryGetValue(effect.Type, out var entry))
             {
-                Destroy(iconObj);
+                ObjectPoolManager.Instance.Despawn(entry);
                 _activeIcons.Remove(effect.Type);
             }
         }
 
-        private Sprite GetIconForType(StatusEffectType type)
+        private void CreateIcon(ActiveStatusEffect effect)
         {
-            return type switch
+            if (_buffIconPrefab == null || _iconContainer == null || _iconData == null) return;
+            var sprite = _iconData.GetIcon(effect.Type);
+            if (sprite == null) return;
+            var iconObj = ObjectPoolManager.Instance.Spawn(_buffIconPrefab.gameObject, _iconContainer);
+            var entry = iconObj.GetComponent<BuffIconEntry>();
+            if (entry != null)
             {
-                StatusEffectType.Shield => shieldIcon,
-                StatusEffectType.Heal => healIcon,
-                StatusEffectType.DamageBuff => damageBuffIcon,
-                StatusEffectType.Root => rootIcon,
-                _ => null
-            };
+                entry.Setup(sprite, effect.RemainingTurns, _iconData.GetColor(effect.Type));
+                _activeIcons[effect.Type] = entry;
+            }
         }
     }
 }

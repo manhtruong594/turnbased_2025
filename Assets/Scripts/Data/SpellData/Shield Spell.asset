@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e0c76128c4113b94ead3f348ac466dc1, type: 3}
+  m_Name: Shield Spell
+  m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.SpellCard.SpellCardData
+  spellName: Shield Spell
+  description: "Ta\u0323o khi\xEAn t\xF4\u0300n ta\u0323i 2 turn cho m\xF4\u0323t
+    \u0111\xF4\u0300ng minh"
+  icon: {fileID: 21300000, guid: fdf81e4514a3ee343842aa1421113184, type: 3}
+  mpCost: 1
+  consumeOnUse: 1
+  targetType: 0
+  range: 0
+  spellEffect:
+    rid: 2528320529774149939
+  castVfxPrefab: {fileID: 0}
+  impactVfxPrefab: {fileID: 0}
+  references:
+    version: 2
+    RefIds:
+    - rid: 2528320529774149939
+      type: {class: ShieldEffect, ns: TurnBasedGame.SpellCard, asm: Assembly-CSharp}
+      data:
+        shieldValue: 20
+        duration: 2
