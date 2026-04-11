@@ -118,7 +118,7 @@ namespace TurnBasedGame.ObjectPool
             var obj = Spawn(key);
             if (obj != null && parent != null)
             {
-                obj.transform.SetParent(parent);
+                obj.transform.SetParent(parent, false);
             }
 
             return obj;
@@ -145,10 +145,16 @@ namespace TurnBasedGame.ObjectPool
                 return null;
             if (parent != null)
             {
-                pooledObj.transform.SetParent(parent);
+                pooledObj.transform.SetParent(parent, false);
             }
             return pooledObj.gameObject;
         }   
+
+        public T Spawn<T>(string key, Transform parent = null) where T : PooledObject
+        {
+            var obj = Spawn(key, parent);
+            return obj != null ? obj.GetComponent<T>() : null;
+        }
 
         public GameObject Spawn(GameObject prefab, Vector3 position, Quaternion rotation)
         {

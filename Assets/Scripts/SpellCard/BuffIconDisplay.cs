@@ -10,7 +10,7 @@ namespace TurnBasedGame.SpellCard
     /// </summary>
     public class BuffIconDisplay : MonoBehaviour
     {
-        [SerializeField] private Transform _iconContainer;
+        [SerializeField] private Transform _iconWorldContainer;
         [SerializeField] private BuffIconEntry _buffIconPrefab;
         [SerializeField] private BuffIconData _iconData;
 
@@ -18,6 +18,9 @@ namespace TurnBasedGame.SpellCard
 
         public void Init()
         {
+            foreach (var entry in _activeIcons.Values)
+                ObjectPoolManager.Instance.Despawn(entry);
+            _activeIcons.Clear();
         }
 
         public void OnEffectAdded(ActiveStatusEffect effect)
@@ -37,15 +40,18 @@ namespace TurnBasedGame.SpellCard
 
         private void CreateIcon(ActiveStatusEffect effect)
         {
-            if (_buffIconPrefab == null || _iconContainer == null || _iconData == null) return;
+            if (_buffIconPrefab == null || _iconData == null) return;
             var sprite = _iconData.GetIcon(effect.Type);
             if (sprite == null) return;
-            var iconObj = ObjectPoolManager.Instance.Spawn(_buffIconPrefab.gameObject, _iconContainer);
-            var entry = iconObj.GetComponent<BuffIconEntry>();
-            if (entry != null)
+            if (_iconWorldContainer != null)
             {
-                entry.Setup(sprite, effect.RemainingTurns, _iconData.GetColor(effect.Type));
-                _activeIcons[effect.Type] = entry;
+                var iconObj = ObjectPoolManager.Instance.Spawn(_buffIconPrefab.gameObject, _iconWorldContainer);
+                var entry = iconObj.GetComponent<BuffIconEntry>();
+                if (entry != null)
+                {
+                    entry.Setup(sprite, effect.RemainingTurns, _iconData.GetColor(effect.Type));
+                    _activeIcons[effect.Type] = entry;
+                }
             }
         }
     }

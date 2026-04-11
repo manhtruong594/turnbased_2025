@@ -158,7 +158,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.SpellCard.BuffIconDisplay
   _iconContainer: {fileID: 5358063026989990482}
-  _buffIconPrefab: {fileID: 5064005224786775834, guid: 4c529944e13010849930d620f0210456, type: 3}
+  _buffIconPrefab: {fileID: 91353089454723996, guid: 4c529944e13010849930d620f0210456, type: 3}
   _iconData: {fileID: 11400000, guid: 501d244d2b532bb4d87bc1e13c3b855d, type: 2}
 --- !u!114 &6589932224222782942
 MonoBehaviour:

@@ -73,7 +73,7 @@ Material:
     - _AutoFadeDelay: 0.1
     - _AutoFadeSpeed: 4
     - _AutoSize: 1
-    - _BorderWidth: 0.01
+    - _BorderWidth: 0.02
     - _BumpScale: 1
     - _Cutoff: 0.5
     - _DebugMode: 1
@@ -112,7 +112,7 @@ Material:
     - _ZWrite: 1
     m_Colors:
     - _BgColor: {r: 0.19702297, g: 0.20754719, b: 0.19070846, a: 1}
-    - _BorderColor: {r: 0.2, g: 0.20784314, b: 0.19215687, a: 0}
+    - _BorderColor: {r: 0, g: 0, b: 0, a: 1}
     - _BorderScale: {r: 0.5, g: 0.05, b: 1, a: 0}
     - _Color: {r: 0, g: 1, b: 0, a: 1}
     - _Color1: {r: 1, g: 0, b: 0, a: 1}

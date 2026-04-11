@@ -15,7 +15,7 @@ MonoBehaviour:
   spellName: Stun Spell
   description: "La\u0300m choa\u0301ng ke\u0309 \u0111i\u0323ch trong 1 turn, ke\u0309
     \u0111i\u0323ch bi\u0323 choa\u0301ng kh\xF4ng th\xEA\u0309 ha\u0300nh \u0111\xF4\u0323ng"
-  icon: {fileID: 21300000, guid: 325d33c6d266f0e448f60efb34dde7b1, type: 3}
+  icon: {fileID: 21300000, guid: 6f649aea2852e3b46a8c4386355a2c53, type: 3}
   mpCost: 2
   consumeOnUse: 1
   targetType: 4

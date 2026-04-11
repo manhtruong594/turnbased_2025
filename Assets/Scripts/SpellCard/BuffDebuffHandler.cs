@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using TurnBasedGame.Unit;
 using TurnBasedGame.Core;
+using TurnBasedGame.ObjectPool;
 
 namespace TurnBasedGame.SpellCard
 {
@@ -46,6 +47,7 @@ namespace TurnBasedGame.SpellCard
 
         public event Action<ActiveStatusEffect> OnEffectAdded;
         public event Action<ActiveStatusEffect> OnEffectRemoved;
+        List<BuffEffect> activeVFX = new List<BuffEffect>();
 
         public void Init(UnitController owner)
         {
@@ -66,6 +68,7 @@ namespace TurnBasedGame.SpellCard
             RemoveByType(effect.Type);
             _activeEffects.Add(effect);
             OnEffectAdded?.Invoke(effect);
+            SpawnVfx(effect);
             Debug.Log($"[Effect] {_owner.name} nhận {effect.Type} ({effect.Value}) trong {effect.RemainingTurns} lượt");
         }
 
@@ -108,6 +111,7 @@ namespace TurnBasedGame.SpellCard
                 {
                     _activeEffects.RemoveAt(i);
                     OnEffectRemoved?.Invoke(effect);
+                    DespawnVfx(effect.Type);
                     Debug.Log($"[Effect] {_owner.name} hết hiệu ứng {effect.Type}");
                 }
                 else
@@ -116,6 +120,45 @@ namespace TurnBasedGame.SpellCard
                 }
             }
         }
+
+        public void RemoveByType(StatusEffectType type)
+        {
+            for (int i = _activeEffects.Count - 1; i >= 0; i--)
+            {
+                if (_activeEffects[i].Type == type)
+                {
+                    var removed = _activeEffects[i];
+                    _activeEffects.RemoveAt(i);
+                    OnEffectRemoved?.Invoke(removed);
+                    DespawnVfx(removed.Type);
+                }
+            }
+        }
+
+        private void SpawnVfx(ActiveStatusEffect effect)
+        {
+            var vfxSrc = EffectManager.Instance.GetBuffEffect(effect.Type);
+            if (vfxSrc == null) return;
+
+            var vfx = ObjectPoolManager.Instance.Spawn<BuffEffect>(effect.Type.ToString(), _owner.transform);
+            activeVFX.Add(vfx);
+            vfx.effectType = effect.Type;
+            vfx.transform.localPosition = Vector3.zero;
+        }
+
+        private void DespawnVfx(StatusEffectType type)
+        {
+            for (int i = activeVFX.Count - 1; i >= 0; i--)
+            {
+                if (activeVFX[i].effectType == type)
+                {
+                    ObjectPoolManager.Instance.Despawn(activeVFX[i]);
+                    activeVFX.RemoveAt(i);
+                }
+            }
+        }
+
+        #region  SUPPORTTING METHODS
 
         public int GetShieldValue()
         {
@@ -160,19 +203,6 @@ namespace TurnBasedGame.SpellCard
             return false;
         }
 
-        public void RemoveByType(StatusEffectType type)
-        {
-            for (int i = _activeEffects.Count - 1; i >= 0; i--)
-            {
-                if (_activeEffects[i].Type == type)
-                {
-                    var removed = _activeEffects[i];
-                    _activeEffects.RemoveAt(i);
-                    OnEffectRemoved?.Invoke(removed);
-                }
-            }
-        }
-
         public void ClearAll()
         {
             for (int i = _activeEffects.Count - 1; i >= 0; i--)
@@ -187,5 +217,7 @@ namespace TurnBasedGame.SpellCard
         {
             return Mathf.Max(0, rawDamage - GetShieldValue());
         }
+
+        #endregion
     }
 }

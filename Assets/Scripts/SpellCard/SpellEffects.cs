@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using TurnBasedGame.Core;
 using TurnBasedGame.Unit;
 using UnityEngine;
@@ -130,6 +131,23 @@ namespace TurnBasedGame.SpellCard
 
             handler.AddEffect(new ActiveStatusEffect(StatusEffectType.Stun, 0, duration, caster));
             Debug.Log($"[Spell] Stun: Choáng {target.name} trong {duration} lượt");
+        }
+    }
+
+    /// <summary>
+    /// Composite Pattern: Kết hợp nhiều ISpellEffect trong 1 spell card.
+    /// Cho phép thiết kế spell phức tạp (Damage + Root, Heal + Cleanse...) trong Inspector mà không cần code mới.
+    /// </summary>
+    [Serializable]
+    public class CompositeEffect : ISpellEffect
+    {
+        [SerializeReference, SpellEffectSelector]
+        public List<ISpellEffect> effects = new();
+
+        public void Apply(PlayerID caster, UnitController target)
+        {
+            foreach (var effect in effects)
+                effect?.Apply(caster, target);
         }
     }
 }
