@@ -141,10 +141,10 @@ RectTransform:
   m_Father: {fileID: 2990772675801739402}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_Pivot: {x: 0, y: 0.5}
 --- !u!114 &4871907937710067740
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -157,7 +157,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 13b5034ec0fbbc643969130ca4c464b6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.SpellCard.BuffIconDisplay
-  _iconContainer: {fileID: 5358063026989990482}
+  _iconWorldContainer: {fileID: 5358063026989990482}
   _buffIconPrefab: {fileID: 91353089454723996, guid: 4c529944e13010849930d620f0210456, type: 3}
   _iconData: {fileID: 11400000, guid: 501d244d2b532bb4d87bc1e13c3b855d, type: 2}
 --- !u!114 &6589932224222782942
@@ -198,7 +198,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
-  m_HorizontalFit: 0
+  m_HorizontalFit: 2
   m_VerticalFit: 0
 --- !u!1 &8017086075023222230
 GameObject:
