@@ -138,7 +138,11 @@ namespace RedBjorn.ProtoTiles
 
             while (open.Any())
             {
-                var check = open.OrderBy(o => ScoreF[o]).First();
+                var check = open
+                    .OrderBy(o => ScoreF[o])
+                    .ThenBy(o => DiagonalStepPenalty(o))
+                    .ThenBy(o => DirectionChangePenalty(o))
+                    .First();
                 if (check == finish)
                 {
                     break;
@@ -152,16 +156,15 @@ namespace RedBjorn.ProtoTiles
                 open.Remove(check);
                 foreach (var node in map.NeighborsMovable(check).Where(n => n.Vacant))
                 {
-                    var currengScoreG = ScoreG[check] + map.Distance(node, finish);
+                    var currengScoreG = ScoreG[check] + map.Distance(check, node);
                     var gN = -1f;
                     if (ScoreG.TryGetValue(node, out gN))
                     {
-                        if (currengScoreG < gN)
+                        if (currengScoreG < gN || (Mathf.Approximately(currengScoreG, gN) && BetterPathStyle(check, node)))
                         {
                             CameFrom[node] = check;
                             ScoreG[node] = currengScoreG;
                             ScoreF[node] = currengScoreG + map.Distance(node, finish);
-                            CameFrom[node] = check;
                         }
                     }
                     else
@@ -183,6 +186,85 @@ namespace RedBjorn.ProtoTiles
             path.Reverse();
 
             return path;
+        }
+
+        static bool BetterPathStyle(INode candidateParent, INode node)
+        {
+            INode currentParent;
+            if (!CameFrom.TryGetValue(node, out currentParent) || currentParent == null)
+            {
+                return true;
+            }
+
+            var candidateDiagonalPenalty = DiagonalStepPenalty(candidateParent, node);
+            var currentDiagonalPenalty = DiagonalStepPenalty(currentParent, node);
+            if (candidateDiagonalPenalty != currentDiagonalPenalty)
+            {
+                return candidateDiagonalPenalty < currentDiagonalPenalty;
+            }
+
+            var candidateTurnPenalty = DirectionChangePenalty(candidateParent, node);
+            var currentTurnPenalty = DirectionChangePenalty(currentParent, node);
+            return candidateTurnPenalty < currentTurnPenalty;
+        }
+
+        static int DirectionChangePenalty(INode node)
+        {
+            INode parent;
+            if (!CameFrom.TryGetValue(node, out parent) || parent == null)
+            {
+                return 0;
+            }
+
+            return DirectionChangePenalty(parent, node);
+        }
+
+        static int DirectionChangePenalty(INode parent, INode node)
+        {
+            INode grandParent;
+            if (!CameFrom.TryGetValue(parent, out grandParent) || grandParent == null)
+            {
+                return 0;
+            }
+
+            var previousDirection = parent.Position - grandParent.Position;
+            var currentDirection = node.Position - parent.Position;
+            return previousDirection == currentDirection ? 0 : 1;
+        }
+
+        static int DiagonalStepPenalty(INode node)
+        {
+            INode parent;
+            if (!CameFrom.TryGetValue(node, out parent) || parent == null)
+            {
+                return 0;
+            }
+
+            return DiagonalStepPenalty(parent, node);
+        }
+
+        static int DiagonalStepPenalty(INode parent, INode node)
+        {
+            var delta = node.Position - parent.Position;
+            return NonZeroAxisCount(delta) > 1 ? 1 : 0;
+        }
+
+        static int NonZeroAxisCount(Vector3Int value)
+        {
+            var count = 0;
+            if (value.x != 0)
+            {
+                count++;
+            }
+            if (value.y != 0)
+            {
+                count++;
+            }
+            if (value.z != 0)
+            {
+                count++;
+            }
+            return count;
         }
 
         static List<INode> TrimPath(IMapNode map, List<INode> path, float range)

@@ -17,6 +17,6 @@ MonoBehaviour:
   Health: 100
   BaseDamage: 10
   spawnCost: 3
-  moveRange: 2
+  moveRange: 5
   moveSpeed: 5
   icon: {fileID: 0}
