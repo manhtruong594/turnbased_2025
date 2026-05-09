@@ -1,1 +1,3 @@
-** Hoàn thiện hệ thống spell
+** Hoàn thiện thêm character, thêm spell, skill
+** Thêm effect cho skill, spell
+
