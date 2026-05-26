@@ -23,10 +23,17 @@ namespace TurnBasedGame.Skills
         [SerializeField] protected int cooldown;
         [SerializeField] protected int range = 1;
 
-        [Header("Effects Settings")]
+        [Header("VFX Settings")]
+        [SerializeField] private SkillVfxConfig vfxConfig = new SkillVfxConfig();
+
+        [Header("Legacy Effects Settings")]
+        [Tooltip("Legacy fallback. Prefer Skill VFX Config for new skills.")]
         public GameObject VfxPrefab;
+        [Tooltip("Legacy fallback. Prefer Skill VFX Config for new skills.")]
         public GameObject VfxHitPrefab;
+        [Tooltip("Deprecated fallback only. Prefer animation cue timing or projectile hit timing.")]
         public bool HasDelayApplyEffect = false;
+        [Tooltip("Deprecated fallback only. Prefer animation cue timing or projectile hit timing.")]
         public float DelayApplyEffectTime = 0.5f;
         
         [Header("Target Settings")]
@@ -42,6 +49,7 @@ namespace TurnBasedGame.Skills
         public int Cooldown => cooldown;
         public int CurrentCooldown => currentCooldown;
         public int Range => range;
+        public SkillVfxConfig VfxConfig => GetVfxConfig();
 
         public bool CanTargetAllies => (targetTypes & TargetType.Ally) != 0;
         public bool CanTargetEnemies => (targetTypes & TargetType.Enemy) != 0;
@@ -152,6 +160,8 @@ namespace TurnBasedGame.Skills
 
         public void ApplyEffect()
         {
+            if (!_isExecuting) return;
+
             ExecuteEffect(_currentExecutionContext.Item1, _currentExecutionContext.Item2);
             _isExecuting = false;
         }
@@ -166,6 +176,51 @@ namespace TurnBasedGame.Skills
         {
             var (caster, targetPos) = _currentExecutionContext;
             return GetMap().WorldPosition(targetPos);
+        }
+
+        public GameObject GetCastVfxPrefab()
+        {
+            return GetVfxConfig().CastVfxPrefab;
+        }
+
+        public GameObject GetReleaseVfxPrefab()
+        {
+            var config = GetVfxConfig();
+            return config.ReleaseVfxPrefab != null ? config.ReleaseVfxPrefab : VfxPrefab;
+        }
+
+        public GameObject GetProjectilePrefab()
+        {
+            return GetVfxConfig().ProjectilePrefab;
+        }
+
+        public GameObject GetImpactVfxPrefab(bool hasProjectile)
+        {
+            var config = GetVfxConfig();
+            if (config.ImpactVfxPrefab != null)
+                return config.ImpactVfxPrefab;
+
+            if (VfxHitPrefab != null)
+                return VfxHitPrefab;
+
+            return hasProjectile ? null : VfxPrefab;
+        }
+
+        public SkillEffectApplyTiming ResolveEffectApplyTiming(bool hasProjectile)
+        {
+            var config = GetVfxConfig();
+            if (config.EffectApplyTiming != SkillEffectApplyTiming.Automatic)
+                return config.EffectApplyTiming;
+
+            return hasProjectile ? SkillEffectApplyTiming.OnProjectileImpact : SkillEffectApplyTiming.OnAnimationImpact;
+        }
+
+        private SkillVfxConfig GetVfxConfig()
+        {
+            if (vfxConfig == null)
+                vfxConfig = new SkillVfxConfig();
+
+            return vfxConfig;
         }
 
         #endregion

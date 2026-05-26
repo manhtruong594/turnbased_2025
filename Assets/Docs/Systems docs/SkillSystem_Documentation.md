@@ -29,6 +29,34 @@
 
 ## Cách sử dụng
 
+## Skill VFX Timing
+
+Skill effect timing được điều khiển bằng Animation Event cue, không nên canh bằng delay timer nếu animation đã có frame chuẩn.
+
+Animation clip của unit nên đặt các event sau:
+
+| Cue | Animation Event | Mục đích |
+|-----|-----------------|----------|
+| Cast | `AnimEvent_Cast()` hoặc `AnimEvent_SkillCue("Cast")` | Spawn cast VFX ở caster/weapon |
+| Release | `AnimEvent_Release()` hoặc `AnimEvent_SkillCue("Release")` | Spawn projectile hoặc release VFX |
+| Impact | `AnimEvent_Impact()` hoặc `AnimEvent_SkillCue("Impact")` | Apply damage/heal cho melee/instant skill |
+| Complete | `AnimEvent_AttackComplete()` hoặc `AnimEvent_SkillCue("Complete")` | Mốc animation kết thúc, dành cho mở rộng sau |
+
+Runtime flow:
+
+`SkillBase.Execute()` → `UnitController.PerformSkill()` → `UnitAnimator.PlayAttack()` → Animation Event cue → `SkillEffectRunner` → `SkillBase.ApplyEffect()` → `ExecuteEffect()`.
+
+Config VFX mới nằm trong `SkillVfxConfig` của `SkillBase`:
+
+- `castVfxPrefab`: hiệu ứng lúc bắt đầu cast.
+- `releaseVfxPrefab`: hiệu ứng lúc release, ví dụ muzzle/slash.
+- `projectilePrefab`: projectile bay đến target.
+- `impactVfxPrefab`: hiệu ứng tại target khi impact.
+- `effectApplyTiming`: `Automatic`, `OnAnimationImpact`, `OnProjectileImpact`, hoặc `OnRelease`.
+- `castSpawnPoint`, `releaseSpawnPoint`, `impactSpawnPoint`: `Caster`, `EffectSpawnPoint`, hoặc `Target`.
+
+`VfxPrefab`, `VfxHitPrefab`, `HasDelayApplyEffect`, `DelayApplyEffectTime` chỉ còn là legacy fallback để asset cũ tiếp tục chạy. Skill mới nên dùng `SkillVfxConfig`.
+
 ### Tạo Skill mới (ScriptableObject)
 1. Right click Project → Create → Skills → chọn loại
 2. Config thông số trong Inspector

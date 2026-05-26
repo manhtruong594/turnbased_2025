@@ -99,7 +99,7 @@ stateDiagram-v2
 **C. Attack** (Strategy + Template Method)
 - Click skill button → `EnterAttackMode()` → show attack area → click target
 - `skill.CanUse()` pipeline: `ValidateCooldown()` → `ValidateRange()` → `ValidateTarget()` → `ValidateCustomConditions()`
-- `skill.Execute()`: play animation → `ApplyEffect()` (animation event) → `ExecuteEffect()` → `StartCooldown()` → `FinishTurnActions()`
+- `skill.Execute()`: play animation → Animation Event cue → `SkillEffectRunner` → `ApplyEffect()` → `ExecuteEffect()` → `StartCooldown()` → `FinishTurnActions()`
 
 #### Turn End
 - Manual: `EndTurnButton` hoặc Timeout (`Timer <= 0`)

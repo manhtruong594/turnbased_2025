@@ -1,14 +1,11 @@
-using UnityEngine;
 using System;
 using TurnBasedGame.Skills;
-using TurnBasedGame.ObjectPool;
-using TurnBasedGame.VFX;
+using UnityEngine;
 
 namespace TurnBasedGame.Unit
 {
     /// <summary>
-    /// Component quản lý animation của unit
-    /// Sử dụng Observer Pattern thông qua Events
+    /// Controls unit animations and forwards animation events as skill cues.
     /// </summary>
     public class UnitAnimator : MonoBehaviour
     {
@@ -19,8 +16,19 @@ namespace TurnBasedGame.Unit
         [SerializeField] private float defaultAttackSpeed = 1f;
         [SerializeField] private Transform _effectSpawnPoint;
         [SerializeField] private float _transitionDuration = 0.1f;
+        [SerializeField] private SkillEffectRunner _skillEffectRunner;
 
-        SkillBase _currentSkill;
+        private SkillBase _currentSkill;
+
+        private void Awake()
+        {
+            if (_skillEffectRunner == null && !TryGetComponent(out _skillEffectRunner))
+            {
+                _skillEffectRunner = gameObject.AddComponent<SkillEffectRunner>();
+            }
+
+            _skillEffectRunner.Initialize(transform, _effectSpawnPoint);
+        }
 
         #region Animation Control
 
@@ -42,9 +50,9 @@ namespace TurnBasedGame.Unit
 
             if (attackSpeed < 0)
                 attackSpeed = defaultAttackSpeed;
-            //animator.SetFloat(AnimationHashLib.AttackSpeed, attackSpeed);
-            animator.CrossFadeInFixedTime(AnimationHashLib.GetHashAnimByAttackType(skill.Type), _transitionDuration);
+
             _currentSkill = skill;
+            animator.CrossFadeInFixedTime(AnimationHashLib.GetHashAnimByAttackType(skill.Type), _transitionDuration);
         }
 
         public void PlayHit()
@@ -61,85 +69,54 @@ namespace TurnBasedGame.Unit
 
         #endregion
 
-        /// <summary>
-        /// event gọi khi attack trúng target, hoặc khi skill buff kích hoạt hiệu ứng
-        /// </summary>
-        private void OnApplyEffect()
+        #region Animation Events
+
+        public void AnimEvent_SkillCue(string cueName)
         {
-            if (_currentSkill != null)
+            if (!Enum.TryParse(cueName, true, out SkillAnimationCue cue))
             {
-                _currentSkill.ApplyEffect();
-            }
-        }
-
-        #region Animation Events (Được gọi từ Animation Clips)
-
-        /// <summary>
-        /// Animation Event: Được gọi tại frame attack thực sự gây damage
-        /// Thêm event này vào Attack Animation Clip tại frame hit
-        /// </summary>
-        public void AnimEvent_AttackHit()
-        {
-            OnApplyEffect();
-        }
-
-        /// <summary>
-        /// Animation Event: Được gọi tại frame mà skill có projectile bắn ra
-        /// </summary>
-        public void AnimEvent_AttackStart()
-        {
-            if (_currentSkill == null || _currentSkill.VfxPrefab == null) return;
-            var spawnedObj = ObjectPoolManager.Instance.Spawn(_currentSkill.VfxPrefab);
-            if (!spawnedObj.TryGetComponent<Projectile>(out var projectile))
-            {
+                Debug.LogWarning($"Invalid skill animation cue: {cueName}");
                 return;
             }
 
-            projectile.transform.SetPositionAndRotation(_effectSpawnPoint.position, _effectSpawnPoint.rotation);
-            projectile.Launch(_effectSpawnPoint.position, _currentSkill.GetCurrentTargetWorldPosition());
-            projectile.OnReachTarget = OnApplyEffect;
+            _skillEffectRunner.HandleCue(_currentSkill, cue);
         }
 
-        /// <summary>
-        /// Animation Event: Được gọi tại frame mà skill có hiệu ứng xuất hiện (vd: slash vfx, buff vfx)
-        /// </summary>
+        public void AnimEvent_Cast()
+        {
+            _skillEffectRunner.HandleCue(_currentSkill, SkillAnimationCue.Cast);
+        }
+
+        public void AnimEvent_Release()
+        {
+            _skillEffectRunner.HandleCue(_currentSkill, SkillAnimationCue.Release);
+        }
+
+        public void AnimEvent_Impact()
+        {
+            _skillEffectRunner.HandleCue(_currentSkill, SkillAnimationCue.Impact);
+        }
+
+        public void AnimEvent_AttackHit()
+        {
+            AnimEvent_Impact();
+        }
+
+        public void AnimEvent_AttackStart()
+        {
+            AnimEvent_Release();
+        }
+
         public void AnimEvent_StartEffect()
         {
-            if (_currentSkill == null) return;
-            if (_currentSkill.VfxPrefab != null)
-            {
-                var spawnedObj = ObjectPoolManager.Instance.Spawn(_currentSkill.VfxPrefab);
-                spawnedObj.transform.SetPositionAndRotation(_effectSpawnPoint.position, _effectSpawnPoint.rotation);
-            }
-
-            if (_currentSkill.HasDelayApplyEffect)
-            {
-                StartCoroutine(DelayedEffect());
-            }
-            else
-            {
-                OnApplyEffect();
-            }
+            AnimEvent_Impact();
         }
 
-        private System.Collections.IEnumerator DelayedEffect()
-        {
-            yield return new WaitForSeconds(_currentSkill.DelayApplyEffectTime);
-            OnApplyEffect();
-        }
-
-        /// <summary>
-        /// Animation Event: Được gọi khi attack animation hoàn thành
-        /// Thêm event này vào Attack Animation Clip tại frame cuối
-        /// </summary>
         public void AnimEvent_AttackComplete()
         {
+            _skillEffectRunner.HandleCue(_currentSkill, SkillAnimationCue.Complete);
         }
 
-        /// <summary>
-        /// Animation Event: Được gọi khi death animation hoàn thành
-        /// Thêm event này vào Death Animation Clip tại frame cuối
-        /// </summary>
         public void AnimEvent_DeathComplete()
         {
         }
