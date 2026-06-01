@@ -83,7 +83,6 @@ namespace TurnBasedGame.VFX
             _lineRenderer.SetPosition(1, _targetPosition);
 
             OnReachTarget?.Invoke();
-            SpawnHitEffect();
 
             StartFade();
         }

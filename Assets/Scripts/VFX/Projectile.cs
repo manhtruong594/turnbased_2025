@@ -26,7 +26,6 @@ namespace TurnBasedGame.VFX
 
         [Header("VFX")]
         [SerializeField] private ParticleSystem trailEffect;
-        [SerializeField] protected GameObject hitEffectPrefab;
 
         // Protected state
         protected Vector3 _startPosition;
@@ -177,23 +176,9 @@ namespace TurnBasedGame.VFX
             transform.position = _targetPosition;
 
             OnReachTarget?.Invoke();
-
-            SpawnHitEffect();
             ObjectPoolManager.Instance.Despawn(pooledObject);
         }
-
-        protected void SpawnHitEffect()
-        {
-            if (hitEffectPrefab == null) return;
-
-            var effect = ObjectPoolManager.Instance.Spawn(hitEffectPrefab);
-            if (effect == null)
-            {
-                return;
-            }
-            effect.transform.SetPositionAndRotation(_targetPosition, Quaternion.identity);
-        }
-
+ 
         #endregion
 
         #region Editor Helpers

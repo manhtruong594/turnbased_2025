@@ -18,10 +18,15 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 062eeb9d5e8ba8f45a9ddfea52518f82, type: 3}
   cooldown: 3
   range: 2
-  VfxPrefab: {fileID: 4481029513496387370, guid: 8ad3266ef044e794eb2db7934ca4cd54, type: 3}
-  VfxHitPrefab: {fileID: 8296672776471280054, guid: df59fcf49f1185344a1705b94fe518b3, type: 3}
-  HasDelayApplyEffect: 0
-  DelayApplyEffectTime: 0.5
+  vfxConfig:
+    castVfxPrefab: {fileID: 0}
+    releaseVfxPrefab: {fileID: 4481029513496387370, guid: 8ad3266ef044e794eb2db7934ca4cd54, type: 3}
+    projectilePrefab: {fileID: 0}
+    impactVfxPrefab: {fileID: 8296672776471280054, guid: df59fcf49f1185344a1705b94fe518b3, type: 3}
+    effectApplyTiming: 0
+    castSpawnPoint: 0
+    releaseSpawnPoint: 1
+    impactSpawnPoint: 2
   targetTypes: 10
   multipleDmg: 1.25
   aoeRadius: 2

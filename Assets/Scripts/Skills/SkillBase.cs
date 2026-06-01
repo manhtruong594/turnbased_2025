@@ -26,16 +26,6 @@ namespace TurnBasedGame.Skills
         [Header("VFX Settings")]
         [SerializeField] private SkillVfxConfig vfxConfig = new SkillVfxConfig();
 
-        [Header("Legacy Effects Settings")]
-        [Tooltip("Legacy fallback. Prefer Skill VFX Config for new skills.")]
-        public GameObject VfxPrefab;
-        [Tooltip("Legacy fallback. Prefer Skill VFX Config for new skills.")]
-        public GameObject VfxHitPrefab;
-        [Tooltip("Deprecated fallback only. Prefer animation cue timing or projectile hit timing.")]
-        public bool HasDelayApplyEffect = false;
-        [Tooltip("Deprecated fallback only. Prefer animation cue timing or projectile hit timing.")]
-        public float DelayApplyEffectTime = 0.5f;
-        
         [Header("Target Settings")]
         [SerializeField] protected TargetType targetTypes;
 
@@ -63,20 +53,23 @@ namespace TurnBasedGame.Skills
         #region Template Method - Validation Pipeline
         public virtual bool CanUse(UnitController caster, Vector3Int targetPos)
         {
-            if (!ValidateCooldown()) 
+            if (!ValidateCooldown())
             {
                 Debug.LogWarning($"{skillName} is on cooldown.");
                 return false;
             }
-            if (!ValidateRange(caster, targetPos)) {
+            if (!ValidateRange(caster, targetPos))
+            {
                 Debug.LogWarning($"{targetPos} is out of range for {skillName}.");
                 return false;
             }
-            if (!ValidateTarget(caster, targetPos)){
+            if (!ValidateTarget(caster, targetPos))
+            {
                 Debug.LogWarning($"{skillName} cannot target the selected tile.");
                 return false;
             }
-            if (!ValidateCustomConditions(caster, targetPos)) {
+            if (!ValidateCustomConditions(caster, targetPos))
+            {
                 Debug.LogWarning($"{skillName} cannot be used due to custom conditions.");
                 return false;
             }
@@ -99,7 +92,7 @@ namespace TurnBasedGame.Skills
         protected virtual bool ValidateTarget(UnitController caster, Vector3Int targetPos)
         {
             var targetUnit = MapManager.Instance?.GetUnitAtTile(targetPos);
-            
+
             if (targetUnit == null)
                 return CanTargetEmptyTile;
 
@@ -107,7 +100,7 @@ namespace TurnBasedGame.Skills
                 return CanTargetSelf;
 
             bool isSameOwner = targetUnit.GetOwner() == caster.GetOwner();
-            
+
             if (isSameOwner && CanTargetAllies) return true;
             if (!isSameOwner && CanTargetEnemies) return true;
 
@@ -121,6 +114,7 @@ namespace TurnBasedGame.Skills
         #endregion
 
         #region Template Method - Execution Pipeline
+        
         public void Execute(UnitController caster, Vector3Int targetPos)
         {
             Updater.Instance.StartCoroutine(ExcuteAsync(caster, targetPos));
@@ -141,15 +135,16 @@ namespace TurnBasedGame.Skills
                 elapsed += Time.deltaTime;
                 if (elapsed >= EXECUTE_TIMEOUT)
                 {
-                    Debug.LogError($"[{skillName}] OnHitTarget was never called! Forcing completion after {EXECUTE_TIMEOUT}s.");
+                    Debug.LogError($"[{skillName}] ApplyEffect was never called! Forcing completion after {EXECUTE_TIMEOUT}s.");
                     _isExecuting = false;
                     break;
                 }
+
                 yield return null;
             }
             OnExecuteComplete(caster, targetPos);
         }
- 
+
         protected virtual void StartCooldown()
         {
             if (skillType != SkillType.Normal)
@@ -158,11 +153,16 @@ namespace TurnBasedGame.Skills
             }
         }
 
-        public void ApplyEffect()
+        public virtual void ApplyEffect()
         {
             if (!_isExecuting) return;
+            Updater.Instance.StartCoroutine(ApplyEffectAsync(_currentExecutionContext.Item1, _currentExecutionContext.Item2));
+        }
 
-            ExecuteEffect(_currentExecutionContext.Item1, _currentExecutionContext.Item2);
+        protected virtual IEnumerator ApplyEffectAsync(UnitController caster, Vector3Int targetPos)
+        {
+            yield return null;
+            ExecuteEffect(caster, targetPos);
             _isExecuting = false;
         }
 
@@ -171,13 +171,33 @@ namespace TurnBasedGame.Skills
             SkillEventBus.Instance?.TriggerSkillUsed(this, caster, targetPos);
             caster.FinishTurnActions();
         }
-
-        public Vector3 GetCurrentTargetWorldPosition()
+        protected virtual void ExecuteEffect(UnitController caster, Vector3Int targetPos)
         {
-            var (caster, targetPos) = _currentExecutionContext;
-            return GetMap().WorldPosition(targetPos);
         }
 
+        #endregion
+
+        #region Cooldown Management
+        public void ResetCooldown() => currentCooldown = 0;
+
+        public void ReduceCooldown()
+        {
+            if (currentCooldown > 0)
+                currentCooldown--;
+        }
+        #endregion
+
+        #region Utility Methods
+
+        protected RedBjorn.ProtoTiles.MapEntity GetMap()
+        {
+            return MapManager.Instance.MapEntity;
+        }
+
+        public virtual ISkill Clone()
+        {
+            return Instantiate(this);
+        }
         public GameObject GetCastVfxPrefab()
         {
             return GetVfxConfig().CastVfxPrefab;
@@ -186,7 +206,7 @@ namespace TurnBasedGame.Skills
         public GameObject GetReleaseVfxPrefab()
         {
             var config = GetVfxConfig();
-            return config.ReleaseVfxPrefab != null ? config.ReleaseVfxPrefab : VfxPrefab;
+            return config.ReleaseVfxPrefab;
         }
 
         public GameObject GetProjectilePrefab()
@@ -194,16 +214,12 @@ namespace TurnBasedGame.Skills
             return GetVfxConfig().ProjectilePrefab;
         }
 
-        public GameObject GetImpactVfxPrefab(bool hasProjectile)
+        public GameObject GetImpactVfxPrefab()
         {
             var config = GetVfxConfig();
             if (config.ImpactVfxPrefab != null)
                 return config.ImpactVfxPrefab;
-
-            if (VfxHitPrefab != null)
-                return VfxHitPrefab;
-
-            return hasProjectile ? null : VfxPrefab;
+            return null;
         }
 
         public SkillEffectApplyTiming ResolveEffectApplyTiming(bool hasProjectile)
@@ -223,38 +239,12 @@ namespace TurnBasedGame.Skills
             return vfxConfig;
         }
 
-        #endregion
-
-        #region Abstract Methods - Phải implement ở subclass
-        public abstract List<Vector3Int> GetAffectedTiles(Vector3Int targetPos);
-        
-        /// <summary>
-        /// xử lý effect và tính toán tác động của skill
-        /// </summary>
-        protected abstract void ExecuteEffect(UnitController caster, Vector3Int targetPos);
-        #endregion
-
-        #region Cooldown Management
-        public void ResetCooldown() => currentCooldown = 0;
-        
-        public void ReduceCooldown()
+        public Vector3 GetCurrentTargetWorldPosition()
         {
-            if (currentCooldown > 0)
-                currentCooldown--;
-        }
-        #endregion
-
-        #region Utility Methods
-
-        protected RedBjorn.ProtoTiles.MapEntity GetMap()
-        {
-            return MapManager.Instance.MapEntity;
+            var targetPos = _currentExecutionContext.Item2;
+            return GetMap().WorldPosition(targetPos);
         }
 
-        public virtual ISkill Clone()
-        {
-            return Instantiate(this);
-        }
         #endregion
     }
 }

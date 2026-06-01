@@ -134,6 +134,22 @@ namespace TurnBasedGame.SpellCard
         }
     }
 
+    [Serializable]
+    public class FreezeEffect : ISpellEffect
+    {
+        [Range(1, 5)] public int duration = 1;
+
+        public void Apply(PlayerID caster, UnitController target)
+        {
+            if (target == null || target.IsDead()) return;
+            var handler = target.BuffHandler;
+            if (handler == null) return;
+
+            handler.AddEffect(new ActiveStatusEffect(StatusEffectType.Freeze, 0, duration, caster));
+            Debug.Log($"[Spell] Freeze: Làm chậm {target.name} trong {duration} lượt");
+        }
+    }
+
     /// <summary>
     /// Composite Pattern: Kết hợp nhiều ISpellEffect trong 1 spell card.
     /// Cho phép thiết kế spell phức tạp (Damage + Root, Heal + Cleanse...) trong Inspector mà không cần code mới.

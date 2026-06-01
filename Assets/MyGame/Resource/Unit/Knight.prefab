@@ -211,6 +211,7 @@ GameObject:
   - component: {fileID: 7208497065503833964}
   - component: {fileID: 3668627435138639126}
   - component: {fileID: 4399936470503347770}
+  - component: {fileID: 7573672835556224312}
   m_Layer: 0
   m_Name: Body
   m_TagString: Untagged
@@ -272,6 +273,19 @@ MonoBehaviour:
   defaultAttackSpeed: 1
   _effectSpawnPoint: {fileID: 599137153868048845}
   _transitionDuration: 0.1
+  _skillEffectRunner: {fileID: 7573672835556224312}
+--- !u!114 &7573672835556224312
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8017086075023222230}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c5be59f52d466040bb851f632131800, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Unit.SkillEffectRunner
 --- !u!1 &9067359507422054096
 GameObject:
   m_ObjectHideFlags: 0

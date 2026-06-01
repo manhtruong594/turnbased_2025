@@ -10,7 +10,6 @@ namespace TurnBasedGame.Unit
     {
         private Transform _casterRoot;
         private Transform _effectSpawnPoint;
-        private Coroutine _delayedApplyCoroutine;
 
         public void Initialize(Transform casterRoot, Transform effectSpawnPoint)
         {
@@ -65,10 +64,7 @@ namespace TurnBasedGame.Unit
             if (timing == SkillEffectApplyTiming.OnProjectileImpact)
                 return;
 
-            SpawnImpactVfx(skill, hasProjectile);
-
-            if (timing == SkillEffectApplyTiming.OnAnimationImpact)
-                ApplyEffectWithLegacyDelay(skill);
+            SpawnImpactVfx(skill);
         }
 
         private GameObject ResolveProjectilePrefab(SkillBase skill, GameObject releaseVfxPrefab)
@@ -93,7 +89,7 @@ namespace TurnBasedGame.Unit
             projectile.transform.SetPositionAndRotation(startPosition, spawnPoint.rotation);
             projectile.OnReachTarget = () =>
             {
-                SpawnImpactVfx(skill, true);
+                SpawnImpactVfx(skill);
 
                 if (timing == SkillEffectApplyTiming.OnProjectileImpact)
                     skill.ApplyEffect();
@@ -101,9 +97,9 @@ namespace TurnBasedGame.Unit
             projectile.Launch(startPosition, skill.GetCurrentTargetWorldPosition());
         }
 
-        private void SpawnImpactVfx(SkillBase skill, bool hasProjectile)
+        private void SpawnImpactVfx(SkillBase skill)
         {
-            SpawnVfx(skill.GetImpactVfxPrefab(hasProjectile), skill.VfxConfig.ImpactSpawnPoint, skill);
+            SpawnVfx(skill.GetImpactVfxPrefab(), skill.VfxConfig.ImpactSpawnPoint, skill);
         }
 
         private void SpawnVfx(GameObject prefab, SkillVfxSpawnPoint spawnPointType, SkillBase skill)
@@ -140,27 +136,6 @@ namespace TurnBasedGame.Unit
         private Quaternion GetCasterRotation()
         {
             return _casterRoot != null ? _casterRoot.rotation : transform.rotation;
-        }
-
-        private void ApplyEffectWithLegacyDelay(SkillBase skill)
-        {
-            if (!skill.HasDelayApplyEffect)
-            {
-                skill.ApplyEffect();
-                return;
-            }
-
-            if (_delayedApplyCoroutine != null)
-                StopCoroutine(_delayedApplyCoroutine);
-
-            _delayedApplyCoroutine = StartCoroutine(ApplyEffectAfterDelay(skill));
-        }
-
-        private IEnumerator ApplyEffectAfterDelay(SkillBase skill)
-        {
-            yield return new WaitForSeconds(skill.DelayApplyEffectTime);
-            skill.ApplyEffect();
-            _delayedApplyCoroutine = null;
         }
 
         private readonly struct SpawnPoint

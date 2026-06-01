@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 65e443a4567d66244b7d585e46e2b439, type: 3}
-  m_Name: Axe Whirl Wind
+  m_Name: Axe whirl wind
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Skills.NormalAttackSkill
   skillName: NormalAttack
   description: No description

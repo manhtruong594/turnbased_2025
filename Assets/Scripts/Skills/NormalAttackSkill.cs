@@ -27,10 +27,6 @@ namespace TurnBasedGame.Skills
         {
             return Mathf.RoundToInt(caster.GetCurrentDamage() * multipleDmg);
         }
-        
-        public override List<Vector3Int> GetAffectedTiles(Vector3Int targetPos)
-        {
-            return new List<Vector3Int> { targetPos };
-        }
+      
     }
 }

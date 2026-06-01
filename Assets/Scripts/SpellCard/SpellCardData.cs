@@ -57,19 +57,20 @@ namespace TurnBasedGame.SpellCard
 
     public enum StatusEffectType
     {
-        None,
+        None = 0,
         // Buffs
-        Heal,
-        Shield,
-        DamageBuff,
-        Cleanse,
+        Heal = 1,
+        Shield = 2,
+        DamageBuff = 3,
+        Cleanse = 4,
         // Debuffs
-        Burn,
-        Poison,
-        Slow,
-        Weaken,
-        Root,
-        Stun,
+        Burn = 100,
+        Poison = 101,
+        Slow = 102,
+        Weaken = 103,
+        Root = 104,
+        Stun = 105,
+        Freeze = 106,
     }
 
     public static class StatusEffectTypeExtensions
@@ -81,6 +82,8 @@ namespace TurnBasedGame.SpellCard
             StatusEffectType.Slow    => true,
             StatusEffectType.Weaken  => true,
             StatusEffectType.Root    => true,
+            StatusEffectType.Stun    => true,
+            StatusEffectType.Freeze  => true,
             _                        => false,
         };
 

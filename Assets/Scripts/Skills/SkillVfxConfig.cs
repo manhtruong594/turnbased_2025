@@ -33,7 +33,7 @@ namespace TurnBasedGame.Skills
         [SerializeField] private GameObject releaseVfxPrefab;
         [SerializeField] private GameObject projectilePrefab;
         [SerializeField] private GameObject impactVfxPrefab;
-        [SerializeField] private SkillEffectApplyTiming effectApplyTiming = SkillEffectApplyTiming.Automatic;
+        [SerializeField] private SkillEffectApplyTiming effectApplyTiming = SkillEffectApplyTiming.Automatic;           // khi nào thì apply effect 
         [SerializeField] private SkillVfxSpawnPoint castSpawnPoint = SkillVfxSpawnPoint.EffectSpawnPoint;
         [SerializeField] private SkillVfxSpawnPoint releaseSpawnPoint = SkillVfxSpawnPoint.EffectSpawnPoint;
         [SerializeField] private SkillVfxSpawnPoint impactSpawnPoint = SkillVfxSpawnPoint.Target;

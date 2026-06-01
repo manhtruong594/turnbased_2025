@@ -24,11 +24,7 @@ namespace TurnBasedGame.Skills
             target.Heal(healAmount);
         }
 
-        public override List<Vector3Int> GetAffectedTiles(Vector3Int targetPos)
-        {
-            return new List<Vector3Int> { targetPos };
-        }
-
+        
         protected override bool ValidateCustomConditions(UnitController caster, Vector3Int targetPos)
         {
             var target = MapManager.Instance?.GetUnitAtTile(targetPos);

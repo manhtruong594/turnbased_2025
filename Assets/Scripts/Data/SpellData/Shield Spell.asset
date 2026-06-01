@@ -22,7 +22,7 @@ MonoBehaviour:
   range: 1
   spellEffect:
     rid: 2528320529774149939
-  castVfxPrefab: {fileID: 0}
+  castVfxPrefab: {fileID: 2781309253588686194, guid: 89426c5491b896146a59a2bba4727bc0, type: 3}
   impactVfxPrefab: {fileID: 0}
   references:
     version: 2

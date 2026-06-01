@@ -21,7 +21,6 @@ namespace TurnBasedGame.Skills
 
         bool CanUse(UnitController caster, Vector3Int targetPos);
         void Execute(UnitController caster, Vector3Int targetPos);
-        List<Vector3Int> GetAffectedTiles(Vector3Int targetPos);
         
         void ResetCooldown();
         void ReduceCooldown();

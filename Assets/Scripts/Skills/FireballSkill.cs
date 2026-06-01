@@ -55,14 +55,6 @@ namespace TurnBasedGame.Skills
 
             Debug.Log($"{caster.name} dùng Fireball gây {finalDamage} damage cho {hitCount} mục tiêu!");
         }
-       
-        public override List<Vector3Int> GetAffectedTiles(Vector3Int targetPos)
-        {
-            var tiles = new List<Vector3Int>();
-            
-            tiles = GetMap().Area(targetPos, aoeRadius);
-            return tiles;
-        }
 
         protected override bool ValidateCustomConditions(UnitController caster, Vector3Int targetPos)
         {
