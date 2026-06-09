@@ -150,6 +150,24 @@ namespace TurnBasedGame.SpellCard
         }
     }
 
+    /// <summary>Gây chảy máu, mất máu mỗi đầu lượt.</summary>
+    [Serializable]
+    public class BleedEffect : ISpellEffect
+    {
+        [Range(1, 50)] public int bleedDamage = 10;
+        [Range(1, 10)] public int duration = 3;
+
+        public void Apply(PlayerID caster, UnitController target)
+        {
+            if (target == null || target.IsDead()) return;
+            var handler = target.BuffHandler;
+            if (handler == null) return;
+
+            handler.AddEffect(new ActiveStatusEffect(StatusEffectType.Bleed, bleedDamage, duration, caster));
+            Debug.Log($"[Spell] Bleed: Gây chảy máu {bleedDamage} dmg/turn cho {target.name} trong {duration} lượt");
+        }
+    }
+
     /// <summary>
     /// Composite Pattern: Kết hợp nhiều ISpellEffect trong 1 spell card.
     /// Cho phép thiết kế spell phức tạp (Damage + Root, Heal + Cleanse...) trong Inspector mà không cần code mới.

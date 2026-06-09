@@ -92,6 +92,11 @@ namespace TurnBasedGame.SpellCard
                     Debug.Log($"[Tick] {_owner.name} bị Poison gây {poisonDmg} sát thương");
                     break;
 
+                case StatusEffectType.Bleed:
+                    _owner.TakeDamage(effect.Value);
+                    Debug.Log($"[Tick] {_owner.name} bị Bleed gây {effect.Value} sát thương");
+                    break;
+
                     // Slow / Weaken / Root: không gây damage theo thời gian, chỉ cần tồn tại
                     // Thêm case mới ở đây khi có hiệu ứng tick mới
 

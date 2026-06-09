@@ -71,6 +71,7 @@ namespace TurnBasedGame.SpellCard
         Root = 104,
         Stun = 105,
         Freeze = 106,
+        Bleed = 107,
     }
 
     public static class StatusEffectTypeExtensions
@@ -84,6 +85,7 @@ namespace TurnBasedGame.SpellCard
             StatusEffectType.Root    => true,
             StatusEffectType.Stun    => true,
             StatusEffectType.Freeze  => true,
+            StatusEffectType.Bleed   => true,
             _                        => false,
         };
 
