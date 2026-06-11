@@ -48,6 +48,7 @@ namespace TurnBasedGame.Skills
         #endregion
 
         protected bool _isExecuting = false;
+        protected virtual bool CanDirectTargetUntargetableUnit => false;
         ValueTuple<UnitController, Vector3Int> _currentExecutionContext;
 
         #region Template Method - Validation Pipeline
@@ -102,7 +103,17 @@ namespace TurnBasedGame.Skills
             bool isSameOwner = targetUnit.GetOwner() == caster.GetOwner();
 
             if (isSameOwner && CanTargetAllies) return true;
-            if (!isSameOwner && CanTargetEnemies) return true;
+            if (!isSameOwner && CanTargetEnemies)
+            {
+                if (!CanDirectTargetUntargetableUnit &&
+                    targetUnit.BuffHandler != null &&
+                    targetUnit.BuffHandler.IsUntargetableDirectly())
+                {
+                    return false;
+                }
+
+                return true;
+            }
 
             return false;
         }

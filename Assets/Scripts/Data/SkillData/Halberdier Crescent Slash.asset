@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 32df5e1091f44ff493555c60fc35e69b, type: 3}
+  m_Name: Halberdier Crescent Slash
+  m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Skills.HalberdierCrescentSlashSkill
+  skillName: Nguyet Nha Tram Tran
+  description: Slashes a 2-tile line, applies HealBan when focused, and grants Shield to the caster.
+  skillType: 3
+  icon: {fileID: 0}
+  cooldown: 4
+  range: 2
+  vfxConfig:
+    castVfxPrefab: {fileID: 0}
+    releaseVfxPrefab: {fileID: 0}
+    projectilePrefab: {fileID: 0}
+    impactVfxPrefab: {fileID: 0}
+    effectApplyTiming: 3
+    castSpawnPoint: 1
+    releaseSpawnPoint: 1
+    impactSpawnPoint: 2
+  targetTypes: 2
+  lineLength: 2
+  primaryDamageMultiplier: 1.7
+  secondaryDamageMultiplier: 1
+  healBanDuration: 2
+  shieldValueMultiplier: 1
+  shieldDuration: 2

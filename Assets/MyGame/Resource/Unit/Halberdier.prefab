@@ -83,7 +83,7 @@ PrefabInstance:
     - target: {fileID: 7572629158187435638, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}
       propertyPath: 'startingSkills.Array.data[1]'
       value: 
-      objectReference: {fileID: 11400000, guid: 5b267e267f77829499bfde3f3f1fea17, type: 2}
+      objectReference: {fileID: 11400000, guid: d9d3a0db6f0e41139a6c8f6cb4d3955c, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects:
     - {fileID: 1204427113363424705, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}

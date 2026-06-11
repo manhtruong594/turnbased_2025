@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ab45a991cc94a8cabfe75fcd4372af0, type: 3}
+  m_Name: Magician Fire Seal
+  m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Skills.MagicianFireSealSkill
+  skillName: Hoa An Thien Tru
+  description: Deals area fire damage, burns targets, and leaves Burning Ground that can apply Burn.
+  skillType: 3
+  icon: {fileID: 0}
+  cooldown: 5
+  range: 3
+  vfxConfig:
+    castVfxPrefab: {fileID: 0}
+    releaseVfxPrefab: {fileID: 0}
+    projectilePrefab: {fileID: 0}
+    impactVfxPrefab: {fileID: 0}
+    effectApplyTiming: 3
+    castSpawnPoint: 1
+    releaseSpawnPoint: 1
+    impactSpawnPoint: 2
+  targetTypes: 10
+  damageMultiplier: 1.4
+  aoeRadius: 1
+  bonusDamageAgainstBurningTargetPercent: 25
+  burnChanceOnImpact: 0.25
+  burnChanceFromGround: 0.5
+  burnDuration: 2
+  burnDamageMultiplier: 0.4
+  burningGroundDuration: 2

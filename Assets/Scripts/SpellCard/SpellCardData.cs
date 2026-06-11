@@ -59,10 +59,13 @@ namespace TurnBasedGame.SpellCard
     {
         None = 0,
         // Buffs
-        Heal = 1,
+        HealOverTime = 1,
         Shield = 2,
         DamageBuff = 3,
-        Cleanse = 4,
+        CleanseOverTime = 4,
+        BloodRage = 5,
+        StanceGuard = 6,
+        ShadowStep = 7,
         // Debuffs
         Burn = 100,
         Poison = 101,
@@ -72,6 +75,8 @@ namespace TurnBasedGame.SpellCard
         Stun = 105,
         Freeze = 106,
         Bleed = 107,
+        GuardBreak = 108,
+        HealBan = 109,
     }
 
     public static class StatusEffectTypeExtensions
@@ -86,6 +91,8 @@ namespace TurnBasedGame.SpellCard
             StatusEffectType.Stun    => true,
             StatusEffectType.Freeze  => true,
             StatusEffectType.Bleed   => true,
+            StatusEffectType.GuardBreak => true,
+            StatusEffectType.HealBan => true,
             _                        => false,
         };
 

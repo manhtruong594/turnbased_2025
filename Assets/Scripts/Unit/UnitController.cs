@@ -169,6 +169,22 @@ namespace TurnBasedGame.Unit
             GameMediator.Instance?.NotifyUnitMoved(this, currentGridPosition, newGridPos);
             currentGridPosition = newGridPos;
         }
+
+        public void TeleportTo(Vector3Int newGridPos)
+        {
+            var map = runtimeStats.MapEntity ?? MapManager.Instance?.MapEntity;
+            if (map == null || map.Tile(newGridPos) == null)
+                return;
+
+            if (_movingCoroutine != null)
+            {
+                StopCoroutine(_movingCoroutine);
+                _movingCoroutine = null;
+            }
+
+            _myTrans.position = map.WorldPosition(newGridPos);
+            UpdateGridPosition(newGridPos);
+        }
         #endregion
 
         #region  Support Methods
@@ -182,6 +198,7 @@ namespace TurnBasedGame.Unit
 
         public void OnTurnBegin()
         {
+            TileHazardManager.Instance?.TryApplyTurnStartEffect(this);
             _attackComponent.ReduceSkillsCooldowns();
             _buffHandler?.TickEffects();
             ResetComponents();
@@ -195,12 +212,17 @@ namespace TurnBasedGame.Unit
 
         public UnitAttack AttackComponent => _attackComponent;
         public UnitData UnitData => unitData;
-        public int GetMoveRange() => runtimeStats.MoveRange;
+        public int GetMoveRange() => runtimeStats.MoveRange + (_buffHandler?.GetMoveBonus() ?? 0);
         public int GetCurrentHealth() => runtimeStats.Health;
         public float GetHealthPercent() => (float)runtimeStats.Health / runtimeStats.MaxHealth;
         public PlayerID GetOwner() => runtimeStats.Owner;
         public bool IsMoveDone() => runtimeStats.IsMoveCompleted;
-        public int GetCurrentDamage() => runtimeStats.BaseDamage;
+        public int GetCurrentDamage()
+        {
+            int flatDamage = runtimeStats.BaseDamage + (_buffHandler?.GetDamageBonus() ?? 0);
+            int percentBonus = _buffHandler?.GetDamagePercentBonus() ?? 0;
+            return Mathf.Max(0, Mathf.RoundToInt(flatDamage * (1f + percentBonus / 100f)));
+        }
         public bool CanMove()
         {
             if (runtimeStats.IsMoveCompleted || runtimeStats.IsInAttackMode) return false;
@@ -234,9 +256,28 @@ namespace TurnBasedGame.Unit
             }
             FloatingTextSpawner.Instance?.SpawnDamage(transform.position, (int)damage);
         }
+
+        public void TakeNonLethalDamage(float damage)
+        {
+            int safeDamage = Mathf.Max(0, Mathf.FloorToInt(damage));
+            if (safeDamage <= 0 || runtimeStats.Health <= 1)
+                return;
+
+            int previousHealth = runtimeStats.Health;
+            runtimeStats.Health = Mathf.Max(1, runtimeStats.Health - safeDamage);
+            int actualDamage = previousHealth - runtimeStats.Health;
+            _healthBar.UpdateHealthBar((float)runtimeStats.Health / runtimeStats.MaxHealth);
+            FloatingTextSpawner.Instance?.SpawnDamage(transform.position, actualDamage);
+        }
         
         public void Heal(int healAmount)
         {
+            if (_buffHandler != null && !_buffHandler.CanReceiveHealing())
+            {
+                Debug.Log($"[Heal] {name} cannot receive healing due to HealBan.");
+                return;
+            }
+
             runtimeStats.Health += healAmount;
             runtimeStats.Health = Mathf.Clamp(runtimeStats.Health, 0, runtimeStats.MaxHealth);
             _healthBar.UpdateHealthBar((float)runtimeStats.Health / runtimeStats.MaxHealth);

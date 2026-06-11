@@ -15,11 +15,6 @@ namespace TurnBasedGame.SpellCard
     {
         void Apply(PlayerID caster, UnitController target);
     }
-
-    public abstract class SpellBuffEffct: ISpellEffect
-    {
-        public abstract void Apply(PlayerID caster, UnitController target);
-    }
     
     /// <summary>Hồi HP cho target.</summary>
     [Serializable]

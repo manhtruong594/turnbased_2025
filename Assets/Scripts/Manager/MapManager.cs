@@ -96,6 +96,12 @@ public class MapManager : BaseManager
     {
         return _unitPositions.ContainsKey(gridPos);
     }
+
+    public bool IsTileAvailable(Vector3Int gridPos)
+    {
+        var tile = MapEntity?.Tile(gridPos);
+        return tile != null && tile.Vacant && !HasUnitAtTile(gridPos);
+    }
     #endregion
 
     #region  Helper Methods

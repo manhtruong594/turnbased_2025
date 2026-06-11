@@ -65,6 +65,9 @@ namespace TurnBasedGame.Unit
                 return;
 
             SpawnImpactVfx(skill);
+
+            if (timing == SkillEffectApplyTiming.OnAnimationImpact)
+                skill.ApplyEffect();
         }
 
         private GameObject ResolveProjectilePrefab(SkillBase skill, GameObject releaseVfxPrefab)

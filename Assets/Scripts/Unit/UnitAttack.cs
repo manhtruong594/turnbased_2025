@@ -166,6 +166,9 @@ namespace TurnBasedGame.Unit
             if (targetUnit.GetOwner() == runtimeStats.Owner)
                 return false;
 
+            if (targetUnit.BuffHandler != null && targetUnit.BuffHandler.IsUntargetableDirectly())
+                return false;
+
             if (GetDistanceToTarget(targetUnit.currentGridPosition) > _selectedSkill.Range)
                 return false;
 

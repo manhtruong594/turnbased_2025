@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee0b4c26df214d119832921c685b587a, type: 3}
+  m_Name: Smasher Earthquake
+  m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Skills.SmasherEarthquakeSkill
+  skillName: Dia Chan Toai Son
+  description: Strikes one tile, damages an enemy, pushes it back, and stuns on collision.
+  skillType: 3
+  icon: {fileID: 0}
+  cooldown: 4
+  range: 1
+  vfxConfig:
+    castVfxPrefab: {fileID: 0}
+    releaseVfxPrefab: {fileID: 0}
+    projectilePrefab: {fileID: 0}
+    impactVfxPrefab: {fileID: 0}
+    effectApplyTiming: 3
+    castSpawnPoint: 1
+    releaseSpawnPoint: 1
+    impactSpawnPoint: 2
+  targetTypes: 10
+  damageMultiplier: 1.8
+  collisionDamageMultiplier: 0.5
+  knockbackDistance: 1
+  stunDuration: 1

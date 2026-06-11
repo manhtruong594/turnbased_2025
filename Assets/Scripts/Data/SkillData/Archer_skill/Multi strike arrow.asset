@@ -34,11 +34,11 @@ MonoBehaviour:
   extraArrowMaxDamageMultiplier: 0.7
   extraArrowEffectChance: 0.25
   CurrentArrowEffect:
-    rid: 5819969648607625299
+    rid: 5748816594849759309
   references:
     version: 2
     RefIds:
-    - rid: 5819969648607625299
+    - rid: 5748816594849759309
       type: {class: FreezeEffect, ns: TurnBasedGame.SpellCard, asm: Assembly-CSharp}
       data:
-        duration: 2
+        duration: 1

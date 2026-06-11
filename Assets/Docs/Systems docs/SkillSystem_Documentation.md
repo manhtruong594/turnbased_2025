@@ -1,62 +1,62 @@
 # Skill System Documentation
 
 - **Version**: 1.1
-- **Updated**: 2026-05-27
+- **Updated**: 2026-06-10
 - **Scope**: `Assets/Scripts/Skills`, `UnitAttack`, `UnitAnimator`, `SkillEffectRunner`, skill data assets.
 
 ---
 
-## Kien Truc
+## Kiến Trúc
 
-Skill system hien tai dung cac pattern chinh:
+Skill system hiện tại dùng các pattern chính:
 
-| Pattern | Noi ap dung | Muc dich |
+| Pattern | Nơi áp dụng | Mục đích |
 |---------|-------------|----------|
-| Strategy | `ISkill`, `SkillBase`, concrete skill classes | Moi skill la mot strategy rieng, co the them skill moi bang class moi. |
-| Template Method | `SkillBase.CanUse()` va `SkillBase.Execute()` | Gom validation/execution flow chung, concrete skill chi override logic rieng. |
-| Observer | `SkillEventBus` | Tach logic skill khoi UI/VFX/Sound listener. |
+| Strategy | `ISkill`, `SkillBase`, concrete skill classes | Mỗi skill là một strategy riêng, có thể thêm skill mới bằng class mới. |
+| Template Method | `SkillBase.CanUse()` và `SkillBase.Execute()` | Gom validation/execution flow chung, concrete skill chỉ override logic riêng. |
+| Observer | `SkillEventBus` | Tách logic skill khỏi UI/VFX/Sound listener. |
 | Data-Driven | `ScriptableObject` skill assets | Config range, cooldown, target, icon, VFX trong Inspector. |
-| Bridge | `UnitSkillsBridge` | Noi `UnitAttack` voi UI `SkillButton` va object pool. |
+| Bridge | `UnitSkillsBridge` | Nối `UnitAttack` với UI `SkillButton` và object pool. |
 
-### Thanh Phan Chinh
+### Thành Phần Chính
 
-| Component | Vai tro |
+| Component | Vai trò |
 |-----------|---------|
-| `ISkill` | Contract cho skill: thong tin hien thi, cooldown, range, `CanUse`, `Execute`, clone. |
-| `SkillBase` | Base `ScriptableObject`, chua validation pipeline, execution coroutine, cooldown, VFX config access. |
-| `UnitAttack` | Quan ly danh sach skill runtime, selected skill, attack mode, click target va cooldown tick dau turn. |
-| `UnitSkillsBridge` | Tao/cap nhat/huy skill buttons bang `ObjectPoolManager`. |
-| `SkillButton` | Hien icon/description, forward click ve `UnitAttack`, khoa button khi cooldown > 0. |
-| `UnitController` | Xoay unit ve target, goi animation skill, finish turn sau khi skill hoan tat. |
-| `UnitAnimator` | Play animation theo `SkillType`, nhan Animation Event va forward cue sang `SkillEffectRunner`. |
-| `SkillEffectRunner` | Spawn cast/release/projectile/impact VFX va goi `skill.ApplyEffect()` theo timing. |
+| `ISkill` | Contract cho skill: thông tin hiển thị, cooldown, range, `CanUse`, `Execute`, clone. |
+| `SkillBase` | Base `ScriptableObject`, chứa validation pipeline, execution coroutine, cooldown, VFX config access. |
+| `UnitAttack` | Quản lý danh sách skill runtime, selected skill, attack mode, click target và cooldown tick đầu turn. |
+| `UnitSkillsBridge` | Tạo/cập nhật/hủy skill buttons bằng `ObjectPoolManager`. |
+| `SkillButton` | Hiện icon/description, forward click về `UnitAttack`, khóa button khi cooldown > 0. |
+| `UnitController` | Xoay unit về target, gọi animation skill, finish turn sau khi skill hoàn tất. |
+| `UnitAnimator` | Play animation theo `SkillType`, nhận Animation Event và forward cue sang `SkillEffectRunner`. |
+| `SkillEffectRunner` | Spawn cast/release/projectile/impact VFX và gọi `skill.ApplyEffect()` theo timing. |
 | `SkillEventBus` | Singleton event bus cho `OnSkillUsed`, `OnSkillLearned`, `OnCooldownComplete`, `OnSkillFailed`. |
 
 ---
 
 ## Runtime Flow
 
-1. `UnitAttack.Init()` clone tung skill trong `startingSkills`, reset cooldown va tao `SkillButton`.
+1. `UnitAttack.Init()` clone từng skill trong `startingSkills`, reset cooldown và tạo `SkillButton`.
 2. Click skill button -> `_selectedSkill = skill` -> `EnterAttackMode()`.
-3. `EnterAttackMode()` hien attack area bang `_selectedSkill.Range`.
+3. `EnterAttackMode()` hiện attack area bằng `_selectedSkill.Range`.
 4. Click tile trong attack mode -> `selectedSkill.CanUse(unit, tile.Position)`.
-5. Neu hop le -> `selectedSkill.Execute(unit, tile.Position)`.
+5. Nếu hợp lệ -> `selectedSkill.Execute(unit, tile.Position)`.
 6. `SkillBase.Execute()` start coroutine `ExcuteAsync`.
-7. `ExcuteAsync` luu execution context, goi `caster.PerformSkill(this, targetPos)`, start cooldown.
-8. `UnitController.PerformSkill()` xoay unit ve target va goi `UnitAnimator.PlayAttack(skill)`.
-9. Animation Event goi cue: Cast, Release, Impact, Complete.
-10. `SkillEffectRunner` spawn VFX/projectile va goi `SkillBase.ApplyEffect()` khi dung timing.
-11. `ApplyEffect()` start effect coroutine va goi `ExecuteEffectAsync(caster, targetPos)`.
-12. Mac dinh `ExecuteEffectAsync()` fallback ve `ExecuteEffect()` cho instant skill.
-13. Khi effect coroutine ket thuc, `OnExecuteComplete()` trigger `OnSkillUsed`, `FinishTurnActions()`.
+7. `ExcuteAsync` lưu execution context, gọi `caster.PerformSkill(this, targetPos)`, start cooldown.
+8. `UnitController.PerformSkill()` xoay unit về target và gọi `UnitAnimator.PlayAttack(skill)`.
+9. Animation Event gọi cue: Cast, Release, Impact, Complete.
+10. `SkillEffectRunner` spawn VFX/projectile và gọi `SkillBase.ApplyEffect()` khi đúng timing.
+11. `ApplyEffect()` start effect coroutine và gọi `ExecuteEffectAsync(caster, targetPos)`.
+12. Mặc định `ExecuteEffectAsync()` fallback về `ExecuteEffect()` cho instant skill.
+13. Khi effect coroutine kết thúc, `OnExecuteComplete()` trigger `OnSkillUsed`, `FinishTurnActions()`.
 
-`SkillBase` co timeout 10 giay trong giai doan cho `ApplyEffect()`. Neu animation/projectile khong bao gio goi `ApplyEffect()`, coroutine se log error va bat buoc ket thuc de khong treo turn. Sau khi `ApplyEffect()` da bat dau, effect coroutine duoc phep chay nhieu frame, dung cho channeling/damage-over-time skill.
+`SkillBase` có timeout 10 giây trong giai đoạn chờ `ApplyEffect()`. Nếu animation/projectile không bao giờ gọi `ApplyEffect()`, coroutine sẽ log error và bắt buộc kết thúc để không treo turn. Sau khi `ApplyEffect()` đã bắt đầu, effect coroutine được phép chạy nhiều frame, dùng cho channeling/damage-over-time skill.
 
 ---
 
 ## Validation Pipeline
 
-`SkillBase.CanUse()` kiem tra theo thu tu:
+`SkillBase.CanUse()` kiểm tra theo thứ tự:
 
 1. `ValidateCooldown()`
 2. `ValidateRange(caster, targetPos)`
@@ -65,118 +65,118 @@ Skill system hien tai dung cac pattern chinh:
 
 ### Cooldown
 
-- `SkillType.Normal` luon bo qua cooldown.
-- Cac type khac chi dung duoc khi `currentCooldown <= 0`.
-- `StartCooldown()` duoc goi ngay khi bat dau execute, truoc khi effect that su apply.
-- `UnitController.OnTurnBegin()` -> `UnitAttack.ReduceSkillsCooldowns()` giam cooldown moi dau turn.
-- `SkillEventBus.TriggerCooldownComplete()` da co API nhung hien chua duoc goi tu `ReduceCooldown()`.
+- `SkillType.Normal` luôn bỏ qua cooldown.
+- Các type khác chỉ dùng được khi `currentCooldown <= 0`.
+- `StartCooldown()` được gọi ngay khi bắt đầu execute, trước khi effect thật sự apply.
+- `UnitController.OnTurnBegin()` -> `UnitAttack.ReduceSkillsCooldowns()` giảm cooldown mỗi đầu turn.
+- `SkillEventBus.TriggerCooldownComplete()` đã có API nhưng hiện chưa được gọi từ `ReduceCooldown()`.
 
 ### Range
 
-`ValidateRange()` dung:
+`ValidateRange()` dùng:
 
 ```csharp
 MapManager.Instance.GetDistance(caster.currentGridPosition, targetPos) <= range
 ```
 
-Vung hien thi attack mode trong `UnitAttack.EnterAttackMode()` dung `_cachedMap.WalkableBorder(currentTile, selectedSkill.Range)`.
+Vùng hiển thị attack mode trong `UnitAttack.EnterAttackMode()` dùng `_cachedMap.WalkableBorder(currentTile, selectedSkill.Range)`.
 
 ### Target
 
-`TargetType` la `[Flags]`:
+`TargetType` là `[Flags]`:
 
-| Flag | Gia tri | Y nghia |
+| Flag | Giá trị | Ý nghĩa |
 |------|---------|---------|
-| `Ally` | `1` | Target unit cung owner. |
-| `Enemy` | `2` | Target unit khac owner. |
-| `Self` | `4` | Target caster hoac unit da dead theo logic hien tai. |
-| `EmptyTile` | `8` | Target o trong. |
+| `Ally` | `1` | Target unit cùng owner. |
+| `Enemy` | `2` | Target unit khác owner. |
+| `Self` | `4` | Target caster hoặc unit đã dead theo logic hiện tại. |
+| `EmptyTile` | `8` | Target ô trống. |
 
-Luu y: `ValidateTarget()` hien dang xem `targetUnit == caster || targetUnit.IsDead()` la dieu kien `Self`. Neu can phan biet self va dead unit, nen tach logic sau nay.
+Lưu ý: `ValidateTarget()` hiện đang xem `targetUnit == caster || targetUnit.IsDead()` là điều kiện `Self`. Nếu cần phân biệt self và dead unit, nên tách logic sau này.
 
 ---
 
-## VFX Va Animation Cue
+## VFX Và Animation Cue
 
-`SkillVfxConfig` nam trong `SkillBase`:
+`SkillVfxConfig` nằm trong `SkillBase`:
 
-| Field | Muc dich |
+| Field | Mục đích |
 |-------|----------|
-| `castVfxPrefab` | VFX luc bat dau cast. |
-| `releaseVfxPrefab` | VFX luc release, vi du muzzle/slash. Neu prefab co component `Projectile`, no duoc xem nhu projectile fallback. |
-| `projectilePrefab` | Projectile bay tu spawn point den target. Uu tien hon `releaseVfxPrefab` neu duoc set. |
-| `impactVfxPrefab` | VFX tai target khi impact. |
+| `castVfxPrefab` | VFX lúc bắt đầu cast. |
+| `releaseVfxPrefab` | VFX lúc release, ví dụ muzzle/slash. Nếu prefab có component `Projectile`, nó được xem như projectile fallback. |
+| `projectilePrefab` | Projectile bay từ spawn point đến target. Ưu tiên hơn `releaseVfxPrefab` nếu được set. |
+| `impactVfxPrefab` | VFX tại target khi impact. |
 | `effectApplyTiming` | `Automatic`, `OnAnimationImpact`, `OnProjectileImpact`, `OnRelease`. |
-| `castSpawnPoint` | `Caster`, `EffectSpawnPoint`, hoac `Target`. |
-| `releaseSpawnPoint` | `Caster`, `EffectSpawnPoint`, hoac `Target`. |
-| `impactSpawnPoint` | `Caster`, `EffectSpawnPoint`, hoac `Target`. |
+| `castSpawnPoint` | `Caster`, `EffectSpawnPoint`, hoặc `Target`. |
+| `releaseSpawnPoint` | `Caster`, `EffectSpawnPoint`, hoặc `Target`. |
+| `impactSpawnPoint` | `Caster`, `EffectSpawnPoint`, hoặc `Target`. |
 
 ### Animation Events
 
-Animation clip cua unit co the goi cac method sau tren `UnitAnimator`:
+Animation clip của unit có thể gọi các method sau trên `UnitAnimator`:
 
-| Cue | Animation Event | Muc dich |
+| Cue | Animation Event | Mục đích |
 |-----|-----------------|----------|
-| Cast | `AnimEvent_Cast()` hoac `AnimEvent_SkillCue("Cast")` | Spawn cast VFX. |
-| Release | `AnimEvent_Release()`, `AnimEvent_AttackStart()` hoac `AnimEvent_SkillCue("Release")` | Spawn release VFX/projectile. |
-| Impact | `AnimEvent_Impact()`, `AnimEvent_AttackHit()`, `AnimEvent_StartEffect()` hoac `AnimEvent_SkillCue("Impact")` | Spawn impact VFX va apply effect neu timing yeu cau. |
-| Complete | `AnimEvent_AttackComplete()` hoac `AnimEvent_SkillCue("Complete")` | Cue ket thuc animation, hien chi forward sang runner. |
+| Cast | `AnimEvent_Cast()` hoặc `AnimEvent_SkillCue("Cast")` | Spawn cast VFX. |
+| Release | `AnimEvent_Release()`, `AnimEvent_AttackStart()` hoặc `AnimEvent_SkillCue("Release")` | Spawn release VFX/projectile. |
+| Impact | `AnimEvent_Impact()`, `AnimEvent_AttackHit()`, `AnimEvent_StartEffect()` hoặc `AnimEvent_SkillCue("Impact")` | Spawn impact VFX và apply effect nếu timing yêu cầu. |
+| Complete | `AnimEvent_AttackComplete()` hoặc `AnimEvent_SkillCue("Complete")` | Cue kết thúc animation, hiện chỉ forward sang runner. |
 
 ### Effect Timing
 
 `SkillBase.ResolveEffectApplyTiming(hasProjectile)`:
 
-- Neu `effectApplyTiming != Automatic`, dung gia tri config.
-- Neu `Automatic` va co projectile -> `OnProjectileImpact`.
-- Neu `Automatic` va khong co projectile -> `OnAnimationImpact`.
+- Nếu `effectApplyTiming != Automatic`, dùng giá trị config.
+- Nếu `Automatic` và có projectile -> `OnProjectileImpact`.
+- Nếu `Automatic` và không có projectile -> `OnAnimationImpact`.
 
 Current code notes:
 
-- `OnRelease` goi `skill.ApplyEffect()` ngay tai release cue.
-- `OnProjectileImpact` goi `skill.ApplyEffect()` trong callback `Projectile.OnReachTarget`.
-- `OnAnimationImpact` la timing duoc resolve cho skill khong co projectile, nhung `SkillEffectRunner.HandleImpactCue()` hien chi spawn impact VFX va chua goi `skill.ApplyEffect()`. Neu dung melee/instant skill khong co projectile va khong set `OnRelease`, can cap nhat runner hoac config timing de tranh timeout.
-- Cac field legacy nhu `VfxPrefab`, `VfxHitPrefab`, `HasDelayApplyEffect`, `DelayApplyEffectTime` van con trong mot so asset YAML cu, nhung khong con la field trong `SkillBase` hien tai.
+- `OnRelease` gọi `skill.ApplyEffect()` ngay tại release cue.
+- `OnProjectileImpact` gọi `skill.ApplyEffect()` trong callback `Projectile.OnReachTarget`.
+- `OnAnimationImpact` gọi `skill.ApplyEffect()` trong `SkillEffectRunner.HandleImpactCue()` sau khi spawn impact VFX, dùng được cho melee/instant skill có animation impact cue.
+- Các field legacy như `VfxPrefab`, `VfxHitPrefab`, `HasDelayApplyEffect`, `DelayApplyEffectTime` vẫn còn trong một số asset YAML cũ, nhưng không còn là field trong `SkillBase` hiện tại.
 
 ---
 
-## Cac Skill Hien Co
+## Các Skill Hiện Có
 
 ### Code Classes
 
-| Class | Create Menu | Logic chinh |
+| Class | Create Menu | Logic chính |
 |-------|-------------|-------------|
 | `NormalAttackSkill` | `Skills/Normal Attack` | Damage 1 target: `caster.GetCurrentDamage() * multipleDmg`. |
-| `FireballSkill` | `Skills/Fireball` | AOE damage enemy quanh target theo `aoeRadius`. Override `CanUse()` de bo qua `ValidateTarget()`, nen co the cast vao o trong. |
-| `HealSkill` | `Skills/Heal` | Heal target theo `caster.GetCurrentDamage() * multiple`; chi dung khi target ton tai va chua full mau. |
-| `TripleArrowSkill` | Chua co `CreateAssetMenu` | Dang la placeholder, `ExecuteEffect()` rong, chua co runtime logic. |
-| `FlameThrowerSkill` | `Skills/Flame Thrower` | Damage lien tuc theo tick bang `ExecuteEffectAsync()`. |
+| `FireballSkill` | `Skills/Fireball` | AOE damage enemy quanh target theo `aoeRadius`. Override `CanUse()` để bỏ qua `ValidateTarget()`, nên có thể cast vào ô trống. |
+| `HealSkill` | `Skills/Heal` | Heal target theo `caster.GetCurrentDamage() * multiple`; chỉ dùng khi target tồn tại và chưa full máu. |
+| `TripleArrowSkill` | Chưa có `CreateAssetMenu` | Đang là placeholder, `ExecuteEffect()` rỗng, chưa có runtime logic. |
+| `FlameThrowerSkill` | `Skills/Flame Thrower` | Damage liên tục theo tick bằng `ExecuteEffectAsync()`. |
 
 ### Skill Data Assets
 
-| Asset | Class | Skill Name | Type | CD | Range | TargetTypes | Config rieng |
+| Asset | Class | Skill Name | Type | CD | Range | TargetTypes | Config riêng |
 |-------|-------|------------|------|----|-------|-------------|--------------|
-| `Normal arrow.asset` | `NormalAttackSkill` | `NormalAttack` | `Normal` | 0 | 1 | Enemy + EmptyTile (`10`) | `multipleDmg = 1.25`, co projectile VFX. |
-| `Slash attack.asset` | `NormalAttackSkill` | `NormalAttack` | `Normal` | 0 | 1 | Enemy + EmptyTile (`10`) | `multipleDmg = 1.25`, VFX legacy con trong YAML. |
-| `Axe whirl wind.asset` | `NormalAttackSkill` | `NormalAttack` | `Normal` | 0 | 1 | Enemy (`2`) | `multipleDmg = 1.25`, VFX legacy con trong YAML. |
-| `Heavy slash attack.asset` | `NormalAttackSkill` | `NormalAttack` | `Normal` | 0 | 1 | Enemy (`2`) | `multipleDmg = 1.25`, VFX legacy con trong YAML. |
-| `Triple strike arrow.asset` | `NormalAttackSkill` | `NormalAttack` | `Normal` | 0 | 1 | Enemy (`2`) | Hien van tro toi `NormalAttackSkill`, khong phai `TripleArrowSkill`. |
+| `Normal arrow.asset` | `NormalAttackSkill` | `NormalAttack` | `Normal` | 0 | 1 | Enemy + EmptyTile (`10`) | `multipleDmg = 1.25`, có projectile VFX. |
+| `Slash attack.asset` | `NormalAttackSkill` | `NormalAttack` | `Normal` | 0 | 1 | Enemy + EmptyTile (`10`) | `multipleDmg = 1.25`, VFX legacy còn trong YAML. |
+| `Axe whirl wind.asset` | `NormalAttackSkill` | `NormalAttack` | `Normal` | 0 | 1 | Enemy (`2`) | `multipleDmg = 1.25`, VFX legacy còn trong YAML. |
+| `Heavy slash attack.asset` | `NormalAttackSkill` | `NormalAttack` | `Normal` | 0 | 1 | Enemy (`2`) | `multipleDmg = 1.25`, VFX legacy còn trong YAML. |
+| `Triple strike arrow.asset` | `NormalAttackSkill` | `NormalAttack` | `Normal` | 0 | 1 | Enemy (`2`) | Hiện vẫn trỏ tới `NormalAttackSkill`, không phải `TripleArrowSkill`. |
 | `Fireball.asset` | `FireballSkill` | `FireBall` | `Ultimate` | 3 | 2 | Enemy + EmptyTile (`10`) | `multipleDmg = 1.25`, `aoeRadius = 2`. |
-| `Heal skill.asset` | `HealSkill` | `Unnamed Skill` | `BuffAndDebuff` | 2 | 2 | Ally + Self + EmptyTile (`13`) | `multiple = 1.5`; custom validation yeu cau target unit ton tai va chua full HP. |
+| `Heal skill.asset` | `HealSkill` | `Unnamed Skill` | `BuffAndDebuff` | 2 | 2 | Ally + Self + EmptyTile (`13`) | `multiple = 1.5`; custom validation yêu cầu target unit tồn tại và chưa full HP. |
 
-Khong con mana/cost trong interface va base class hien tai. Neu can cost, nen them vao contract/data flow rieng thay vi chi ghi trong doc.
+Không còn mana/cost trong interface và base class hiện tại. Nếu cần cost, nên thêm vào contract/data flow riêng thay vì chỉ ghi trong doc.
 
 ---
 
-## Tao Skill Moi
+## Tạo Skill Mới
 
-1. Tao class ke thua `SkillBase`.
-2. Them `[CreateAssetMenu]` neu skill can tao asset tu Project window.
+1. Tạo class kế thừa `SkillBase`.
+2. Thêm `[CreateAssetMenu]` nếu skill cần tạo asset từ Project window.
 3. Override `ExecuteEffect(UnitController caster, Vector3Int targetPos)` cho instant skill.
-4. Override `ExecuteEffectAsync(UnitController caster, Vector3Int targetPos)` cho skill can nhieu frame, vi du channeling hoac damage-over-time.
-5. Override `ValidateCustomConditions()` neu co dieu kien rieng.
-6. Chi override `CanUse()` khi that su can thay doi validation pipeline chung.
-7. Tao asset skill trong Project, config `skillType`, `cooldown`, `range`, `targetTypes`, `vfxConfig`.
-8. Gan asset vao `UnitAttack.startingSkills` cua prefab/unit.
+4. Override `ExecuteEffectAsync(UnitController caster, Vector3Int targetPos)` cho skill cần nhiều frame, ví dụ channeling hoặc damage-over-time.
+5. Override `ValidateCustomConditions()` nếu có điều kiện riêng.
+6. Chỉ override `CanUse()` khi thật sự cần thay đổi validation pipeline chung.
+7. Tạo asset skill trong Project, config `skillType`, `cooldown`, `range`, `targetTypes`, `vfxConfig`.
+8. Gán asset vào `UnitAttack.startingSkills` của prefab/unit.
 
 Template:
 
@@ -205,19 +205,18 @@ namespace TurnBasedGame.Skills
 
 ---
 
-## Luu Y Khi Setup Animation/VFX
+## Lưu Ý Khi Setup Animation/VFX
 
-- Skill dung projectile nen set `projectilePrefab` trong `SkillVfxConfig` va de `effectApplyTiming = Automatic` hoac `OnProjectileImpact`.
-- Skill instant/melee nen set `effectApplyTiming = OnRelease` trong asset hien tai, tru khi `SkillEffectRunner.HandleImpactCue()` duoc cap nhat de apply effect o `OnAnimationImpact`.
-- Animation attack phai co it nhat mot cue co the dan den `ApplyEffect()`. Neu khong, `SkillBase` se timeout sau 10 giay.
-- `UnitAnimator.PlayAttack()` chon animation bang `AnimationHashLib.GetHashAnimByAttackType(skill.Type)`, vi vay `SkillType` trong asset anh huong truc tiep animation duoc play.
+- Skill dùng projectile nên set `projectilePrefab` trong `SkillVfxConfig` và để `effectApplyTiming = Automatic` hoặc `OnProjectileImpact`.
+- Skill instant/melee có thể set `effectApplyTiming = OnRelease` để apply sớm ở release cue, hoặc `OnAnimationImpact` nếu animation clip có impact cue ổn định.
+- Animation attack phải có ít nhất một cue có thể dẫn đến `ApplyEffect()`. Nếu không, `SkillBase` sẽ timeout sau 10 giây.
+- `UnitAnimator.PlayAttack()` chọn animation bằng `AnimationHashLib.GetHashAnimByAttackType(skill.Type)`, vì vậy `SkillType` trong asset ảnh hưởng trực tiếp animation được play.
 
 ---
 
 ## Known Gaps / TODO
 
-- `TripleArrowSkill` chua co logic va chua duoc data asset `Triple strike arrow.asset` su dung.
-- `SkillEventBus.OnCooldownComplete` co event nhung chua duoc trigger tu cooldown reduction.
-- `SkillEventBus.OnSkillFailed` co event nhung `UnitAttack` hien chi log `"Cannot use skill on this tile."`.
-- `SkillEffectRunner.HandleImpactCue()` nen apply effect khi timing la `OnAnimationImpact`.
-- Mot so asset cu con serialized field legacy khong con trong `SkillBase`; nen mo/save asset trong Unity sau khi migration de YAML sach hon.
+- `TripleArrowSkill` chưa có logic và chưa được data asset `Triple strike arrow.asset` sử dụng.
+- `SkillEventBus.OnCooldownComplete` có event nhưng chưa được trigger từ cooldown reduction.
+- `SkillEventBus.OnSkillFailed` có event nhưng `UnitAttack` hiện chỉ log `"Cannot use skill on this tile."`.
+- Một số asset cũ còn serialized field legacy không còn trong `SkillBase`; nên mở/save asset trong Unity sau khi migration để YAML sạch hơn.

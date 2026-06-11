@@ -181,6 +181,30 @@ namespace TurnBasedGame.SpellCard
             return total;
         }
 
+        public int GetDamagePercentBonus()
+        {
+            int total = 0;
+            foreach (var e in _activeEffects)
+                if (e.Type == StatusEffectType.BloodRage) total += e.Value;
+            return total;
+        }
+
+        public int GetMoveBonus()
+        {
+            int total = 0;
+            foreach (var e in _activeEffects)
+                if (e.Type == StatusEffectType.BloodRage) total += 1;
+            return total;
+        }
+
+        public bool HasHealBan() => HasEffect(StatusEffectType.HealBan);
+
+        public bool CanReceiveHealing() => !HasHealBan();
+
+        public bool IsUntargetableDirectly() => HasEffect(StatusEffectType.ShadowStep);
+
+        public bool IsImmuneToDisplacement() => HasEffect(StatusEffectType.StanceGuard);
+
         public bool IsRooted() => HasEffect(StatusEffectType.Root) || HasEffect(StatusEffectType.Stun);
 
         /// <summary>Lấy tất cả debuff đang active trên unit.</summary>
@@ -220,7 +244,17 @@ namespace TurnBasedGame.SpellCard
 
         public float ModifyIncomingDamage(float rawDamage)
         {
-            return Mathf.Max(0, rawDamage - GetShieldValue());
+            float modifiedDamage = rawDamage;
+
+            foreach (var effect in _activeEffects)
+            {
+                if (effect.Type == StatusEffectType.GuardBreak)
+                    modifiedDamage *= 1f + effect.Value / 100f;
+                else if (effect.Type == StatusEffectType.StanceGuard)
+                    modifiedDamage *= Mathf.Max(0f, 1f - effect.Value / 100f);
+            }
+
+            return Mathf.Max(0, modifiedDamage - GetShieldValue());
         }
 
         #endregion
