@@ -1,254 +1,106 @@
-# Hệ thống Spawn Unit - Sprint 2
+# Spawn Unit System
 
-## 📋 Tổng quan
+## 1. Mục tiêu
 
-Hệ thống spawn unit cho phép người chơi tạo ra các đơn vị chiến đấu bằng cách tiêu tốn MP (Mana Points). Đây là tính năng cốt lõi của Sprint 2, mục 2 theo kế hoạch phát triển.
+Cho phép một phe dùng MP để tạo unit tại spawn point hợp lệ, đăng ký unit với map và cập nhật UI/event
+mà không tạo state trùng.
 
-## ✅ Các tính năng đã hoàn thành
+## 2. Thành phần
 
-### 1. **UnitData System** (`UnitData.cs`)
-- ScriptableObject để lưu trữ cấu hình unit
-- Chứa thông tin: tên, mô tả, cost MP, move range, speed, prefab, icon
-- Dễ dàng tạo nhiều loại unit khác nhau
+| Thành phần | Trách nhiệm |
+|---|---|
+| `UnitData` | Tên, mô tả, HP, damage, spawn cost, move range/speed và icon |
+| `UnitController` prefab | Template được tạo, sau đó nhận owner và grid position runtime |
+| `SpawnPoint` | Owner, grid position, occupied/available và visual state |
+| `UnitSpawner` | Validation, MP transaction, instantiate và danh sách unit theo phe |
+| `SpawnPanel` | Tạo danh sách lựa chọn unit từ selected deck |
+| `SpawnUnitButton` | Hiển thị data, interactable state và gửi yêu cầu spawn |
+| `MPManager` | Kiểm tra/trừ MP và phát thay đổi |
+| `MapManager` | Đăng ký unit tại grid position |
+| `GameMediator` | Phát `NotifySpawnUnit` và MP-related event |
 
-### 2. **Unit Component** (`Unit.cs`)
-- Component chính gắn vào mỗi unit prefab
-- Quản lý thông tin runtime: owner, grid position, selection state
-- Hỗ trợ events: OnSelected, OnDeselected
-- Visual feedback theo team (màu sắc)
+## 3. Luồng spawn
 
-### 3. **SpawnPoint System** (`SpawnPoint.cs`)
-- Đánh dấu vị trí spawn hợp lệ trên map
-- Phân biệt spawn point của từng người chơi
-- Quản lý trạng thái: Available/Occupied
-- Visual indicator với màu sắc (green = available, red = occupied)
-
-### 4. **UnitSpawner** (`UnitSpawner.cs`)
-- Singleton pattern quản lý toàn bộ việc spawn
-- Kiểm tra điều kiện:
-  - Đủ MP để spawn
-  - Spawn point khả dụng
-  - Spawn point thuộc đúng người chơi
-- Tự động phân loại spawn points theo người chơi
-- Events: OnUnitSpawned, OnUnitDestroyed
-- Helper methods: GetPlayerUnits, GetUnitCount, etc.
-
-### 5. **UI System**
-
-#### `SpawnUnitButton.cs`
-- Button UI để spawn từng loại unit
-- Tự động update state (enabled/disabled) theo MP
-- Visual feedback: màu sắc thay đổi khi đủ/không đủ MP
-- Tích hợp với MPManager và TurnManager
-
-#### `SpawnPanel.cs`
-- Panel chứa danh sách các unit có thể spawn
-- Tự động generate buttons từ danh sách UnitData
-- Quản lý hiển thị/ẩn panel
-- Hỗ trợ thêm/xóa unit động
-
-### 6. **Tích hợp với các hệ thống khác**
-- **MPManager**: Kiểm tra và tiêu tốn MP khi spawn
-- **TurnManager**: Chỉ cho phép spawn vào lượt của mình
-- **UIManager**: Hiển thị log và cập nhật UI
-
-## 🎯 Luồng hoạt động
-
-```
-1. Người chơi click Spawn Button
-   ↓
-2. SpawnUnitButton kiểm tra:
-   - Có phải lượt của mình?
-   - Đủ MP không?
-   ↓
-3. Gọi UnitSpawner.SpawnUnit()
-   ↓
-4. UnitSpawner kiểm tra:
-   - Có spawn point available?
-   - Spawn point thuộc đúng người chơi?
-   ↓
-5. MPManager.SpendMP() - Trừ MP
-   ↓
-6. Instantiate unit prefab
-   ↓
-7. Initialize Unit component
-   ↓
-8. Đánh dấu spawn point = occupied
-   ↓
-9. Trigger OnUnitSpawned event
-   ↓
-10. UI cập nhật (MP giảm, button state)
+```text
+Chọn unit trong SpawnPanel
+    └── SpawnUnitButton gửi yêu cầu
+            └── UnitSpawner kiểm tra
+                    ├── sai lượt / thiếu MP / không có spawn point → thất bại
+                    └── hợp lệ
+                          ├── tạo unit
+                          ├── Init(owner, grid position)
+                          ├── đánh dấu spawn point occupied
+                          ├── đăng ký với map
+                          ├── trừ MP
+                          └── phát event + cập nhật UI
 ```
 
-## 📂 Cấu trúc Code
+Transaction phải có tính nguyên tử ở mức gameplay: nếu không tạo/khởi tạo/đăng ký được unit thì không
+được để MP đã trừ hoặc spawn point bị chiếm dở.
 
-```
-Assets/Scripts/
-├── Unit/
-│   ├── UnitData.cs          - ScriptableObject cho unit config
-│   ├── Unit.cs              - Component cho unit runtime
-│   ├── UnitSpawner.cs       - Manager spawn logic
-│   └── SpawnPoint.cs        - Đánh dấu vị trí spawn
-└── UI/
-    ├── SpawnUnitButton.cs   - UI button spawn từng unit
-    └── SpawnPanel.cs        - Panel chứa danh sách buttons
-```
+## 4. API chính
 
-## 🔧 API chính
+### `UnitSpawner`
 
-### UnitSpawner
+- `SpawnUnit(UnitController unit, PlayerID owner, SpawnPoint spawnPoint = null)` trả `bool`.
+- `GetAvailableSpawnPoint(PlayerID player)` lấy một điểm trống.
+- `GetAvailableSpawnPoints(PlayerID player)` lấy toàn bộ điểm trống của phe.
+- `GetPlayerUnits(PlayerID player)` lấy unit runtime của phe.
 
-```csharp
-// Spawn unit
-bool SpawnUnit(UnitData unitData, PlayerID owner, SpawnPoint spawnPoint = null)
+### `SpawnPoint`
 
-// Lấy spawn points available
-SpawnPoint GetAvailableSpawnPoint(PlayerID player)
-List<SpawnPoint> GetAvailableSpawnPoints(PlayerID player)
+- `Initialize(PlayerID playerOwner, Vector3Int gridPos)`.
+- `MarkAsOccupied()` và `MarkAsAvailable()`.
+- `BelongsTo(PlayerID player)`.
+- `SetVisible(bool visible)`.
 
-// Lấy units của người chơi
-List<Unit> GetPlayerUnits(PlayerID player)
-int GetUnitCount(PlayerID player)
+## 5. Quy tắc
 
-// Hủy unit
-void DestroyUnit(Unit unit)
-void ClearAllUnits()
-```
+- Chỉ spawn trong lượt của phe sở hữu nếu UI/controller áp dụng luật turn.
+- Unit phải tồn tại, có `UnitData` và prefab reference hợp lệ.
+- Phe phải đủ `spawnCost`.
+- Spawn point phải đúng owner và chưa occupied.
+- Tile đích không được có unit khác trong `MapManager`.
+- Owner, runtime stats và grid position phải được gán trước khi unit nhận action.
+- MP/UI/event chỉ cập nhật sau khi spawn thành công.
 
-### Unit
+## 6. Trạng thái
 
-```csharp
-// Initialize
-void Initialize(UnitData data, PlayerID owner, Vector3Int gridPos)
+| Hạng mục | Trạng thái |
+|---|---|
+| Unit data và prefab-based spawn | Hiện có |
+| Spawn point theo phe | Hiện có |
+| MP validation/payment | Hiện có |
+| Map registration | Hiện có |
+| Spawn panel/button | Hiện có |
+| Button phản ứng theo MP | Hiện có, cần kiểm chứng |
+| Tooltip và failure reason | Một phần |
+| Spawn animation/SFX/VFX | Một phần |
+| Automated spawn tests | Chưa có |
 
-// Selection
-void Select()
-void Deselect()
+## 7. Trường hợp lỗi cần xử lý
 
-// Queries
-bool BelongsTo(PlayerID player)
-```
+- Không có `UnitSpawner`, `MPManager`, `MapManager` hoặc mediator.
+- Deck chứa null/missing prefab.
+- Không có spawn point đúng phe hoặc tất cả đã occupied.
+- Spawn point báo trống nhưng tile map đã có unit.
+- Unit bị hủy ngay sau instantiate.
+- UI click lặp trong cùng frame hoặc khi transition turn.
+- AI và player cùng yêu cầu spawn do owner/turn setup sai.
 
-### SpawnPoint
+## 8. Kiểm chứng
 
-```csharp
-// Initialize
-void Initialize(PlayerID playerOwner, Vector3Int gridPos)
+1. Đủ MP và có spawn point: tạo đúng prefab, owner, position; MP giảm đúng cost.
+2. Thiếu MP: không tạo object, không đổi spawn point/map và có feedback.
+3. Hết spawn point: không trừ MP.
+4. Tile đã có unit: spawn thất bại an toàn.
+5. Sau unit death/removal, luật có cho tái sử dụng spawn point hay không phải hoạt động đúng thiết kế.
+6. Button cập nhật sau MP change, turn change và spawn thành công.
+7. Event spawn chỉ phát một lần cho mỗi unit thành công.
 
-// State management
-void MarkAsOccupied()
-void MarkAsAvailable()
-bool IsAvailable { get; }
+## 9. Việc còn lại
 
-// Queries
-bool BelongsTo(PlayerID player)
-```
-
-## 🎨 Thiết kế tuân thủ
-
-### SOLID Principles
-
-- **Single Responsibility**: Mỗi class có một nhiệm vụ rõ ràng
-  - `UnitData`: Chỉ lưu config
-  - `Unit`: Chỉ quản lý runtime state
-  - `UnitSpawner`: Chỉ xử lý spawn logic
-  - `SpawnPoint`: Chỉ quản lý vị trí spawn
-
-- **Open/Closed**: Dễ mở rộng
-  - Thêm unit mới chỉ cần tạo UnitData mới
-  - Không cần sửa code hiện tại
-
-- **Dependency Inversion**: Sử dụng interfaces và events
-  - Các component giao tiếp qua events
-  - Loose coupling giữa các hệ thống
-
-### DRY (Don't Repeat Yourself)
-
-- Logic kiểm tra MP được tập trung ở `MPManager`
-- Logic spawn được tập trung ở `UnitSpawner`
-- Không duplicate code kiểm tra điều kiện
-
-### KISS (Keep It Simple, Stupid)
-
-- Code ngắn gọn, dễ hiểu
-- Methods không quá dài (< 30 dòng)
-- Tên biến/hàm rõ ràng, tự giải thích
-
-## 📊 Performance
-
-- **Singleton pattern**: Tránh duplicate managers
-- **Event-based**: Chỉ update khi cần thiết
-- **Caching**: SpawnPoints được cache và phân loại sẵn
-- **Object pooling ready**: Cấu trúc sẵn sàng để implement pooling sau
-
-## 🧪 Testing Checklist
-
-- [x] Spawn unit tiêu tốn đúng MP
-- [x] Không thể spawn khi không đủ MP
-- [x] Không thể spawn khi hết spawn point
-- [x] Spawn point đổi màu khi occupied
-- [x] Button disabled khi không đủ MP
-- [x] Button enabled khi đủ MP
-- [x] Unit được tạo đúng vị trí
-- [x] Unit có đúng owner
-- [x] Events được trigger đúng
-- [x] UI update đúng sau spawn
-
-## 📖 Documentation
-
-- **Setup Guide**: `HUONG_DAN_SETUP_SPAWN_UNIT.md` - Hướng dẫn chi tiết cách setup trong Unity
-- **Code Comments**: Tất cả public methods đều có XML comments
-- **Inline Comments**: Giải thích logic phức tạp
-
-## 🚀 Next Steps (Sprint 2, Mục 3)
-
-Để hoàn thiện Sprint 2, cần implement tiếp:
-
-1. **Thêm HP và Damage cho Unit**
-   - Thêm fields vào UnitData
-   - Component HealthSystem cho Unit
-   - UI hiển thị HP bar
-
-2. **Combat System**
-   - Unit attack logic
-   - Damage calculation
-   - Death/destroy khi HP <= 0
-
-3. **Unit Movement trên Grid**
-   - Tích hợp với ProtoTiles grid system
-   - Click để di chuyển unit
-   - Hiển thị move range
-   - Pathfinding
-
-## 💡 Notes
-
-- Code được viết theo chuẩn C# conventions
-- Tuân thủ nguyên tắc từ `Senior.instructions.md`
-- Sẵn sàng tích hợp với Grid System (ProtoTiles)
-- Events cho phép dễ dàng mở rộng (VFX, SFX, etc.)
-
-## 🐛 Known Issues
-
-- Visual indicator của spawn point chưa có animation
-- Chưa có sound effects khi spawn
-- Chưa có particle effects khi spawn
-- Unit prefab hiện tại dùng Cube placeholder
-
-## 📝 Changelog
-
-### Version 1.0 - Sprint 2.2 Implementation
-- ✅ Tạo hệ thống UnitData (ScriptableObject)
-- ✅ Tạo Unit component với owner và grid position
-- ✅ Implement SpawnPoint system với visual feedback
-- ✅ Tạo UnitSpawner với đầy đủ validation
-- ✅ UI system với SpawnPanel và SpawnUnitButton
-- ✅ Tích hợp với MPManager và TurnManager
-- ✅ Events và state management
-- ✅ Documentation đầy đủ
-
----
-
-**Tác giả**: AI Assistant  
-**Ngày tạo**: 2025-10-24  
-**Sprint**: Sprint 2 - Vòng lặp Chiến đấu Cốt lõi (Phần 1)  
-**Mục tiêu**: Hiện thực hành động "spawn unit" tiêu tốn MP
+1. Chốt và hiển thị failure reason thay cho log-only.
+2. Thêm feedback success/failure, tooltip và audio/visual còn thiếu.
+3. Bảo vệ thao tác click lặp và transaction dở.
+4. Thêm EditMode test cho validation và PlayMode test cho map/scene integration.

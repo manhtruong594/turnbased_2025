@@ -1,262 +1,152 @@
-# Core Gameloop System Documentation
+# Core Gameloop System
 
-- **Version**: 2.0 | **Updated**: 2026-03-24 | **Engine**: Unity 2022.3+
+## 1. Phạm vi
 
----
+Tài liệu mô tả luồng runtime của trận local: khởi tạo manager, đổi lượt, thao tác unit, spell card,
+capture point và kết thúc trận. Trạng thái được đối chiếu với code tại `Assets/Scripts`.
 
-## Kiến trúc hệ thống
+## 2. Thành phần
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                      GAME MEDIATOR                          │
-│             (Mediator Pattern - Event Bus)                  │
-│  OnPlayerTurnStarted, OnPlayerTurnEnded, OnMPChanged,      │
-│  OnUnitSelected, OnUnitDeselected, OnUnitMoved,            │
-│  OnCapturePointCaptured, OnGameEnd, OnSpellCardUsed,       │
-│  OnHandChanged                                             │
-└─────────────────┬───────────────────────────────────────────┘
-                  │
-        ┌─────────┴──────────┐
-        │                    │
-        ▼                    ▼
-┌──────────────┐    ┌──────────────────┐
-│ TurnManager  │    │  PlayerController│
-│ (FSM)        │◄───┤  (Input/Logic)   │
-└──────┬───────┘    └────────┬─────────┘
-       │                     │
-       │              ┌──────┴──────┐
-       │              ▼             ▼
-       │       ┌────────────┐ ┌──────────────┐
-       │       │AIController│ │ SpellCard    │
-       │       │(Strategy)  │ │ Manager      │
-       │       └────────────┘ └──────────────┘
-       │
-       ├──────────────┬────────────────┬──────────────┬──────────────┐
-       ▼              ▼                ▼              ▼              ▼
-┌──────────┐   ┌──────────┐    ┌──────────┐   ┌──────────┐  ┌────────────┐
-│MPManager │   │MapManager│    │UnitSpawner│   │AreaPath  │  │CapturePoint│
-│(Resource)│   │(Grid Sys)│    │(Factory)  │   │Manager   │  │Manager     │
-└──────────┘   └──────────┘    └──────────┘   └──────────┘  └────────────┘
+| Thành phần | Trách nhiệm |
+|---|---|
+| `GameMediator` | Phát event giữa turn, MP, unit, capture point, spell và endgame |
+| `TurnManager` | Giữ `TurnState`, phe hiện tại, timer, turn count và winner |
+| `PlayerController` | Kết nối turn event với input, UI, unit của phe và AI opponent |
+| `AIController` | Thực hiện lượt bot theo coroutine |
+| `MPManager` | Quản lý MP theo `PlayerID` và thông báo thay đổi |
+| `UnitSpawner` | Spawn unit, kiểm tra MP/spawn point và theo dõi roster runtime |
+| `MapManager` | Đăng ký unit theo grid, truy vấn tile/unit/range/distance |
+| `CapturePointManager` | Theo dõi owner và kiểm tra điều kiện chiến thắng |
+| `SpellCardManager` | Quản lý hand, selection, targeting, confirm và use card |
+| `ObjectPoolManager` | Tái sử dụng VFX/projectile/UI object được pool |
+
+Các manager kế thừa `BaseManager` và nhận `GameMediator`/map cache theo bootstrap hiện có. Không tạo
+singleton hoặc event channel mới nếu manager hiện tại đã sở hữu trách nhiệm đó.
+
+## 3. State model
+
+### Turn
+
+`TurnState` gồm trạng thái khởi tạo, lượt Player 1, lượt Player 2 và kết thúc game. `TurnManager` là
+nguồn chính cho `CurrentState`, `CurrentPlayer`, `TurnCount`, `Timer` và `Winner`.
+
+```text
+Initialization
+    └── Player1Turn hoặc Player2Turn
+            ├── Player1Turn <──> Player2Turn
+            └── GameEnd
 ```
 
-| Component | Pattern | Trách nhiệm |
-|-----------|---------|-------------|
-| **GameMediator** | Mediator | Trung gian giao tiếp giữa các manager, giảm coupling |
-| **TurnManager** | State Machine | Quản lý states và điều phối turn flow |
-| **PlayerController** | Controller | Xử lý input, logic cho người chơi, quản lý AI |
-| **AIController** | Strategy | Điều khiển hành vi AI |
-| **MPManager** | Singleton | Quản lý tài nguyên MP cho cả 2 player |
-| **MapManager** | Spatial Index | Quản lý grid map, tracking units theo vị trí |
-| **UnitSpawner** | Factory | Spawn và quản lý units |
-| **AreaPathManager** | Visualization | Visualize movement/attack/spell area và pathfinding |
-| **CapturePointManager** | Singleton | Quản lý điểm chiếm đóng (victory condition) |
-| **ObjectPoolManager** | Object Pool | Object pooling cho VFX, skill buttons, etc. |
+### Unit
 
----
+`UnitRuntimeStats` giữ owner, map, HP, grid position và cờ hoàn thành move/action. `UnitController`
+điều phối movement, skill, damage/heal, buff/debuff và reset theo turn.
 
-## Gameloop Flow
+### Spell card
 
-### 1. Initialization
+`SpellCardManager` dùng state object:
 
-`GameMediator.Start()` khởi tạo tất cả managers qua `Initialize(mediator)` → `TurnManager` set state = `Initialization` → `Invoke(StartFirstTurn)` → chuyển sang `Player1Turn`.
-
-### 2. Turn Loop
-
-```mermaid
-stateDiagram-v2
-    [*] --> TurnStart
-    TurnStart --> ActionPhase
-    ActionPhase --> ActionPhase: Player Actions
-    ActionPhase --> TurnEnd: EndTurn() / Timeout
-    TurnEnd --> TurnStart: Next Player
-    
-    state ActionPhase {
-        [*] --> SpawnUnit
-        SpawnUnit --> MoveUnit
-        MoveUnit --> AttackUnit
-        AttackUnit --> UseSpellCard
-        UseSpellCard --> [*]
-    }
+```text
+Idle ── chọn card ──> Targeting ── target hợp lệ ──> Confirming
+ ^                         │                              │
+ └──────── cancel ─────────┴──────── confirm/cancel ─────┘
 ```
 
-#### Turn Start
-- `TurnManager.StartPlayerTurn()` → increment `turnCount`, fire `OnPlayerTurnStarted`
-- `PlayerController`: reset `_actionLefts = 2`, lấy units, gọi `unit.OnTurnBegin()` cho mỗi unit:
-  - `ReduceSkillsCooldowns()` → `BuffDebuffHandler.TickEffects()` → `ResetComponents()`
-- Timer = `_flatTimeLimit + (unitCount × 10)`
+## 4. Luồng khởi tạo
 
-#### Action Phase
+1. Scene tạo các manager và reference được serialize.
+2. Manager nhận `GameMediator` và map liên quan.
+3. `TurnManager.Initialize` đặt turn count, starting player và `Initialization`.
+4. Sau `TurnTransitionDelay`, manager chuyển sang turn state của phe bắt đầu.
+5. `GameMediator.NotifyPlayerTurnStarted` kích hoạt controller/UI của phe tương ứng.
 
-**A. Spawn Unit**
-- UI → `UnitSpawner.SpawnUnit()` → check MP (`MPManager.HasEnoughMP()`) + spawn point available
-- Nếu OK: Instantiate → `unit.Init(owner, gridPos)` → `MapManager.RegisterUnit()` → `MPManager.SpendMP()`
+Initialization order phụ thuộc reference trong scene. Missing manager hoặc subscribe sau event đầu có thể làm hệ
+thống không nhận được turn start; cần kiểm tra trong Play Mode sau thay đổi scene/bootstrap.
 
-**B. Movement** (Command Pattern — hỗ trợ Undo)
-- Click unit → `AreaPathManager.ShowMoveArea(range)` → click tile → `UnitController.Move(path)`
-- `CommandInvoker.ExecuteCommand(MoveCommand)` → coroutine di chuyển → `UpdateGridPosition()` → `IsMoveCompleted = true`
-- Cancel Move → `CommandInvoker.UndoLastCommand()`
+## 5. Luồng một lượt
 
-**C. Attack** (Strategy + Template Method)
-- Click skill button → `EnterAttackMode()` → show attack area → click target
-- `skill.CanUse()` pipeline: `ValidateCooldown()` → `ValidateRange()` → `ValidateTarget()` → `ValidateCustomConditions()`
-- `skill.Execute()`: play animation → Animation Event cue → `SkillEffectRunner` → `ApplyEffect()` → `ExecuteEffect()` → `StartCooldown()` → `FinishTurnActions()`
+### Bắt đầu lượt
 
-#### Turn End
-- Manual: `EndTurnButton` hoặc Timeout (`Timer <= 0`)
-- `TurnManager.EndCurrentTurn()` → `NotifyPlayerTurnEnded()` → `SwitchToNextPlayer()` sau delay
+1. `TurnManager.StartPlayerTurn` cập nhật phe và tăng `turnCount`.
+2. `PlayerController.HandleTurnStarted` xác định `_isMyTurn`.
+3. Phe người chơi reset action, lấy lại danh sách unit và gọi `UnitController.OnTurnBegin`.
+4. Timer được tính bằng thời gian nền cộng `unitCount * 10`.
+5. UI action/dice/end-turn được bật cho đúng phe.
 
-### 3. AI Turn
+### Hành động
 
-```
-AIController.ExecuteAITurn():
-1. AddMP(aiPlayerID, 3)
-2. TrySpawnRandomUnit() (nếu < maxUnit và đủ MP)
-3. Với mỗi unit:
-   - FindNearestOpponentUnit()
-   - Nếu trong range → AttackTarget()
-   - Nếu không → MoveTowardsTarget() → AttackTarget() (nếu đã vào range)
-4. FinishTurnActions() cho all units → EndCurrentTurn()
-```
+Người chơi có thể spawn unit, move, dùng attack/skill hoặc spell card khi validation thành công.
+Mọi thay đổi MP, unit position, capture point và spell hand phải phát event qua luồng đang có để UI
+không giữ state riêng lệch với runtime.
 
-### 4. Game End
+### Kết thúc lượt
 
-- Điều kiện: 1 player hết units HOẶC CapturePoint bị chiếm
-- `GameMediator.NotifyGameEnd(winner)` → `TurnManager.TriggerGameEnd()` → state = `GameEnd`
+1. Manual End Turn, timer hoặc AI gọi `TurnManager.EndCurrentTurn`.
+2. `NotifyPlayerTurnEnded` được phát.
+3. Unit của phe hoàn tất/reset state cuối lượt.
+4. Sau delay, `SwitchToNextPlayer` chuyển state và bắt đầu lượt kế tiếp.
 
----
+Điểm rủi ro: nhiều nguồn có thể gọi End Turn. Luồng cần guard chống schedule `SwitchToNextPlayer`
+nhiều lần trong cùng một turn.
 
-## State Management
+## 6. Lượt AI
 
-### Turn States
+Implementation hiện tại:
 
-```csharp
-public enum TurnState { Initialization, Player1Turn, Player2Turn, GameEnd }
-```
+1. Chờ `actionDelay`.
+2. Cộng 3 MP cho AI.
+3. Spawn ngẫu nhiên nếu chưa đạt `maxUnit`.
+4. Với từng unit, chọn opponent gần nhất.
+5. Attack nếu trong tầm; nếu không, đi tới tile hợp lệ gần target rồi thử attack lại.
+6. Finish action cho unit và kết thúc lượt.
 
-### Unit States (`UnitRuntimeStats`)
+Giới hạn hiện tại:
 
-```csharp
-public class UnitRuntimeStats
-{
-    public int Health, MaxHealth, BaseDamage, MoveRange;
-    public PlayerID Owner;
-    public bool IsInAttackMode, IsMoveCompleted, IsActionCompleted, IsDead;
-}
-```
+- Không dùng spell card.
+- Không ưu tiên capture point hoặc mục tiêu sắp chết.
+- Không có utility score/decision log đầy đủ.
+- `PlayerController` đặt timer 30 giây như workaround khi chờ AI.
+- Chưa có batch regression chứng minh AI không soft-lock.
 
-```mermaid
-stateDiagram-v2
-    [*] --> Ready: OnTurnBegin()
-    Ready --> Moving: Move()
-    Ready --> Attacking: EnterAttackMode()
-    Moving --> ActionReady: IsMoveCompleted=true
-    Attacking --> ActionCompleted: Attack()
-    ActionReady --> Attacking: EnterAttackMode()
-    ActionCompleted --> [*]: FinishTurnActions()
-    
-    state "Dead" as Dead
-    Ready --> Dead: Health <= 0
-    Moving --> Dead: Health <= 0
-    Attacking --> Dead: Health <= 0
-```
+## 7. Capture và endgame
 
-**State Checks:**
-- `CanMove()` → `!IsMoveCompleted && !IsInAttackMode && !IsRooted()`
-- `CanAttack()` → `!IsActionCompleted`
+`CapturePoint` giữ grid position và owner. `CapturePointManager` nghe unit movement/capture event,
+cập nhật quyền sở hữu và gọi game end khi đạt luật hiện tại. `TurnManager.TriggerGameEnd` khóa timer,
+hủy invoke đang chờ và chuyển sang `GameEnd`. UI nhận winner qua mediator.
 
----
+Mọi thay đổi luật thắng phải kiểm tra đồng thời capture khi move, unit death, đổi turn và scene restart.
 
-## Design Patterns (tóm tắt)
+## 8. Event chính
 
-| Pattern | Áp dụng | Mục đích |
-|---------|---------|----------|
-| **Mediator** | `GameMediator` | Event bus trung gian, giảm coupling giữa managers |
-| **Command** | `MoveCommand` / `CommandInvoker` | Undo movement, action history |
-| **Strategy + Template Method** | `ISkill` / `SkillBase` | Skill system mở rộng, validation pipeline chung |
-| **State Machine** | `TurnManager` | FSM cho turn flow (`ChangeState` → `HandleStateChange`) |
-| **Singleton** | Tất cả managers | Global access, 1 instance duy nhất |
-| **Factory** | `UnitSpawner` | Centralized unit creation (validate MP → find spawn → instantiate → register) |
-| **Object Pool** | `ObjectPoolManager` | Reuse VFX, skill buttons |
+`GameMediator` hiện phát các event cho:
 
----
+- Player turn started/ended.
+- MP changed.
+- Unit spawned, selected, deselected và moved.
+- Capture point captured.
+- Spell card used và hand changed.
+- Game ended.
 
-## Event System
+Subscriber phải unsubscribe trong `OnDisable`/`OnDestroy` tương ứng với lifecycle subscribe. Không dùng
+event để giữ object đã chết lâu hơn scene.
 
-### Events qua GameMediator
+## 9. Điểm cần hoàn thiện
 
-| Event | Parameters | Purpose |
-|-------|-----------|---------|
-| `OnPlayerTurnStarted` | `PlayerID` | Trigger turn start logic |
-| `OnPlayerTurnEnded` | `PlayerID` | Clean up turn |
-| `OnMPChanged` | `PlayerID, int, int` | Update MP UI |
-| `OnUnitSelected` | `UnitController` | Show movement area |
-| `OnUnitDeselected` | `UnitController` | Hide areas |
-| `OnUnitMoved` | `UnitController, Vector3Int, Vector3Int` | Track unit position |
-| `OnCapturePointCaptured` | `Vector3Int, PlayerID` | Victory condition check |
-| `OnGameEnd` | `PlayerID` | End game UI |
-| `OnSpellCardUsed` | `SpellCardData, PlayerID` | SpellCard effects |
-| `OnHandChanged` | `PlayerID` | Update hand UI |
+| Mức | Hạng mục |
+|---|---|
+| P0 | Guard double end-turn và coroutine/invoke cũ |
+| P0 | Smoke test toàn bộ trận local |
+| P0 | Xử lý target/unit chết giữa action |
+| P1 | Bỏ timer workaround của AI |
+| P1 | AI priority cho capture, kill và spell |
+| P1 | Đồng bộ failure feedback cho UI |
+| P2 | Automated EditMode/PlayMode regression |
 
-```mermaid
-graph TD
-    A[TurnManager] -->|NotifyPlayerTurnStarted| B[GameMediator]
-    B -->|OnPlayerTurnStarted| C[PlayerController]
-    B -->|OnPlayerTurnStarted| D[UI Systems]
-    C -->|Action| E[UnitSpawner]
-    E -->|NotifySpawnUnit| B
-    B -->|OnMPChanged| F[MPDisplayUI]
-    C -->|Action| G[UnitMove]
-    G -->|NotifyUnitSelected| B
-    B -->|OnUnitSelected| H[AreaPathManager]
-```
+## 10. Kiểm chứng tối thiểu
 
----
-
-## Skill System
-
-```csharp
-public interface ISkill
-{
-    string SkillName { get; }
-    SkillType Type { get; }
-    int Range { get; }
-    int Cooldown { get; }
-    int CurrentCooldown { get; }
-    bool CanUse(UnitController caster, Vector3Int targetPos);
-    void Execute(UnitController caster, Vector3Int targetPos);
-    ISkill Clone();
-}
-
-public enum SkillType { Normal, Active, Passive, Ultimate, BuffAndDebuff }
-
-[Flags]
-public enum TargetType { None=0, Ally=1, Enemy=2, Self=4, EmptyTile=8 }
-```
-
-**SkillBase** (ScriptableObject): validation pipeline chung (`ValidateCooldown` → `ValidateRange` → `ValidateTarget` → `ValidateCustomConditions`), execute qua animation event → `ExecuteEffect()` (abstract).
-
-**Concrete skills:** `NormalAttackSkill` (no cooldown), `FireballSkill` (AOE), `HealSkill` (ally heal).
-
----
-
-## Configuration
-
-| Setting | Value | Thuộc về |
-|---------|-------|----------|
-| `StartingPlayer` | `PlayerID.Player1` | TurnManager |
-| `TurnTransitionDelay` | `0.5f` | TurnManager |
-| `_flatTimeLimit` | `20f` | TurnManager |
-| `maxMP` | `20` | MPManager |
-| `startingMP` | `0` | MPManager |
-| AI MP/turn | `+3` | AIController |
-| `actionDelay` | `1f` | AIController |
-| `maxUnit` (AI) | `3` | AIController |
-
-**Timer formula:** `_flatTimeLimit + (unitCount × 10)`
-
----
-
-## Tài liệu liên quan
-
-- [Grid System Documentation](../Grid_System_Documentation.md)
-- [Skill System Documentation](./Skill_System.md) _(pending)_
+1. Start đúng phe được cấu hình.
+2. Manual end, timeout và AI completion mỗi trường hợp chỉ đổi một lượt.
+3. Unit mới spawn tham gia timer và turn reset đúng.
+4. Unit chết không còn trong map lookup/target list.
+5. Capture đủ điều kiện chỉ phát một winner.
+6. Restart scene xóa subscriber/coroutine/state cũ.

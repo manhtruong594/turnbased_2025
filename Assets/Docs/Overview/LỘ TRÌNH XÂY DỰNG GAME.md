@@ -1,148 +1,128 @@
-Dưới đây là lộ trình chi tiết chia làm **6 Giai đoạn (Phases)**:
+# Lộ trình xây dựng game
 
----
+Cập nhật: `2026-09-04`
 
-### **GIAI ĐOẠN 1: PROTOTYPE (NGUYÊN MẪU THÔ) - 2~3 Tuần**
+## 1. Trạng thái hiện tại
 
-**Mục tiêu:** Chứng minh gameplay "vui" trước khi làm đẹp. Chỉ dùng hình khối (Cube, Capsule) đại diện cho unit. Chưa làm Multiplayer online (chỉ làm Local PvP trên cùng 1 máy).
+Project đang ở cuối vertical slice local và đầu giai đoạn hoàn thiện content/meta. Gameplay lõi đã có,
+nhưng chưa có đủ kiểm thử regression, persistence, Shop/Settings và AI chiến thuật. Multiplayer chưa
+được triển khai.
 
-1. **Thiết lập dự án:**
-* Cài đặt Unity, thiết lập Github/Plastic SCM để quản lý source code (Rất quan trọng cho team 2 người).
-* Chọn thư viện Networking (Photon Fusion, Mirror hoặc Unity Netcode) nhưng chưa code vội, chỉ cài sẵn.
+| Hạng mục | Trạng thái | Ghi chú |
+|---|---|---|
+| Core turn-based loop | Hiện có, cần kiểm chứng | Turn, timer, spawn, move, attack, capture, endgame |
+| Unit và skill | Hiện có, cần hoàn thiện | 7 unit, skill data/code; còn event/cooldown/LOS và regression |
+| Spell card | Một phần | Hand, MP, target, effect; thiếu area target và một số status runtime |
+| AI local | Một phần | Spawn/Move/Attack; thiếu spell, capture priority và utility scoring |
+| Main Menu/Prepare/Inventory | Một phần | Các screen lõi có code; cần kiểm chứng scene/prefab flow |
+| Shop/Settings/Persistence | Chưa có | Data nền tảng có nhưng thiếu flow hoàn chỉnh và save/load |
+| Multiplayer | Chưa có | Không có runtime networking/lobby/matchmaking |
+| Test automation | Chưa có | Có editor test tool thủ công, chưa có test suite first-party |
+| Release | Chưa có | Chưa có build artifact và store pipeline |
 
+## 2. Milestone A — Ổn định vertical slice local
 
-2. **Hệ thống Grid & Map (Coder):**
-* Tạo Grid Map (lưới lục giác hoặc ô vuông) cơ bản.
-* Logic xác định vật cản, cứ điểm.
+Mục tiêu: một trận local có thể chơi từ đầu đến cuối lặp lại mà không soft-lock.
 
+Phạm vi:
 
-3. **Core Mechanics (Coder):**
-* Hệ thống Turn-based: Chuyển lượt giữa Player A và Player B.
-* Hệ thống Xúc xắc: Code logic random ra MP.
-* Hệ thống Spawn Unit: Trừ MP -> Sinh ra một khối Cube trên map.
-* Hệ thống Di chuyển & Tấn công cơ bản.
+1. Hoàn thiện cooldown event, skill failure event và line-of-sight.
+2. Kiểm thử từng skill với hai phe, invalid target và target chết giữa effect.
+3. Kiểm thử spell card: MP, consume, cancel, buff duration và UI state.
+4. Loại bỏ workaround timer chờ AI; bảo đảm mỗi turn chỉ kết thúc một lần.
+5. Tạo smoke test PlayMode cho spawn → move → attack/spell → capture → endgame.
+6. Sửa lỗi Console thuộc code dự án trong luồng smoke test.
 
+Tiêu chí thoát:
 
-4. **Định hình Art Style (Artist):**
-* Vẽ Concept Art cho 1 Unit (Ví dụ: Nghê Thần) và 1 Môi trường (Đầm Sen).
-* Thử nghiệm Shader trong Unity: Làm sao để model 3D trông như tranh Đông Hồ/Sơn Mài? (Đây là key visual của game).
+- Chơi liên tiếp tối thiểu 5 trận local không soft-lock.
+- Không double end-turn, không mất MP khi target invalid.
+- Tất cả skill/spell đang đưa vào deck có feedback và kết thúc action đúng.
+- Không có exception từ code dự án trong luồng chuẩn.
 
+## 3. Milestone B — Hoàn thiện AI và combat readability
 
+Mục tiêu: AI đưa ra hành động hợp lệ, có mục đích và quan sát/debug được.
 
----
+Phạm vi:
 
-### **GIAI ĐOẠN 2: VERTICAL SLICE (LÁT CẮT DỌC) - 4~6 Tuần**
+1. Priority rule: kết liễu → hành động giá trị cao → capture → tiếp cận → end turn.
+2. Dùng spell card khi lợi ích vượt chi phí và target hợp lệ.
+3. Tránh tile kẹt; xử lý map không có path hoặc không còn opponent.
+4. Decision log, action indicator và tùy chọn Fast AI.
+5. Bổ sung tooltip, invalid-action reason, cooldown state và buff/debuff readability.
 
-**Mục tiêu:** Một trận đấu hoàn chỉnh (Local) với đồ họa sơ khởi. Có đủ thắng/thua.
+Tiêu chí thoát:
 
-1. **Hoàn thiện Gameplay Loop (Coder):**
-* Cơ chế chiếm cứ điểm (đứng lên đổi màu).
-* Điều kiện thắng (chiếm hết cứ điểm) / Thua.
-* Cơ chế tính giờ (Time limit dựa trên số Unit - *USPs của game*).
+- AI tự chơi hết 20 trận test mà không treo lượt.
+- Log giải thích được action chính.
+- Người test nhận biết được target, cost, cooldown và status mà không cần Console.
 
+## 4. Milestone C — Meta flow local
 
-2. **Sản xuất Unit đầu tiên (Artist):**
-* Model & Texture cho 4 Unit cơ bản: Nghê (Tank), Gà (Assassin), Xà Tinh (Mage), Tướng (Warrior).
-* Animation đơn giản: Idle, Move, Attack. (Nên làm kiểu Rối nước - cử động cứng cáp để đỡ tốn công animate mượt).
+Mục tiêu: hoàn chỉnh vòng lặp ngoài trận và dữ liệu người chơi.
 
+Phạm vi:
 
-3. **UI/UX Cơ bản (Artist + Coder):**
-* Làm HUD: Thanh MP (hình nén nhang), Nút bấm, Đồng hồ đếm ngược.
-* Hiển thị lưới di chuyển rõ ràng.
+1. Main Menu → Prepare Battle/Inventory → Battle → Result → Main Menu.
+2. Settings cho âm thanh, đồ họa và điều khiển cơ bản.
+3. Save/load profile, Gold, XP, collection và selected deck/spells.
+4. Reward sau trận có quy tắc rõ và chống cộng lặp.
+5. Shop cơ bản nếu còn thuộc phạm vi sản phẩm.
 
+Tiêu chí thoát:
 
+- Restart app không làm mất profile/deck đã lưu.
+- Save migration/fallback không phá dữ liệu cũ.
+- Navigation không để lại screen/popup trùng hoặc callback lặp.
 
----
+## 5. Milestone D — Content và polish
 
-### **GIAI ĐOẠN 3: MULTIPLAYER & SYSTEM (XƯƠNG SỐNG) - 4~6 Tuần**
+Mục tiêu: một map và roster đủ chất lượng cho demo công khai.
 
-**Mục tiêu:** Hai người chơi được với nhau qua mạng (Internet/LAN). Đây là giai đoạn khó nhất của team 2 người.
+Phạm vi:
 
-1. **Networking (Coder):**
-* Đồng bộ hóa (Sync) vị trí Unit, máu, MP giữa 2 máy.
-* Đồng bộ hóa kết quả tung xúc xắc (Chống hack/cheat cơ bản).
-* Xử lý ngắt kết nối (Reconnect).
+1. Cân bằng 7 unit và bộ spell bằng số liệu playtest.
+2. Hoàn thiện Đầm Sen Tàn: lane, obstacle, capture point và camera readability.
+3. Đồng bộ animation cue, VFX, SFX, icon và status feedback.
+4. Tối ưu pool, managed allocation, draw call và thời gian tải.
+5. Map thứ hai chỉ làm greybox sau khi map đầu đạt tiêu chí.
 
+Tiêu chí thoát:
 
-2. **Lobby & Matchmaking (Coder):**
-* Màn hình tạo phòng, tìm phòng.
-* Đặt tên người chơi.
+- Frame time ổn định trên cấu hình mục tiêu đã chốt.
+- Không missing reference/material/script trong scene phát hành.
+- Unit/spell sử dụng trong build có asset hoàn chỉnh.
 
+## 6. Milestone E — Multiplayer, tùy chọn
 
-3. **VFX & SFX (Artist):**
-* Làm hiệu ứng kỹ năng: Vệt mực tàu, bụi vàng, khói hương.
-* Thêm âm thanh: Tiếng xúc xắc, tiếng di chuyển, nhạc nền (Đàn tranh).
+Chỉ bắt đầu sau quyết định sản phẩm và prototype kỹ thuật. Cần chốt authority model, framework mạng,
+host/server model và phạm vi reconnect trước khi viết gameplay networking.
 
+Phạm vi dự kiến:
 
+- Lobby và matchmaking.
+- Đồng bộ turn, command, dice/MP, unit state, skill/spell và capture point.
+- Validation phía authority, timeout, disconnect và reconnect.
+- Determinism hoặc state reconciliation phù hợp.
 
----
+Milestone này không chặn bản local nếu multiplayer bị loại khỏi release đầu.
 
-### **GIAI ĐOẠN 4: CONTENT EXPANSION (ĐẮP THỊT) - 4 Tuần**
+## 7. Milestone F — Release
 
-**Mục tiêu:** Thêm chiều sâu chiến thuật và nội dung.
+1. Chốt PC hay Android là nền tảng đầu tiên.
+2. Tạo build pipeline, versioning, crash logging và release checklist.
+3. Kiểm thử input, resolution, save path và performance trên thiết bị mục tiêu.
+4. Chuẩn bị store metadata, privacy policy, icon, screenshot và trailer.
+5. Chỉ tích hợp IAP/Ads khi mô hình kinh doanh đã được duyệt.
 
-1. **Hệ thống Spell/Thẻ bài (Coder):**
-* Code logic sử dụng thẻ bài (Buff máu, tăng giáp, trói chân).
-* Hệ thống Shop trong game (nếu có).
+## 8. Thứ tự ưu tiên
 
-
-2. **Mở rộng Môi trường (Artist):**
-* Hoàn thiện Map 1: Đầm Sen Tàn (Nước, lá sen, sương mù).
-* Làm thêm Map 2: Cổ Loa hoặc Làng Tranh (nếu kịp tiến độ).
-
-
-3. **Hệ thống Bot/AI (Coder):**
-* Làm Bot đơn giản (Random hành động hoặc tìm đường ngắn nhất) để người chơi có thể test một mình.
-
-
-
----
-
-### **GIAI ĐOẠN 5: META GAME & POLISH (ĐÁNH BÓNG) - 3 Tuần**
-
-**Mục tiêu:** Tạo động lực chơi lại và làm game "sướng" hơn.
-
-1. **Hệ thống Meta (Coder):**
-* Lưu dữ liệu người chơi (Gold, Exp, Level).
-* Màn hình Inventory, chọn bộ bài/đội hình trước khi vào trận.
-
-
-2. **Polish (Artist + Coder):**
-* **Juice:** Thêm độ rung màn hình (Screen shake) khi tấn công mạnh.
-* Hiệu ứng chuyển cảnh (Màn sương/Cuộn tranh).
-* Tối ưu hóa (Optimize) cho Android (Giảm dung lượng texture, giảm polygon).
-
-
-3. **Cân bằng Game (Balancing):**
-* Test xem Gà có quá mạnh không? Nghê có quá trâu không?
-* Chỉnh sửa chỉ số MP cost, Damage, HP.
-
-
-
----
-
-### **GIAI ĐOẠN 6: RELEASE (PHÁT HÀNH) - 2 Tuần**
-
-**Mục tiêu:** Đưa game lên Store.
-
-1. **Đóng gói & Build:**
-* Build bản PC (Steam) và Android (APK/AAB).
-
-
-2. **Marketing Assets (Artist):**
-* Chụp ảnh màn hình (Screenshot), quay Trailer, làm Icon game.
-
-
-3. **Store Setup (Coder):**
-* Tích hợp Google Play Services, IAP (nếu có bán đồ), Ads (nếu có).
-
-
-
----
-
-### **LỜI KHUYÊN CHO TEAM 2 NGƯỜI:**
-
-1. **Giảm tải phần Art:** Vì chỉ có 1 Artist, hãy tận dụng **Asset Store** cho các vật thể môi trường (cây cối, đá, nước) và dùng Shader để biến chúng thành phong cách tranh vẽ. Chỉ nên tự model các Unit đặc thù (Nghê, Gà...).
-2. **Đơn giản hóa Animation:** GDD nhắc đến "Rối nước/Hình nhân", hãy tận dụng điều này. Không cần làm animation nhuyễn như người thật. Làm kiểu giật cục, bay lơ lửng sẽ vừa đúng chất tâm linh, vừa đỡ tốn công.
-3. **Logic "Auto Balance":** Cơ chế thời gian turn dựa trên số unit là con dao hai lưỡi. Coder cần test kỹ ngay từ giai đoạn 2. Nếu quá nhiều unit => thời gian quá dài => trận đấu bị lê thê.
-4. **Cắt bỏ nếu cần:** Nếu thấy trễ tiến độ, hãy mạnh dạn cắt bỏ phần "Chế độ cốt truyện" và tập trung vào PvP. Cốt truyện có thể kể qua mô tả thẻ bài (như Dark Souls).
+| Ưu tiên | Công việc |
+|---|---|
+| P0 | Smoke test và sửa lỗi làm kẹt/mất lượt |
+| P0 | Hoàn thiện skill/spell đang dùng trong build |
+| P1 | AI không soft-lock và có priority hợp lệ |
+| P1 | Meta navigation, persistence và settings |
+| P2 | Balance, map, VFX/SFX và optimization |
+| P3 | Multiplayer hoặc monetization sau quyết định sản phẩm |

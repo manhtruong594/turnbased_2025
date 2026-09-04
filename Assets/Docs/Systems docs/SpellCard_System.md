@@ -1,215 +1,118 @@
-# Spell Card System Documentation
+# Spell Card System
 
-- **Version**: 2.0 | **Updated**: 2026-03-24
+## 1. Mục tiêu
 
----
+Spell card cho phép người chơi dùng MP để tạo hiệu ứng ngoài action riêng của unit. Hệ thống gồm data,
+hand, targeting, confirmation, effect strategy, buff/debuff, UI và VFX.
 
-## Kiến trúc hệ thống
+## 2. Thành phần
 
-```
-GameMediator (OnSpellCardUsed, OnHandChanged)
-       │
-       ▼
-SpellCardManager (Singleton) ─── runtime logic: select, confirm, validate, execute
-       │
-  ┌────┴─────┬──────────────┬──────────────┐
-  ▼          ▼              ▼              ▼
-SpellCardData  ISpellEffect    SpellCardPanel   SpellCardConfirmUI
-(SO)         (SerializeRef)   (UI Hand)        (Confirm/Cancel)
-              │               SpellCardBase
-       ┌──────┼──────┬──────────┬──────────┬──────────┐
-       ▼      ▼      ▼          ▼          ▼          ▼
-     Heal   Shield  DamageBuff Cleanse    Root     Damage
-              │
-       BuffDebuffHandler (Component on Unit) → BuffIconDisplay
-```
+| Thành phần | Trách nhiệm |
+|---|---|
+| `SpellCardData` | Metadata, MP cost, consume rule, target type, range, effect và VFX |
+| `ISpellEffect` | Contract áp effect lên target |
+| `SpellCardManager` | Hand, state, validation, range, selection, use và event |
+| `SpellCardState` | Idle, Targeting và Confirming |
+| `SpellCardPanel` | Tạo/refresh card UI cho một phe |
+| `SpellCardItem` | Hiển thị card và chuyển click vào manager |
+| `SpellCardConfirmUI` | Confirm/cancel trước khi cast |
+| `BuffDebuffHandler` | Lưu status, tick duration và modifier runtime |
+| `BuffIconDisplay` | Đồng bộ status với icon trên unit |
+| `EffectManager` | Spawn visual theo `StatusEffectType` |
 
-| Component | Pattern | Trách nhiệm |
-|-----------|---------|-------------|
-| **SpellCardData** | ScriptableObject | Data spell (tên, cost, target, effect reference) |
-| **SpellCardManager** | Singleton | Chọn card, confirm, validate target, trừ MP, kích hoạt effect |
-| **ISpellEffect** | Strategy (SerializeReference) | Interface cho hiệu ứng spell, gán trực tiếp trên SO |
-| **SpellCardConfirmUI** | MonoBehaviour | UI xác nhận: card bay lên giữa màn hình + nút Confirm/Cancel |
-| **BuffDebuffHandler** | Component | Quản lý status effects (buff/debuff) trên từng unit |
-| **SpellCardPanel / SpellCardBase** | UI | Hiển thị danh sách spell card + button cho từng card |
-| **BuffIconDisplay** | Observer | Hiển thị icon buff trên đầu unit |
+## 3. Data
 
----
+`SpellCardData` có:
 
-## Data Layer
+- `spellName`, `description`, `icon`.
+- `mpCost`, `consumeOnUse`.
+- `targetType`, `range`.
+- `[SerializeReference] ISpellEffect spellEffect`.
+- `castVfxPrefab`, `impactVfxPrefab`.
 
-### SpellCardData (ScriptableObject)
+Effect dùng managed reference và custom property drawer. Khi đổi tên/move class effect phải có kế hoạch
+migration; nếu type không resolve, dữ liệu effect trong asset có thể mất.
 
-```csharp
-[CreateAssetMenu(fileName = "NewSpellCard", menuName = "TurnBased/Spell Card")]
-public class SpellCardData : ScriptableObject
-{
-    public string spellName;
-    public string description;
-    public Sprite icon;
-    public int mpCost = 2;
-    public bool consumeOnUse = true;           // card bị xóa sau khi dùng
-    public SpellTargetType targetType;
-    public int range = 3;
+## 4. Target type
 
-    [SerializeReference, SpellEffectSelector]
-    public ISpellEffect spellEffect;           // Polymorphic — chọn effect trong Inspector dropdown
+| Giá trị | Ý nghĩa | Trạng thái |
+|---|---|---|
+| `SingleAlly` | Một unit cùng phe | Hiện có |
+| `SingleEnemy` | Một unit đối địch | Hiện có |
+| `Self` | Caster/player context | Hiện có, cần kiểm chứng setup |
+| `AnyUnit` | Một unit bất kỳ | Hiện có |
+| `AllAllies` | Toàn bộ unit cùng phe | Chưa hoàn chỉnh |
+| `AllEnemies` | Toàn bộ unit đối địch | Chưa hoàn chỉnh |
 
-    public GameObject castVfxPrefab, impactVfxPrefab;
+Area target phải quy định rõ range áp theo target trung tâm hay toàn map và card bị consume một lần cho
+toàn bộ tập mục tiêu.
 
-    public void Cast(PlayerID caster, UnitController target)
-        => spellEffect?.Apply(caster, target);
-}
-```
+## 5. Effect hiện có
 
-### Enums
+| Effect | Kết quả |
+|---|---|
+| `HealEffect` | Hồi HP nếu target nhận heal được |
+| `ShieldEffect` | Thêm shield status theo value/duration |
+| `DamageBuffEffect` | Tăng damage theo duration |
+| `CleanseEffect` | Xóa status theo implementation hiện tại |
+| `RootEffect` | Cấm move |
+| `DamageEffect` | Gây damage trực tiếp |
+| `StunEffect` | Cấm/giới hạn hành động theo status integration |
+| `FreezeEffect` | Gắn freeze status; behavior cần chốt rõ |
+| `BleedEffect` | Damage theo turn |
+| `CompositeEffect` | Chạy danh sách effect theo thứ tự |
 
-```csharp
-public enum SpellTargetType
-{ SingleAlly, SingleEnemy, Self, AllAllies, AllEnemies, AnyUnit }
+Data assets hiện có: Damage Spell, Root Spell, Shield Spell và Stun Spell trong
+`Assets/Scripts/Data/SpellData`.
 
-public enum StatusEffectType
-{
-    None,
-    // Buffs
-    Heal, Shield, DamageBuff, Cleanse,
-    // Debuffs
-    Burn, Poison, Slow, Weaken, Root
-}
-```
+## 6. Status
 
----
+`BuffDebuffHandler` hỗ trợ add, tick, remove, query buff/debuff và các modifier như shield, damage,
+move, heal ban, untargetable, displacement immunity và rooted. `StatusEffectType` có thêm các giá trị
+phục vụ skill như `BloodRage`, `StanceGuard`, `ShadowStep`, `GuardBreak`, `HealBan`.
 
-## Luồng Logic Chính
+`Slow` và `Weaken` hiện được khai báo nhưng chưa có modifier runtime đầy đủ. `Freeze` cần thống nhất là
+slow, root hay stun để tránh UI và logic hiểu khác nhau.
 
-### 1. Khởi tạo
-`PlayerController.SetupUI()` → `SpellCardPanel.Initialize(selectedSpells, playerID)` → `SpellCardManager.InitializeHand(owner, spells)` → Instantiate `SpellCardBase` buttons.
+## 7. Luồng sử dụng card
 
-### 2. Chọn Card + Xác nhận
-- UI click → `SpellCardBase.OnCardClicked()` → `SpellCardManager.SelectCard(card, caster, sourceRect)`
-- Validation: `card != null` + `HasEnoughMP()` + không đang confirming/targeting
-- Nếu OK → `SpellCardConfirmUI.Show()`:
-  - Card bay từ vị trí gốc lên giữa màn hình (fly animation)
-  - Hiện overlay mờ nền
-  - Hiện 2 nút: ✓ Confirm / ✗ Cancel
-- **Confirm** → `OnConfirmCard()` → `_isTargeting = true` → vào chế độ chọn target
-- **Cancel** → `OnCancelCard()` → `DeselectCard()` → quay về trạng thái bình thường
+1. `PlayerController` khởi tạo `SpellCardPanel` từ `PlayerDataSO.SelectedSpells`.
+2. Panel gọi `SpellCardManager.InitializeHand` cho phe.
+3. Click card gọi `SelectCard`; manager kiểm tra turn và MP.
+4. State chuyển sang Targeting và highlight vùng hợp lệ.
+5. Chọn target hợp lệ chuyển sang Confirming.
+6. Confirm kiểm tra lại target/MP trước transaction.
+7. Card cast effect, spawn VFX, trừ MP và bị remove nếu `consumeOnUse`.
+8. Manager phát spell-used/hand-changed và trở về Idle.
 
-### 3. Sử dụng Card
+Cancel hoặc validation fail phải trở về state an toàn mà không trừ MP/consume card.
 
-| Bước | Hành động |
-|------|-----------|
-| 1 | Lấy unit từ tile (`MapManager.GetUnitAtTile`) |
-| 2 | `ValidateTarget()` theo `SpellTargetType` |
-| 3 | `MPManager.SpendMP()` |
-| 4 | `_actionLefts.Value--` |
-| 5 | `card.Cast(caster, target)` → `effect.Apply()` |
-| 6 | Xóa card nếu `consumeOnUse` |
-| 7 | `GameMediator.NotifySpellCardUsed()` |
+## 8. Quy tắc transaction
 
-### 4. Target Validation
+- Validation được chạy lại tại thời điểm confirm, không chỉ lúc chọn target.
+- MP chỉ trừ khi cast được commit.
+- `consumeOnUse` chỉ remove đúng một card sau commit.
+- Effect composite áp theo thứ tự; target chết giữa danh sách phải được từng effect xử lý an toàn.
+- UI hand, MP và state cập nhật từ nguồn runtime, không tự đoán kết quả.
+- Cast/impact VFX không quyết định gameplay success.
 
-| TargetType | Điều kiện |
-|------------|-----------|
-| SingleAlly | target cùng owner |
-| SingleEnemy | target khác owner |
-| Self | target cùng owner |
-| AnyUnit | luôn hợp lệ (trừ dead) |
-| AllAllies / AllEnemies | chưa implement |
+## 9. Known gaps
 
----
+| Mức | Vấn đề |
+|---|---|
+| P0 | Chưa có regression cho cancel/invalid/dead target và transaction MP/card |
+| P1 | `AllAllies`/`AllEnemies` validation và execution chưa hoàn chỉnh |
+| P1 | `Slow`/`Weaken` chưa nối modifier runtime đầy đủ |
+| P1 | `Freeze` chưa có semantic thống nhất |
+| P1 | AI chưa dùng spell card |
+| P2 | Tooltip/combat log/fallback icon cần hoàn thiện |
 
-## Effect System (Strategy Pattern)
+## 10. Kiểm chứng
 
-```csharp
-public interface ISpellEffect
-{
-    void Apply(PlayerID caster, UnitController target);
-}
-```
-
-**Thêm Effect mới:** Tạo class `[Serializable]` implement `ISpellEffect` → tự động hiện trong Inspector dropdown → không cần sửa Factory/switch.
-
-### Các Effect hiện có
-
-| Effect | Loại | Fields | Cơ chế |
-|--------|------|--------|--------|
-| **HealEffect** | Tức thời | `healAmount` | `target.Heal()` |
-| **ShieldEffect** | Buff có duration | `shieldValue`, `duration` | `ModifyIncomingDamage()` trừ shield |
-| **DamageBuffEffect** | Buff có duration | `damageBonus`, `duration` | `GetDamageBonus()` cộng damage |
-| **CleanseEffect** | Tức thời | — | `BuffDebuffHandler.ClearAll()` |
-| **RootEffect** | Debuff có duration | `duration` | `IsRooted()` chặn `CanMove()` |
-| **DamageEffect** | Tức thời | `damage` | `target.TakeDamage()` |
-
----
-
-## Buff/Debuff System
-
-### ActiveStatusEffect (struct)
-
-```csharp
-public struct ActiveStatusEffect
-{
-    public StatusEffectType Type;
-    public int Value;              // Shield amount, damage bonus, etc.
-    public int RemainingTurns;
-    public PlayerID SourcePlayer;
-    public bool TickTurn();        // Giảm 1 turn, return true nếu hết hạn
-}
-```
-
-### BuffDebuffHandler — Các method chính
-
-| Method | Chức năng |
-|--------|-----------|
-| `AddEffect(effect)` | Thêm effect (cùng loại → thay thế) |
-| `TickEffects()` | Đầu turn: giảm duration, apply tick damage (Burn/Poison), xóa hết hạn |
-| `GetShieldValue()` / `GetDamageBonus()` | Lấy bonus từ active effects |
-| `IsRooted()` | Kiểm tra bị Root |
-| `ModifyIncomingDamage(raw)` | `max(0, raw - shield)` |
-| `ClearAll()` | Xóa toàn bộ effects |
-
-**Quy tắc:** Cùng loại → thay thế. Khác loại → stack. Burn = damage cố định/lượt. Poison = damage scaling/lượt.
-
-**Events:** `OnEffectAdded` / `OnEffectRemoved` → `BuffIconDisplay` cập nhật icon.
-
-### Tích hợp UnitController
-- `TakeDamage()` → `_buffHandler.ModifyIncomingDamage(damage)` (Shield)
-- `CanMove()` → `_buffHandler.IsRooted()` (Root)
-- `OnTurnBegin()` → `_buffHandler.TickEffects()` (tick + giảm duration)
-
----
-
-## Event System
-
-| Source | Event | Subscribers |
-|--------|-------|-------------|
-| SpellCardManager | `OnCardSelected(SpellCardData)` | SpellCardPanel (highlight) |
-| SpellCardManager | `OnCardDeselected` | SpellCardPanel (reset) |
-| GameMediator | `OnSpellCardUsed(SpellCardData, PlayerID)` | SpellCardPanel, UI |
-| GameMediator | `OnHandChanged(PlayerID)` | SpellCardPanel (rebuild) |
-| BuffDebuffHandler | `OnEffectAdded/Removed(ActiveStatusEffect)` | BuffIconDisplay |
-
----
-
-## Design Patterns (tóm tắt)
-
-| Pattern | Áp dụng | Mục đích |
-|---------|---------|----------|
-| **Strategy** | `ISpellEffect` + `[SerializeReference]` | Mỗi effect implement interface, gán polymorphic trên SO |
-| **Observer** | Events trong SpellCardManager, BuffDebuffHandler, GameMediator | Decouple UI/logic |
-| **Singleton** | `SpellCardManager.Instance` | Global access |
-| **Data-Driven** | `SpellCardData` (ScriptableObject) | Tạo spell mới trong Editor, không sửa code |
-
----
-
-## Trạng thái & TODO
-
-| Hạng mục | Status |
-|----------|--------|
-| SpellCardData, SpellCardManager, SpellCardPanel UI | ✅ |
-| Effects: Heal, Shield, DamageBuff, Damage, Cleanse, Root | ✅ |
-| BuffDebuffHandler + BuffIconDisplay | ✅ |
-| Burn/Poison tick effects | ✅ |
-| AllAllies / AllEnemies targeting | ⚠️ Chưa implement validate |
-| Slow/Weaken debuffs | ⚠️ Enum có, logic chưa tích hợp |
+1. Đúng/sai turn, đủ/thiếu MP.
+2. Mọi `SpellTargetType`, gồm target chết và target đổi trạng thái trước confirm.
+3. Cancel ở Targeting và Confirming.
+4. Consume true/false; hand và MP chỉ đổi một lần.
+5. Status add, refresh/stack, tick và remove đúng luật.
+6. Composite effect khi effect trước giết target.
+7. Scene restart không giữ selection, subscriber hoặc pooled VFX cũ.
