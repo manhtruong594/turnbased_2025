@@ -13,10 +13,11 @@ MonoBehaviour:
   m_Name: Heal skill
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Skills.HealSkill
   skillName: Unnamed Skill
-  description: No description
+  description: Restores health equal to 150% of the caster's current damage to the caster or an injured ally.
   skillType: 4
   icon: {fileID: 21300000, guid: cc08ccd1cf04a3d43b8d437d087cfc02, type: 3}
   cooldown: 2
+  mpCost: 1
   range: 2
   vfxConfig:
     castVfxPrefab: {fileID: 0}

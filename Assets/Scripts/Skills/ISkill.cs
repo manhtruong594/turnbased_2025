@@ -17,6 +17,7 @@ namespace TurnBasedGame.Skills
         
         int Cooldown { get; }
         int CurrentCooldown { get; }
+        int MPCost { get; }
         int Range { get; }
 
         bool CanUse(UnitController caster, Vector3Int targetPos);

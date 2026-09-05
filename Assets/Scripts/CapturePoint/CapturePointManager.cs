@@ -157,6 +157,7 @@ namespace TurnBasedGame.Capture
         }
 
         public int TotalPoints => _capturePoints.Count;
+        public IReadOnlyList<CapturePoint> CapturePoints => _capturePoints;
 
         #endregion
     }

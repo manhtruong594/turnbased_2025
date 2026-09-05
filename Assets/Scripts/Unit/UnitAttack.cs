@@ -160,6 +160,11 @@ namespace TurnBasedGame.Unit
 
         public bool CanAttack(UnitController targetUnit)
         {
+            return CanAttackFrom(targetUnit, _cachedUnitMove.currentGridPosition);
+        }
+
+        public bool CanAttackFrom(UnitController targetUnit, Vector3Int originGridPos)
+        {
             if (targetUnit == null || targetUnit.IsDead())
                 return false;
 
@@ -169,7 +174,8 @@ namespace TurnBasedGame.Unit
             if (targetUnit.BuffHandler != null && targetUnit.BuffHandler.IsUntargetableDirectly())
                 return false;
 
-            if (GetDistanceToTarget(targetUnit.currentGridPosition) > _selectedSkill.Range)
+            if (_selectedSkill == null ||
+                MapManager.Instance.GetDistance(originGridPos, targetUnit.currentGridPosition) > _selectedSkill.Range)
                 return false;
 
             // Kiểm tra line of sight nếu cần
@@ -180,17 +186,6 @@ namespace TurnBasedGame.Unit
             return true;
         }
  
-        private float GetDistanceToTarget(Vector3Int targetGridPos)
-        {
-            var myTile = _cachedMap.Tile(transform.position);
-            if (myTile == null) return float.MaxValue;
-
-            // Tính khoảng cách Manhattan (grid-based)
-            return Mathf.Abs(myTile.Position.x - targetGridPos.x) +
-                   Mathf.Abs(myTile.Position.y - targetGridPos.y) +
-                   Mathf.Abs(myTile.Position.z - targetGridPos.z);
-        }
-
         private bool HasLineOfSight(Vector3Int targetGridPos)
         {
             // TODO: Implement proper line of sight check

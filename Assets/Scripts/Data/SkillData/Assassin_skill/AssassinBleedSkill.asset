@@ -13,10 +13,12 @@ MonoBehaviour:
   m_Name: AssassinBleedSkill
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Skills.AssassinBleedSkill
   skillName: Unnamed Skill
-  description: No description
+  description: Deals 100% damage to an enemy and applies Bleed, dealing 10 damage
+    at the start of each turn for 3 turns.
   skillType: 0
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 9b0be4ef9a8e4b34eaa96ebc919f52a0, type: 3}
   cooldown: 0
+  mpCost: 0
   range: 1
   vfxConfig:
     castVfxPrefab: {fileID: 0}
@@ -27,7 +29,7 @@ MonoBehaviour:
     castSpawnPoint: 1
     releaseSpawnPoint: 1
     impactSpawnPoint: 2
-  targetTypes: 0
+  targetTypes: 10
   damageMultiplier: 1
   bleedDamagePerTurn: 10
   bleedDuration: 3

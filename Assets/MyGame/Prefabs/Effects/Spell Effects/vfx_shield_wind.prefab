@@ -9784,6 +9784,7 @@ GameObject:
   - component: {fileID: 891555995955539437}
   - component: {fileID: 840662854281868523}
   - component: {fileID: 213146805919537554}
+  - component: {fileID: 7899832412643707467}
   m_Layer: 0
   m_Name: vfx_shield_wind
   m_TagString: Untagged
@@ -14698,6 +14699,19 @@ ParticleSystemRenderer:
   m_MeshWeighting1: 1
   m_MeshWeighting2: 1
   m_MeshWeighting3: 1
+--- !u!114 &7899832412643707467
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2781309253588686194}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a2620fa96a7f2842bb734c1f55667d5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BuffEffect
+  effectType: 2
 --- !u!1 &2849733057742640626
 GameObject:
   m_ObjectHideFlags: 0

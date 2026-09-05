@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
+using TurnBasedGame.Capture;
 using TurnBasedGame.Unit;
 using RedBjorn.ProtoTiles;
 using TurnBasedGame.Resources;
@@ -9,8 +9,8 @@ using TurnBasedGame.Resources;
 namespace TurnBasedGame.Core
 {
     /// <summary>
-    /// Quản lý logic AI cho đối thủ máy
-    /// AI sẽ spawn unit, di chuyển và tấn công player
+    /// Quản lý logic AI cho đối thủ máy.
+    /// AI spawn unit, ưu tiên hạ mục tiêu yếu, chiếm cứ điểm và áp sát đối thủ.
     /// </summary>
     public class AIController : MonoBehaviour
     {
@@ -19,7 +19,15 @@ namespace TurnBasedGame.Core
         [SerializeField] private float actionDelay = 1f;
         [SerializeField] private int maxUnit = 3;
 
-        private int _currentUnitCount = 0;
+        private const float ImmediateAttackScore = 5000f;
+        private const float LethalAttackScore = 10000f;
+        private const float EnemyCaptureScore = 2500f;
+        private const float NeutralCaptureScore = 2000f;
+        private const float CaptureApproachScore = 1000f;
+        private const float LowHealthScore = 100f;
+        private const float DistancePenalty = 10f;
+        private const float ActionCompletionTimeout = 10.5f;
+
         private PlayerID aiPlayerID;
         private PlayerID opponentOfAI;
 
@@ -27,221 +35,281 @@ namespace TurnBasedGame.Core
         {
             opponentOfAI = mainPlayer;
             aiPlayerID = mainPlayer == PlayerID.Player1 ? PlayerID.Player2 : PlayerID.Player1;
-            _currentUnitCount = 0;
         }
 
         /// <summary>
-        /// Thực hiện lượt chơi của AI
+        /// Thực hiện lượt chơi của AI.
         /// </summary>
         public IEnumerator ExecuteAITurn()
         {
             yield return new WaitForSeconds(actionDelay);
 
-            MPManager.Instance.AddMP(aiPlayerID, 3); // Cộng MP cho AI mỗi lượt
-            bool spawned = TrySpawnRandomUnit();
+            if (!IsAITurnActive())
+                yield break;
+
+            MPManager.Instance.AddMP(aiPlayerID, 3);
+            bool spawned = TrySpawnBestUnit();
 
             if (spawned)
-            {
                 yield return new WaitForSeconds(actionDelay);
-            }
 
-            // Bước 2: Lấy tất cả units của AI
-            var myUnits = UnitSpawner.Instance.GetPlayerUnits(aiPlayerID);
+            var myUnits = GetLivingUnits(aiPlayerID);
+            foreach (var unit in myUnits)
+                unit.OnTurnBegin();
 
-            // Bước 3: Với mỗi unit, thử di chuyển gần player và tấn công
             foreach (var unit in myUnits)
             {
-                if (unit == null) continue;
+                if (!IsAITurnActive())
+                    yield break;
+
+                if (unit == null || unit.IsDead())
+                    continue;
 
                 yield return StartCoroutine(ExecuteUnitAction(unit));
                 yield return new WaitForSeconds(actionDelay);
             }
 
-            // Kết thúc lượt
+            if (!IsAITurnActive())
+                yield break;
+
             yield return new WaitForSeconds(actionDelay);
             foreach (var unit in myUnits)
             {
-                unit.FinishTurnActions();
+                if (unit != null && !unit.IsDead())
+                    unit.FinishTurnActions();
             }
+
             TurnManager.Instance.EndCurrentTurn();
         }
 
         /// <summary>
-        /// Spawn một unit ngẫu nhiên nếu có thể
+        /// Spawn unit mạnh nhất trong số các unit AI hiện đủ MP để mua.
         /// </summary>
-        private bool TrySpawnRandomUnit()
+        private bool TrySpawnBestUnit()
         {
-            if (_currentUnitCount >= maxUnit || availableUnits == null || availableUnits.Count == 0)
+            if (GetLivingUnits(aiPlayerID).Count >= maxUnit ||
+                availableUnits == null || availableUnits.Count == 0 ||
+                MPManager.Instance == null)
             {
                 return false;
             }
 
-            var randomUnit = availableUnits[Random.Range(0, availableUnits.Count)];
-            bool success = UnitSpawner.Instance.SpawnUnit(randomUnit, aiPlayerID);
+            int currentMP = MPManager.Instance.GetCurrentMP(aiPlayerID);
+            UnitController bestUnit = null;
+            int bestScore = int.MinValue;
 
+            foreach (var candidate in availableUnits)
+            {
+                if (candidate == null || candidate.UnitData == null ||
+                    candidate.UnitData.spawnCost > currentMP)
+                {
+                    continue;
+                }
+
+                var data = candidate.UnitData;
+                int score = data.BaseDamage * 4 + data.Health + data.moveRange * 8;
+                if (score > bestScore)
+                {
+                    bestScore = score;
+                    bestUnit = candidate;
+                }
+            }
+
+            if (bestUnit == null)
+            {
+                Debug.Log("AI không thể spawn unit: không có unit phù hợp với MP hiện tại.");
+                return false;
+            }
+
+            bool success = UnitSpawner.Instance.SpawnUnit(bestUnit, aiPlayerID);
             if (success)
-            {
-                _currentUnitCount++;
-                Debug.Log($"AI đã spawn {randomUnit.UnitData.unitName}");
-            }
+                Debug.Log($"AI đã spawn {bestUnit.UnitData.unitName}");
             else
-            {
-                Debug.Log("AI không thể spawn unit (không đủ MP hoặc không có spawn point)");
-            }
+                Debug.Log("AI không thể spawn unit: không có spawn point hợp lệ.");
 
             return success;
         }
 
         /// <summary>
-        /// Thực hiện hành động cho 1 unit
+        /// Tấn công mục tiêu tốt nhất; nếu chưa thể, chọn ô đi theo utility rồi thử lại.
         /// </summary>
         private IEnumerator ExecuteUnitAction(UnitController unit)
         {
-            if (unit == null) yield break;
-
-            // Tìm unit gần nhất của đối thủ
-            var targetUnit = FindNearestOpponentUnit(unit);
-
-            if (targetUnit == null)
+            var opponents = GetLivingUnits(opponentOfAI);
+            var target = FindBestAttackTarget(unit, opponents);
+            if (target != null)
             {
-                Debug.Log($"AI unit {unit.name} không tìm thấy mục tiêu");
+                yield return StartCoroutine(AttackTarget(unit, target));
                 yield break;
             }
 
-            if (CanAttackTarget(unit, targetUnit))
-            {
-                yield return StartCoroutine(AttackTarget(unit, targetUnit));
-            }
-            else
-            {
-                // Di chuyển về phía target
-                yield return StartCoroutine(MoveTowardsTarget(unit, targetUnit));
+            yield return StartCoroutine(MoveToBestTile(unit, opponents));
 
-                // Sau khi di chuyển, kiểm tra lại có thể tấn công không
-                yield return new WaitForSeconds(0.5f);
+            if (unit == null || unit.IsDead() || !IsAITurnActive())
+                yield break;
 
-                if (CanAttackTarget(unit, targetUnit))
-                {
-                    yield return StartCoroutine(AttackTarget(unit, targetUnit));
-                }
-            }
+            target = FindBestAttackTarget(unit, GetLivingUnits(opponentOfAI));
+            if (target != null)
+                yield return StartCoroutine(AttackTarget(unit, target));
         }
 
-        /// <summary>
-        /// Tìm unit gần nhất của đối thủ
-        /// </summary>
-        private UnitController FindNearestOpponentUnit(UnitController myUnit)
+        private UnitController FindBestAttackTarget(UnitController attacker, List<UnitController> opponents)
         {
-            var opponentUnits = UnitSpawner.Instance.GetPlayerUnits(opponentOfAI);
+            UnitController bestTarget = null;
+            float bestScore = float.MinValue;
 
-            if (opponentUnits == null || opponentUnits.Count == 0)
-                return null;
-
-            UnitController nearest = null;
-            float minDistance = float.MaxValue;
-
-            foreach (var opponent in opponentUnits)
+            foreach (var target in opponents)
             {
-                if (opponent == null) continue;
+                if (!attacker.AttackComponent.CanAttack(target))
+                    continue;
 
-                float distance = Vector3.Distance(myUnit.transform.position, opponent.transform.position);
-
-                if (distance < minDistance)
+                float score = ScoreTarget(attacker, target, ImmediateAttackScore);
+                if (score > bestScore)
                 {
-                    minDistance = distance;
-                    nearest = opponent;
+                    bestScore = score;
+                    bestTarget = target;
                 }
             }
 
-            return nearest;
+            return bestTarget;
         }
 
-        /// <summary>
-        /// Kiểm tra có thể tấn công target không
-        /// </summary>
-        private bool CanAttackTarget(UnitController attacker, UnitController target)
-        {
-            return attacker.AttackComponent.CanAttack(target);
-        }
-
-        /// <summary>
-        /// Di chuyển về phía target
-        /// </summary>
-        private IEnumerator MoveTowardsTarget(UnitController myUnit, UnitController target)
+        private IEnumerator MoveToBestTile(UnitController unit, List<UnitController> opponents)
         {
             var map = MapManager.Instance.MapEntity;
-            var myPos = myUnit.transform.position;
-            var targetPos = target.transform.position;
-
-            // Lấy vị trí grid của target để loại trừ
-            var targetTile = map.Tile(targetPos);
-            if (targetTile == null)
-            {
-                Debug.LogWarning("Không tìm thấy tile của target");
+            var currentTile = map.Tile(unit.transform.position);
+            if (currentTile == null)
                 yield break;
-            }
-            var targetGridPos = targetTile.Position;
 
-            // Lấy các tile có thể đi được
-            var walkableTiles = map.WalkableTiles(map.Tile(myPos).Position, myUnit.GetMoveRange());
-
+            var walkableTiles = map.WalkableTiles(currentTile.Position, unit.GetMoveRange());
             if (walkableTiles == null || walkableTiles.Count == 0)
-            {
-                Debug.Log("Không có tile nào để di chuyển");
                 yield break;
-            }
 
-            // Tìm tile gần target nhất
             TileEntity bestTile = null;
-            float minDistance = float.MaxValue;
+            float bestScore = float.MinValue;
 
             foreach (var tile in walkableTiles)
             {
-                // Bỏ qua tile không trống
-                if (!tile.Vacant) continue;
-
-                if (MapManager.Instance.HasUnitAtTile(tile.Position))
+                if (!tile.Vacant || MapManager.Instance.HasUnitAtTile(tile.Position))
                     continue;
 
-                var tileWorldPos = map.WorldPosition(tile.Position);
-                float distance = Vector3.Distance(tileWorldPos, targetPos);
-
-                if (distance < minDistance)
+                float score = ScoreMoveTile(unit, tile.Position, opponents);
+                if (score > bestScore)
                 {
-                    minDistance = distance;
+                    bestScore = score;
                     bestTile = tile;
                 }
             }
 
-            if (bestTile != null)
+            if (bestTile == null)
             {
-                // Tính đường đi
-                var path = map.PathTiles(myPos, map.WorldPosition(bestTile.Position), myUnit.GetMoveRange());
+                Debug.Log($"AI không tìm thấy mục tiêu di chuyển hợp lệ cho {unit.name}");
+                yield break;
+            }
 
-                if (path != null && path.Count > 0)
+            var path = map.PathTiles(
+                unit.transform.position,
+                map.WorldPosition(bestTile.Position),
+                unit.GetMoveRange());
+
+            if (path == null || path.Count == 0)
+                yield break;
+
+            Debug.Log($"AI di chuyển {unit.name} đến {bestTile.Position} (utility {bestScore:0})");
+            unit.Move(path);
+            while (!unit.IsMoveDone() && IsAITurnActive())
+                yield return null;
+        }
+
+        private float ScoreMoveTile(
+            UnitController unit,
+            Vector3Int tilePosition,
+            List<UnitController> opponents)
+        {
+            float score = float.MinValue;
+            float nearestDistance = float.MaxValue;
+
+            var capturePoint = CapturePointManager.Instance?.GetPointAt(tilePosition);
+            if (capturePoint != null && !capturePoint.IsCapturedBy(aiPlayerID))
+                score = capturePoint.IsNeutral ? NeutralCaptureScore : EnemyCaptureScore;
+
+            var capturePoints = CapturePointManager.Instance?.CapturePoints;
+            if (capturePoints != null)
+            {
+                foreach (var point in capturePoints)
                 {
-                    Debug.Log($"AI di chuyển {myUnit.name} đến gần {target.name}");
-                    myUnit.Move(path);
-                    while (!myUnit.IsMoveDone())
-                    {
-                        yield return null;
-                    }
+                    if (point == null || point.IsCapturedBy(aiPlayerID))
+                        continue;
+
+                    float distance = MapManager.Instance.GetDistance(tilePosition, point.GridPosition);
+                    score = Mathf.Max(score, CaptureApproachScore - distance * DistancePenalty);
                 }
             }
-            else
+
+            foreach (var target in opponents)
             {
-                Debug.Log($"AI không tìm thấy tile hợp lệ để tiến gần {target.name}");
+                if (target == null || target.IsDead())
+                    continue;
+
+                float distance = MapManager.Instance.GetDistance(tilePosition, target.currentGridPosition);
+                nearestDistance = Mathf.Min(nearestDistance, distance);
+
+                if (unit.AttackComponent.CanAttackFrom(target, tilePosition))
+                    score = Mathf.Max(score, ScoreTarget(unit, target, ImmediateAttackScore));
+            }
+
+            if (nearestDistance < float.MaxValue)
+                score = Mathf.Max(score, -nearestDistance * DistancePenalty);
+
+            return score;
+        }
+
+        private float ScoreTarget(UnitController attacker, UnitController target, float baseScore)
+        {
+            float score = baseScore + (1f - target.GetHealthPercent()) * LowHealthScore;
+            if (target.GetCurrentHealth() <= attacker.GetCurrentDamage())
+                score += LethalAttackScore;
+
+            return score;
+        }
+
+        private IEnumerator AttackTarget(UnitController attacker, UnitController target)
+        {
+            if (attacker == null || target == null || target.IsDead())
+                yield break;
+
+            Debug.Log($"AI tấn công: {attacker.name} -> {target.name}");
+            attacker.AttackComponent.ExecuteAttack(target, true);
+
+            float elapsed = 0f;
+            while (!attacker.IsActionFinished() &&
+                   IsAITurnActive() &&
+                   elapsed < ActionCompletionTimeout)
+            {
+                elapsed += Time.deltaTime;
+                yield return null;
             }
         }
 
-        /// <summary>
-        /// Tấn công target
-        /// </summary>
-        private IEnumerator AttackTarget(UnitController attacker, UnitController target)
+        private List<UnitController> GetLivingUnits(PlayerID player)
         {
-            Debug.Log($"AI tấn công: {attacker.name} -> {target.name}");
-            attacker.AttackComponent.ExecuteAttack(target, true);
-            yield return new WaitForSeconds(0.5f);
+            var livingUnits = new List<UnitController>();
+            var units = UnitSpawner.Instance.GetPlayerUnits(player);
+
+            foreach (var unit in units)
+            {
+                if (unit != null && !unit.IsDead())
+                    livingUnits.Add(unit);
+            }
+
+            return livingUnits;
+        }
+
+        private bool IsAITurnActive()
+        {
+            return TurnManager.Instance != null &&
+                   TurnManager.Instance.CurrentState != TurnState.GameEnd &&
+                   TurnManager.Instance.CurrentPlayer == aiPlayerID;
         }
     }
 }

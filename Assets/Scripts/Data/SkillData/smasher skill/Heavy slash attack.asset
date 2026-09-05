@@ -13,10 +13,11 @@ MonoBehaviour:
   m_Name: Heavy slash attack
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Skills.NormalAttackSkill
   skillName: NormalAttack
-  description: No description
+  description: Deals 125% of the caster's current damage to one enemy.
   skillType: 0
-  icon: {fileID: 21300000, guid: 43358b703766fee4ebe64c7fbd583376, type: 3}
+  icon: {fileID: 21300000, guid: 7dfd68325eeac354d866d207e4d2744c, type: 3}
   cooldown: 0
+  mpCost: 0
   range: 5
   vfxConfig:
     castVfxPrefab: {fileID: 0}

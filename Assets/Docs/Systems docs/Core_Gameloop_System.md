@@ -95,16 +95,19 @@ Implementation hiện tại:
 
 1. Chờ `actionDelay`.
 2. Cộng 3 MP cho AI.
-3. Spawn ngẫu nhiên nếu chưa đạt `maxUnit`.
-4. Với từng unit, chọn opponent gần nhất.
-5. Attack nếu trong tầm; nếu không, đi tới tile hợp lệ gần target rồi thử attack lại.
-6. Finish action cho unit và kết thúc lượt.
+3. Đếm unit còn sống, sau đó spawn unit có utility chiến đấu cao nhất mà MP hiện tại chi trả được nếu chưa đạt `maxUnit`.
+4. Gọi `OnTurnBegin` cho unit AI để reset action, giảm cooldown và tick hiệu ứng.
+5. Nếu có thể attack, ưu tiên đòn kết liễu rồi đến mục tiêu có phần trăm HP thấp hơn.
+6. Nếu chưa thể attack, chấm utility cho các tile đi được theo thứ tự: tạo cơ hội kết liễu/attack,
+   chiếm hoặc tiến gần cứ điểm chưa thuộc AI, sau đó áp sát opponent.
+7. Sau khi di chuyển, đánh giá lại mục tiêu hợp lệ; chỉ tiếp tục khi lượt hiện tại vẫn thuộc AI.
+8. Finish action cho unit và kết thúc lượt.
 
 Giới hạn hiện tại:
 
 - Không dùng spell card.
-- Không ưu tiên capture point hoặc mục tiêu sắp chết.
-- Không có utility score/decision log đầy đủ.
+- Utility hiện là heuristic cố định, chưa có difficulty profile hoặc mô phỏng nhiều lượt.
+- AI mới dùng normal attack; chưa chọn skill chủ động theo cooldown/MP/area effect.
 - `PlayerController` đặt timer 30 giây như workaround khi chờ AI.
 - Chưa có batch regression chứng minh AI không soft-lock.
 
@@ -138,7 +141,7 @@ event để giữ object đã chết lâu hơn scene.
 | P0 | Smoke test toàn bộ trận local |
 | P0 | Xử lý target/unit chết giữa action |
 | P1 | Bỏ timer workaround của AI |
-| P1 | AI priority cho capture, kill và spell |
+| P1 | AI chọn skill chủ động và spell theo utility |
 | P1 | Đồng bộ failure feedback cho UI |
 | P2 | Automated EditMode/PlayMode regression |
 

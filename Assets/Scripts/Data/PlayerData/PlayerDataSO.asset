@@ -36,6 +36,7 @@ MonoBehaviour:
   - {fileID: 3103596494495824874, guid: 36490551fc4a64a4c9cb21da0b731152, type: 3}
   - {fileID: 4601153354674969337, guid: f7e5700fc8c987a489d12f4466079822, type: 3}
   - {fileID: 3320414852625481752, guid: 2aaba951b40a3614a9aa388092e1b961, type: 3}
+  - {fileID: 7874623004453923411, guid: 7a6dc1a668645b64092855e8d0dfc030, type: 3}
   _selectedSpells:
   - {fileID: 11400000, guid: a4f17f060f59e8843807307f138992b7, type: 2}
   - {fileID: 11400000, guid: 3bdac095735eadd4eb3b093605319980, type: 2}

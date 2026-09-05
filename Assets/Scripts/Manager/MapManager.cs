@@ -18,6 +18,13 @@ public class MapManager : BaseManager
     void Awake()
     {
         Instance = this;
+        if (!Map)
+        {
+            Debug.LogError("[MapManager] MapSettings chưa được gán.", this);
+            enabled = false;
+            return;
+        }
+
         if (!MapView)
         {
 #if UNITY_2023_1_OR_NEWER
@@ -26,22 +33,22 @@ public class MapManager : BaseManager
                 MapView = FindObjectOfType<MapView>();
 #endif
         }
+        if (!MapView)
+        {
+            Debug.LogError("[MapManager] Không tìm thấy MapView.", this);
+            enabled = false;
+            return;
+        }
+
         MapEntity = new MapEntity(Map, MapView);
-        if (MapView)
-        {
-            MapView.Init(MapEntity);
-        }
-        else
-        {
-            Log.E("Can't find MapView. Random errors can occur");
-        }
+        MapView.Init(MapEntity);
     }
 
     void Update()
     {
         if (Input.GetKeyUp(GridToggle))
         {
-            MapEntity.GridToggle();
+            MapEntity?.GridToggle();
         }
     }
 

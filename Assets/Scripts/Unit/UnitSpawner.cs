@@ -68,10 +68,25 @@ namespace TurnBasedGame.Unit
             {
                 spawnPoints = new List<SpawnPoint>(FindObjectsByType<SpawnPoint>(FindObjectsSortMode.None));
             }
+            var validSpawnPoints = new List<SpawnPoint>(spawnPoints.Count);
             foreach (var point in spawnPoints)
             {
-                point.Initialize(point.Owner, MapManager.Instance.MapEntity.Tile(point.transform.position).Position);
+                if (point == null)
+                {
+                    continue;
+                }
+
+                var tile = MapManager.Instance?.MapEntity?.Tile(point.transform.position);
+                if (tile == null || !tile.Vacant)
+                {
+                    Debug.LogWarning($"[UnitSpawner] Bỏ qua spawn point '{point.name}' tại {point.transform.position}: tile không tồn tại hoặc không thể di chuyển.", point);
+                    continue;
+                }
+
+                point.Initialize(point.Owner, tile.Position);
+                validSpawnPoints.Add(point);
             }
+            spawnPoints = validSpawnPoints;
             // Phân loại spawn points theo người chơi
             playerSpawnPoints.Clear();
             playerSpawnPoints[PlayerID.Player1] = new List<SpawnPoint>();

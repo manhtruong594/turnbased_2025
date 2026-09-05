@@ -17,6 +17,7 @@ MonoBehaviour:
   skillType: 3
   icon: {fileID: 21300000, guid: 43358b703766fee4ebe64c7fbd583376, type: 3}
   cooldown: 0
+  mpCost: 1
   range: 5
   vfxConfig:
     castVfxPrefab: {fileID: 8038470718839297245, guid: b5d772ee82cbdbf458070c51baab95fe, type: 3}

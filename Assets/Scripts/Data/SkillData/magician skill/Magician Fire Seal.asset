@@ -13,10 +13,12 @@ MonoBehaviour:
   m_Name: Magician Fire Seal
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Skills.MagicianFireSealSkill
   skillName: Hoa An Thien Tru
-  description: Deals area fire damage, burns targets, and leaves Burning Ground that can apply Burn.
+  description: Deals area fire damage, burns targets, and leaves Burning Ground that
+    can apply Burn.
   skillType: 3
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 062eeb9d5e8ba8f45a9ddfea52518f82, type: 3}
   cooldown: 5
+  mpCost: 1
   range: 3
   vfxConfig:
     castVfxPrefab: {fileID: 0}

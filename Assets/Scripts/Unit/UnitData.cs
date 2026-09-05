@@ -1,5 +1,6 @@
 using UnityEngine;
 using TurnBasedGame.Core;
+using TurnBasedGame.EditorSupport;
 
 namespace TurnBasedGame.Unit
 {
@@ -27,6 +28,7 @@ namespace TurnBasedGame.Unit
         public float moveSpeed = 5f;
 
         [Tooltip("Icon hiển thị trên UI")]
+        [SpritePreview]
         public Sprite icon;
     }
 }

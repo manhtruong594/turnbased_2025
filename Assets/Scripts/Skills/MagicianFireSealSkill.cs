@@ -24,7 +24,7 @@ namespace TurnBasedGame.Skills
 
         public override bool CanUse(UnitController caster, Vector3Int targetPos)
         {
-            if (!ValidateCooldown() || !ValidateRange(caster, targetPos))
+            if (!ValidateCooldown() || !ValidateMP(caster) || !ValidateRange(caster, targetPos))
                 return false;
 
             return IsEnemyOrEmptyTile(caster, targetPos) && ValidateCustomConditions(caster, targetPos);

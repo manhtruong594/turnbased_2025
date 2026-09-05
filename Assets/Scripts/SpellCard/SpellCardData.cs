@@ -1,4 +1,5 @@
 using TurnBasedGame.Core;
+using TurnBasedGame.EditorSupport;
 using TurnBasedGame.Unit;
 using UnityEngine;
 
@@ -14,6 +15,7 @@ namespace TurnBasedGame.SpellCard
         [Header("Basic Info")]
         public string spellName = "Unnamed Spell";
         [TextArea(2, 4)] public string description;
+        [SpritePreview]
         public Sprite icon;
 
         [Header("Cost & Restrictions")]

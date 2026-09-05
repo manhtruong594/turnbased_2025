@@ -9800,6 +9800,7 @@ GameObject:
   - component: {fileID: 8658858430017968273}
   - component: {fileID: 444895837611465673}
   - component: {fileID: 1292148066162670061}
+  - component: {fileID: 6241863644373235347}
   m_Layer: 0
   m_Name: vfx_stun_loop
   m_TagString: Untagged
@@ -14716,6 +14717,19 @@ ParticleSystemRenderer:
   m_MeshWeighting1: 1
   m_MeshWeighting2: 1
   m_MeshWeighting3: 1
+--- !u!114 &6241863644373235347
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7362859221103492248}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a2620fa96a7f2842bb734c1f55667d5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BuffEffect
+  effectType: 105
 --- !u!1 &8525642085004300978
 GameObject:
   m_ObjectHideFlags: 0

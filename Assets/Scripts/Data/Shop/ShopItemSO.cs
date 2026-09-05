@@ -1,4 +1,5 @@
 using UnityEngine;
+using TurnBasedGame.EditorSupport;
 
 namespace TurnBasedGame.Data
 {
@@ -19,7 +20,7 @@ namespace TurnBasedGame.Data
         [Header("Display Info")]
         [SerializeField] private string _itemName = "Unnamed Item";
         [SerializeField, TextArea(2, 4)] private string _description;
-        [SerializeField] private Sprite _icon;
+        [SerializeField, SpritePreview] private Sprite _icon;
 
         [Header("Pricing")]
         [SerializeField, Min(0)] private int _price = 50;

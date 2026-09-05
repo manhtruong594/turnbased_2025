@@ -23,6 +23,11 @@ namespace TurnBasedGame.Skills
                 Debug.LogWarning($"{skillName} is on cooldown.");
                 return false;
             }
+            if (!ValidateMP(caster))
+            {
+                Debug.LogWarning($"Not enough MP to use {skillName}. Required MP: {MPCost}.");
+                return false;
+            }
             if (!ValidateRange(caster, targetPos)) {
                 Debug.LogWarning($"{targetPos} is out of range for {skillName}.");
                 return false;

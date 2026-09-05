@@ -10,13 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 65e443a4567d66244b7d585e46e2b439, type: 3}
-  m_Name: Axe Whirl Wind
+  m_Name: mace Smash
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Skills.NormalAttackSkill
   skillName: NormalAttack
-  description: No description
+  description: Deals 125% of the caster's current damage to one enemy.
   skillType: 0
-  icon: {fileID: 21300000, guid: 2820b2e4880bb924da42e15982d02033, type: 3}
+  icon: {fileID: 21300000, guid: b9d3d7dbf5c4f114fbe9d15c62c0f9cc, type: 3}
   cooldown: 0
+  mpCost: 0
   range: 1
   vfxConfig:
     castVfxPrefab: {fileID: 0}

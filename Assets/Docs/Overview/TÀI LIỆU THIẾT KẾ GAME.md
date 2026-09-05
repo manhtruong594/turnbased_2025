@@ -33,7 +33,7 @@ spell card để thay đổi thế trận.
 | Thuật ngữ kỹ thuật | Tên hiển thị đề xuất | Ý nghĩa |
 |---|---|---|
 | Turn | Lượt | Khoảng thời gian một phe được hành động |
-| MP/Mana | Linh Lực | Tài nguyên dùng để triệu hồi và dùng spell card |
+| MP/Mana | Linh Lực | Tài nguyên dùng để triệu hồi, sử dụng skill và dùng spell card |
 | Dice roll | Gieo Quẻ | Cơ chế cấp hoặc biến thiên tài nguyên theo lượt |
 | Spawn Unit | Hóa Hình | Đưa unit từ bộ bài vào spawn point |
 | Capture Point | Trấn Điểm | Vị trí chiến lược quyết định quyền kiểm soát/thắng trận |
@@ -50,7 +50,7 @@ marketing.
 4. Người chơi nhận/quản lý MP, sau đó chọn một hoặc nhiều hành động hợp lệ:
    - Hóa Hình unit tại spawn point và trả MP.
    - Chọn unit, xem vùng đi, di chuyển.
-   - Dùng normal attack hoặc skill trên mục tiêu hợp lệ.
+   - Dùng normal attack miễn phí hoặc trả MP để dùng skill trên mục tiêu hợp lệ.
    - Chọn spell card, chọn mục tiêu, xác nhận và trả MP.
 5. Capture point cập nhật khi unit chiếm vị trí liên quan.
 6. Người chơi kết thúc lượt hoặc timer hết; buff/debuff, cooldown và trạng thái unit được cập nhật.
@@ -77,9 +77,10 @@ mục tiêu hợp lệ và còn tài nguyên/trạng thái tương ứng.
 
 ### Skill
 
-Skill là `ScriptableObject` kế thừa `SkillBase`, có loại skill, target mask, range, cooldown, animation
-cue và VFX. Normal attack cũng đi qua skill pipeline. Hiệu ứng có thể gây damage, heal, buff/debuff,
-dịch chuyển hoặc tạo hazard trên tile.
+Skill là `ScriptableObject` kế thừa `SkillBase`, có loại skill, target mask, range, cooldown, `mpCost`,
+animation cue và VFX. Normal attack cũng đi qua skill pipeline nhưng có chi phí 0 MP. Các skill còn lại
+chỉ được thi triển khi chủ sở hữu unit đủ MP; MP được trừ khi skill bắt đầu thi triển và không bị trừ khi
+hành động không hợp lệ. Hiệu ứng có thể gây damage, heal, buff/debuff, dịch chuyển hoặc tạo hazard trên tile.
 
 ### Spell card
 
@@ -176,7 +177,7 @@ tài nguyên.
 ## 11. Chỉ số cần đo khi playtest
 
 - Thời lượng trận và thời lượng trung bình mỗi lượt.
-- Tỷ lệ MP dành cho spawn so với spell.
+- Tỷ lệ MP dành cho spawn so với skill và spell.
 - Pick rate, win rate và survival rate của từng unit.
 - Tần suất người chơi gặp invalid action hoặc không hiểu target.
 - Số lượt để chiếm/giành lại capture point.

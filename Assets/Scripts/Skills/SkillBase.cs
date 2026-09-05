@@ -6,6 +6,8 @@ using System.Collections;
 using Unity.VisualScripting;
 using System;
 using RedBjorn.ProtoTiles.Example;
+using TurnBasedGame.Resources;
+using TurnBasedGame.EditorSupport;
 
 namespace TurnBasedGame.Skills
 {
@@ -19,8 +21,9 @@ namespace TurnBasedGame.Skills
         [SerializeField] protected string skillName = "Unnamed Skill";
         [SerializeField, TextArea(3, 5)] protected string description = "No description";
         [SerializeField] protected SkillType skillType;
-        [SerializeField] protected Sprite icon;
+        [SerializeField, SpritePreview] protected Sprite icon;
         [SerializeField] protected int cooldown;
+        [SerializeField, Min(0)] protected int mpCost = 1;
         [SerializeField] protected int range = 1;
 
         [Header("VFX Settings")]
@@ -38,6 +41,7 @@ namespace TurnBasedGame.Skills
         public Sprite Icon => icon;
         public int Cooldown => cooldown;
         public int CurrentCooldown => currentCooldown;
+        public int MPCost => skillType == SkillType.Normal ? 0 : mpCost;
         public int Range => range;
         public SkillVfxConfig VfxConfig => GetVfxConfig();
 
@@ -57,6 +61,11 @@ namespace TurnBasedGame.Skills
             if (!ValidateCooldown())
             {
                 Debug.LogWarning($"{skillName} is on cooldown.");
+                return false;
+            }
+            if (!ValidateMP(caster))
+            {
+                Debug.LogWarning($"Not enough MP to use {skillName}. Required MP: {MPCost}.");
                 return false;
             }
             if (!ValidateRange(caster, targetPos))
@@ -82,6 +91,16 @@ namespace TurnBasedGame.Skills
         {
             if (skillType == SkillType.Normal) return true;
             return currentCooldown <= 0;
+        }
+
+        protected virtual bool ValidateMP(UnitController caster)
+        {
+            if (MPCost <= 0)
+                return true;
+
+            return caster != null
+                && MPManager.Instance != null
+                && MPManager.Instance.HasEnoughMP(caster.GetOwner(), MPCost);
         }
 
         protected virtual bool ValidateRange(UnitController caster, Vector3Int targetPos)
@@ -128,7 +147,24 @@ namespace TurnBasedGame.Skills
         
         public void Execute(UnitController caster, Vector3Int targetPos)
         {
+            if (!TrySpendMP(caster))
+            {
+                Debug.LogWarning($"Not enough MP to use {skillName}. Required MP: {MPCost}.");
+                SkillEventBus.Instance?.TriggerSkillFailed(this, caster, "Not enough MP.");
+                return;
+            }
+
             Updater.Instance.StartCoroutine(ExcuteAsync(caster, targetPos));
+        }
+
+        private bool TrySpendMP(UnitController caster)
+        {
+            if (MPCost <= 0)
+                return true;
+
+            return caster != null
+                && MPManager.Instance != null
+                && MPManager.Instance.SpendMP(caster.GetOwner(), MPCost);
         }
 
         const float EXECUTE_TIMEOUT = 10f;

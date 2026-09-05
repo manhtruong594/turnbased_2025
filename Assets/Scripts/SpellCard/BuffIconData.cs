@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using TurnBasedGame.EditorSupport;
 using UnityEngine;
 
 namespace TurnBasedGame.SpellCard
@@ -27,6 +28,7 @@ namespace TurnBasedGame.SpellCard
         public struct Entry
         {
             public StatusEffectType type;
+            [SpritePreview]
             public Sprite icon;
             public Color color;
         }

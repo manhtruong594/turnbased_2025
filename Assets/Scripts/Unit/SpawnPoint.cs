@@ -48,12 +48,19 @@ namespace TurnBasedGame.Unit
             gridPosition = gridPos;
             
             UpdateVisual();
-            GameMediator.Instance.OnUnitMoved += HandleUnitMoved;
+            if (GameMediator.Instance != null)
+            {
+                GameMediator.Instance.OnUnitMoved -= HandleUnitMoved;
+                GameMediator.Instance.OnUnitMoved += HandleUnitMoved;
+            }
         }
         
         void OnDisable()
         {
-            GameMediator.Instance.OnUnitMoved -= HandleUnitMoved;
+            if (GameMediator.Instance != null)
+            {
+                GameMediator.Instance.OnUnitMoved -= HandleUnitMoved;
+            }
         }
         
         private void HandleUnitMoved(UnitController move, Vector3Int oldPos, Vector3Int newPos)

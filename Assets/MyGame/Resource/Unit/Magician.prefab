@@ -1625,8 +1625,12 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5204393105807402248, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}
       propertyPath: m_Name
-      value: Soldier__Female
+      value: Magician
       objectReference: {fileID: 0}
+    - target: {fileID: 7572629158187435638, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}
+      propertyPath: 'startingSkills.Array.data[0]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 264d50d6fa6498c459c5e1b5ba81b661, type: 2}
     - target: {fileID: 7572629158187435638, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}
       propertyPath: 'startingSkills.Array.data[1]'
       value: 

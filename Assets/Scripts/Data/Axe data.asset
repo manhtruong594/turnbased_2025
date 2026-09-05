@@ -19,4 +19,4 @@ MonoBehaviour:
   spawnCost: 3
   moveRange: 6
   moveSpeed: 5
-  icon: {fileID: 21300000, guid: 5e2805d1479227b499602a8f62f9a0e7, type: 3}
+  icon: {fileID: 21300000, guid: e128b01dab70e7a498a78577123c2db0, type: 3}

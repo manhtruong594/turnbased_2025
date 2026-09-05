@@ -87,7 +87,7 @@ PrefabInstance:
     - target: {fileID: 7572629158187435638, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}
       propertyPath: 'startingSkills.Array.data[0]'
       value: 
-      objectReference: {fileID: 11400000, guid: c8301b7a126a8b247a11efd55082b802, type: 2}
+      objectReference: {fileID: 11400000, guid: a5e2871c338541841aedca1a4fae0271, type: 2}
     - target: {fileID: 7572629158187435638, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}
       propertyPath: 'startingSkills.Array.data[1]'
       value: 
