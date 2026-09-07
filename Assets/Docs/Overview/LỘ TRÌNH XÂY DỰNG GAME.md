@@ -1,6 +1,6 @@
 # Lộ trình xây dựng game
 
-Cập nhật: `2026-09-04`
+Cập nhật: `2026-09-07`
 
 ## 1. Trạng thái hiện tại
 
@@ -16,7 +16,7 @@ nhưng chưa có đủ kiểm thử regression, persistence, Shop/Settings và A
 | AI local | Một phần | Spawn/Move/Attack; thiếu spell, capture priority và utility scoring |
 | Main Menu/Prepare/Inventory | Một phần | Các screen lõi có code; cần kiểm chứng scene/prefab flow |
 | Shop/Settings/Persistence | Chưa có | Data nền tảng có nhưng thiếu flow hoàn chỉnh và save/load |
-| Multiplayer | Chưa có | Không có runtime networking/lobby/matchmaking |
+| Multiplayer | Một phần | Có command authority local; chưa có runtime networking/lobby/matchmaking |
 | Test automation | Chưa có | Có editor test tool thủ công, chưa có test suite first-party |
 | Release | Chưa có | Chưa có build artifact và store pipeline |
 
@@ -98,6 +98,9 @@ Tiêu chí thoát:
 
 Chỉ bắt đầu sau quyết định sản phẩm và prototype kỹ thuật. Cần chốt authority model, framework mạng,
 host/server model và phạm vi reconnect trước khi viết gameplay networking.
+
+Kế hoạch triển khai và tiêu chí nghiệm thu chi tiết nằm tại
+[Kế hoạch hoàn thiện multiplayer](MULTIPLAYER_IMPLEMENTATION_PLAN.md).
 
 Phạm vi dự kiến:
 

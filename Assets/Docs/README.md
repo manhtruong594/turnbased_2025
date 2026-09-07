@@ -22,6 +22,8 @@ kế là nguồn tham chiếu cho ý định sản phẩm.
   nội dung, hình ảnh và phạm vi sản phẩm.
 - [Lộ trình xây dựng](Overview/LỘ%20TRÌNH%20XÂY%20DỰNG%20GAME.md): milestone, trạng thái và
   thứ tự ưu tiên.
+- [Kế hoạch hoàn thiện multiplayer](Overview/MULTIPLAYER_IMPLEMENTATION_PLAN.md): kiến trúc MVP,
+  thứ tự triển khai, tiêu chí nghiệm thu và ma trận kiểm thử mạng.
 - [Kế hoạch Phase 2](Overview/KẾ%20HOẠCH%20CHI%20TIẾT%20-%20PHASE%202.md): vertical slice.
 - [Kế hoạch Phase 4](Overview/KẾ%20HOẠCH%20CHI%20TIẾT%20-%20PHASE%204.md): content expansion.
 - [Kế hoạch UI](UISystem_Plan.md): menu, inventory, prepare battle, shop và persistence.
