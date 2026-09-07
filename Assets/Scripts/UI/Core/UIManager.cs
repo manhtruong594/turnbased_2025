@@ -54,6 +54,11 @@ namespace TurnBasedGame.UI
             BuildPrefabRegistry();
         }
 
+        private void Start()
+        {
+            ShowScreen<MainMenuScreen>(false);
+        }
+
         private void Update()
         {
             if (Input.GetKeyDown(KeyCode.Escape))

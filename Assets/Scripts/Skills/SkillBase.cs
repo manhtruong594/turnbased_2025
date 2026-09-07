@@ -19,7 +19,7 @@ namespace TurnBasedGame.Skills
     {
         [Header("Basic Info")]
         [SerializeField] protected string skillName = "Unnamed Skill";
-        [SerializeField, TextArea(3, 5)] protected string description = "No description";
+        [SerializeField, TextArea(3, 5)] protected string description = "Không có mô tả";
         [SerializeField] protected SkillType skillType;
         [SerializeField, SpritePreview] protected Sprite icon;
         [SerializeField] protected int cooldown;
@@ -58,6 +58,11 @@ namespace TurnBasedGame.Skills
         #region Template Method - Validation Pipeline
         public virtual bool CanUse(UnitController caster, Vector3Int targetPos)
         {
+            if (caster == null || !caster.CanAct())
+            {
+                Debug.LogWarning($"{skillName} cannot be used because the caster cannot act.");
+                return false;
+            }
             if (!ValidateCooldown())
             {
                 Debug.LogWarning($"{skillName} is on cooldown.");

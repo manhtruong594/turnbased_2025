@@ -12,8 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f076e9c1177c5f14ba29804f6973f42e, type: 3}
   m_Name: Heal skill
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Skills.HealSkill
-  skillName: Unnamed Skill
-  description: Restores health equal to 150% of the caster's current damage to the caster or an injured ally.
+  skillName: Heal Skill
+  description: "H\u1ED3i m\xE1u cho b\u1EA3n th\xE2n, gia\u0301 tri\u0323 b\u0103\u0300ng
+    150% \u0111i\xEA\u0309m t\xE2\u0301n c\xF4ng"
   skillType: 4
   icon: {fileID: 21300000, guid: cc08ccd1cf04a3d43b8d437d087cfc02, type: 3}
   cooldown: 2
@@ -28,9 +29,5 @@ MonoBehaviour:
     castSpawnPoint: 1
     releaseSpawnPoint: 1
     impactSpawnPoint: 2
-  VfxPrefab: {fileID: 1917425252371570480, guid: 316bffdc277dfd348a97c71fc8776977, type: 3}
-  VfxHitPrefab: {fileID: 0}
-  HasDelayApplyEffect: 0
-  DelayApplyEffectTime: 0.5
-  targetTypes: 13
+  targetTypes: 4
   multiple: 1.5

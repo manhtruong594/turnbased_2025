@@ -52,13 +52,17 @@ toàn bộ tập mục tiêu.
 | Effect | Kết quả |
 |---|---|
 | `HealEffect` | Hồi HP nếu target nhận heal được |
+| `HealOverTimeEffect` | Hồi HP ở đầu mỗi lượt theo value/duration |
 | `ShieldEffect` | Thêm shield status theo value/duration |
 | `DamageBuffEffect` | Tăng damage theo duration |
-| `CleanseEffect` | Xóa status theo implementation hiện tại |
+| `CleanseEffect` | Xóa toàn bộ debuff ngay lập tức, giữ nguyên buff |
+| `CleanseOverTimeEffect` | Xóa toàn bộ debuff ở đầu mỗi lượt trong duration |
+| `SlowEffect` | Giảm move range theo phần trăm |
+| `WeakenEffect` | Giảm outgoing damage theo phần trăm |
 | `RootEffect` | Cấm move |
 | `DamageEffect` | Gây damage trực tiếp |
-| `StunEffect` | Cấm/giới hạn hành động theo status integration |
-| `FreezeEffect` | Gắn freeze status; behavior cần chốt rõ |
+| `StunEffect` | Bỏ toàn bộ action của lượt bị stun |
+| `FreezeEffect` | Khóa hành động 2 lượt; hit trực tiếp đầu tiên phá Freeze và nhận thêm 20% damage |
 | `BleedEffect` | Damage theo turn |
 | `CompositeEffect` | Chạy danh sách effect theo thứ tự |
 
@@ -71,8 +75,10 @@ Data assets hiện có: Damage Spell, Root Spell, Shield Spell và Stun Spell tr
 move, heal ban, untargetable, displacement immunity và rooted. `StatusEffectType` có thêm các giá trị
 phục vụ skill như `BloodRage`, `StanceGuard`, `ShadowStep`, `GuardBreak`, `HealBan`.
 
-`Slow` và `Weaken` hiện được khai báo nhưng chưa có modifier runtime đầy đủ. `Freeze` cần thống nhất là
-slow, root hay stun để tránh UI và logic hiểu khác nhau.
+`Slow` giảm move range theo `Value`%, `Weaken` giảm outgoing damage theo `Value`%. `Freeze` khóa toàn
+bộ hành động trong 2 lượt. Hit damage trực tiếp đầu tiên nhận thêm 20% damage, phá `Freeze` và chuyển
+số lượt còn lại thành `Slow(20)`; damage-over-time không phá `Freeze`. Status tick ở đầu lượt nhưng
+chỉ bị xóa khi unit hoàn tất action để duration 1 vẫn có hiệu lực trong lượt cuối.
 
 ## 7. Luồng sử dụng card
 
@@ -102,8 +108,6 @@ Cancel hoặc validation fail phải trở về state an toàn mà không trừ 
 |---|---|
 | P0 | Chưa có regression cho cancel/invalid/dead target và transaction MP/card |
 | P1 | `AllAllies`/`AllEnemies` validation và execution chưa hoàn chỉnh |
-| P1 | `Slow`/`Weaken` chưa nối modifier runtime đầy đủ |
-| P1 | `Freeze` chưa có semantic thống nhất |
 | P1 | AI chưa dùng spell card |
 | P2 | Tooltip/combat log/fallback icon cần hoàn thiện |
 

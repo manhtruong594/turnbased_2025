@@ -326,7 +326,7 @@ namespace TurnBasedGame.UI
             _spellDetail?.Hide();
 
             bool inDeck = _playerData.SelectedDeck.Contains(unit);
-            _unitDetail?.Bind(unit.UnitData, inDeck);
+            _unitDetail?.Bind(unit, inDeck);
             _unitDetail?.Show();
         }
 

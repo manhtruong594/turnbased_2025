@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ef2af5fd09c475408ffec914fb63c2e, type: 3}
+  m_Name: BattleMapCatalog
+  m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Maps.BattleMapCatalogSO
+  _maps:
+  - {fileID: 11400000, guid: 99fbb4c188d44dd4c885fc0eb665f534, type: 2}
+  - {fileID: 11400000, guid: 16eeb692b951e734e963e66203f35035, type: 2}
+  - {fileID: 11400000, guid: 0def49cdfda781a4196a5768379fe11f, type: 2}

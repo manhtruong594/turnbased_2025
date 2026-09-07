@@ -3,6 +3,7 @@ using TurnBasedGame.Core;
 using TurnBasedGame.UI;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// Hiển thị màn hình kết thúc trận đấu (Win / Lose).
@@ -21,7 +22,6 @@ public class UI_Endgame : MonoBehaviour
     [Header("Config")]
     [SerializeField] private PlayerID _localPlayerID = PlayerID.Player1;
     [SerializeField] private string _mainMenuSceneName = "MainMenu";
-    [SerializeField] private string _battleSceneName = "HUDScene";
 
     [Header("Text Override")]
     [SerializeField] private string _winText = "CHIẾN THẮNG";
@@ -55,7 +55,7 @@ public class UI_Endgame : MonoBehaviour
 
     private void OnRestartClicked()
     {
-        SceneLoader.Instance?.LoadSceneAsync(_battleSceneName);
+        SceneLoader.Instance?.LoadSceneAsync(SceneManager.GetActiveScene().name);
     }
 
     private void OnMainMenuClicked()

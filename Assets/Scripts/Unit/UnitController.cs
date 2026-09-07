@@ -80,9 +80,35 @@ namespace TurnBasedGame.Unit
         #region  Movement Methods
         public void Move(List<TileEntity> path, Action onComplete = null)
         {
+            if (path == null || path.Count == 0)
+            {
+                onComplete?.Invoke();
+                return;
+            }
+
+            var destination = path[path.Count - 1].Position;
+            var result = LocalMatchAuthority.SubmitMove(
+                GetOwner(), this, destination, onComplete);
+            if (!result.Succeeded)
+                onComplete?.Invoke();
+        }
+
+        internal bool TryMoveAuthorized(
+            List<TileEntity> path,
+            Action onComplete,
+            out string failureReason)
+        {
+            if (!CanMove() || path == null || path.Count == 0)
+            {
+                failureReason = "Unit không thể di chuyển hoặc path không hợp lệ.";
+                return false;
+            }
+
             _tempPath = path;
             OnCompleteMove = onComplete;
             _commandInvoker.ExecuteCommand(_moveCommand);
+            failureReason = null;
+            return true;
         }
 
         public void MoveCommand()
@@ -135,6 +161,7 @@ namespace TurnBasedGame.Unit
             }
             UpdateGridPosition(path[path.Count - 1].Position);
             runtimeStats.IsMoveCompleted = true;
+            _movingCoroutine = null;
             _actionPanel.SetActive(IsSelected);
             OnCompleteMove?.Invoke();
             _cancelMoveButton.interactable = true;
@@ -200,8 +227,8 @@ namespace TurnBasedGame.Unit
         {
             TileHazardManager.Instance?.TryApplyTurnStartEffect(this);
             _attackComponent.ReduceSkillsCooldowns();
-            _buffHandler?.TickEffects();
             ResetComponents();
+            _buffHandler?.TickEffects();
         }
     
         public void ResetComponents()
@@ -212,7 +239,12 @@ namespace TurnBasedGame.Unit
 
         public UnitAttack AttackComponent => _attackComponent;
         public UnitData UnitData => unitData;
-        public int GetMoveRange() => runtimeStats.MoveRange + (_buffHandler?.GetMoveBonus() ?? 0);
+        public int GetMoveRange()
+        {
+            int moveRange = runtimeStats.MoveRange + (_buffHandler?.GetMoveBonus() ?? 0);
+            int penalty = _buffHandler?.GetMovePercentPenalty() ?? 0;
+            return Mathf.Max(0, Mathf.FloorToInt(moveRange * (1f - penalty / 100f)));
+        }
         public int GetCurrentHealth() => runtimeStats.Health;
         public float GetHealthPercent() => (float)runtimeStats.Health / runtimeStats.MaxHealth;
         public PlayerID GetOwner() => runtimeStats.Owner;
@@ -221,24 +253,28 @@ namespace TurnBasedGame.Unit
         {
             int flatDamage = runtimeStats.BaseDamage + (_buffHandler?.GetDamageBonus() ?? 0);
             int percentBonus = _buffHandler?.GetDamagePercentBonus() ?? 0;
-            return Mathf.Max(0, Mathf.RoundToInt(flatDamage * (1f + percentBonus / 100f)));
+            int percentPenalty = _buffHandler?.GetDamagePercentPenalty() ?? 0;
+            return Mathf.Max(0, Mathf.RoundToInt(flatDamage * (1f + (percentBonus - percentPenalty) / 100f)));
         }
         public bool CanMove()
         {
+            if (_movingCoroutine != null) return false;
             if (runtimeStats.IsMoveCompleted || runtimeStats.IsInAttackMode) return false;
             if (_buffHandler != null && _buffHandler.IsRooted()) return false;
             return true;
         }
-        public bool IsActionFinished() => runtimeStats.IsActionCompleted;
+        public bool IsActionFinished() => !CanAct();
+        public bool CanAct() => !runtimeStats.IsDead && !runtimeStats.IsActionCompleted &&
+                                (_buffHandler == null || !_buffHandler.PreventsAction());
         public bool IsDead() => runtimeStats.IsDead;
 
         public BuffDebuffHandler BuffHandler => _buffHandler;
 
-        public void TakeDamage(float damage)
+        public void TakeDamage(float damage, bool canBreakFreeze = true)
         {
             // �p d?ng Shield gi?m s�t thuong
             if (damage > 0 && _buffHandler != null)
-                damage = _buffHandler.ModifyIncomingDamage(damage);
+                damage = _buffHandler.ModifyIncomingDamage(damage, canBreakFreeze);
 
             runtimeStats.Health -= (int)damage;
             runtimeStats.Health = Mathf.Clamp(runtimeStats.Health, 0, runtimeStats.MaxHealth);
@@ -296,6 +332,7 @@ namespace TurnBasedGame.Unit
                 return;
             runtimeStats.IsMoveCompleted = true;
             runtimeStats.IsActionCompleted = true;
+            _buffHandler?.RemoveExpiredEffects();
             _attackComponent.ExitAttackMode();
             ChangeSelected(false);
             AreaPathManager.Instance.ResetAll(this);

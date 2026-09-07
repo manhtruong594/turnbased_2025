@@ -64,7 +64,6 @@ namespace TurnBasedGame.SpellCard
         HealOverTime = 1,
         Shield = 2,
         DamageBuff = 3,
-        CleanseOverTime = 4,
         BloodRage = 5,
         StanceGuard = 6,
         ShadowStep = 7,

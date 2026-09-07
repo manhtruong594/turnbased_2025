@@ -1,6 +1,8 @@
+using System.Collections.Generic;
 using UnityEngine;
 using TurnBasedGame.Core;
 using TurnBasedGame.EditorSupport;
+using TurnBasedGame.Skills;
 
 namespace TurnBasedGame.Unit
 {
@@ -24,11 +26,14 @@ namespace TurnBasedGame.Unit
         [Header("Movement")]
         [Range(1, 10)]
         public int moveRange = 3;
-        [Range(1f, 10f)]
-        public float moveSpeed = 5f;
-
+        
         [Tooltip("Icon hiển thị trên UI")]
         [SpritePreview]
         public Sprite icon;
+
+        [Header("Skills")]
+        [SerializeField] private List<SkillBase> startingSkills = new();
+
+        public IReadOnlyList<SkillBase> StartingSkills => startingSkills;
     }
 }

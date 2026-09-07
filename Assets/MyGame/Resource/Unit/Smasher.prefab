@@ -68,14 +68,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: Smasher
       objectReference: {fileID: 0}
-    - target: {fileID: 7572629158187435638, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}
-      propertyPath: 'startingSkills.Array.data[0]'
-      value: 
-      objectReference: {fileID: 11400000, guid: 445081f33d81048419415946e7004b92, type: 2}
-    - target: {fileID: 7572629158187435638, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}
-      propertyPath: 'startingSkills.Array.data[1]'
-      value: 
-      objectReference: {fileID: 11400000, guid: ad9be5f01ead4fc7b27e52ee3e7675a0, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects:
     - {fileID: 1204427113363424705, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}

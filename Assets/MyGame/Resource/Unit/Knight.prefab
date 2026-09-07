@@ -54,10 +54,6 @@ MonoBehaviour:
   canAttackThroughObstacles: 0
   FinishAttackButton: {fileID: 3332735922958582441}
   _actionCanvasGroup: {fileID: 5935454900314583146}
-  startingSkills:
-  - {fileID: 11400000, guid: c8301b7a126a8b247a11efd55082b802, type: 2}
-  - {fileID: 11400000, guid: 05c17095b200410b9466fe345b145015, type: 2}
-  - {fileID: 11400000, guid: 17cbaea1db222d24db000283a3f68aab, type: 2}
   skillButtonPrefab: {fileID: 6131648088992773535, guid: 2cc31421d5ee23044aed87af651491df, type: 3}
   skillButtonContainer: {fileID: 1905263602909234083}
 --- !u!114 &1328495523500364131

@@ -158,14 +158,6 @@ PrefabInstance:
       propertyPath: m_ConstrainProportionsScale
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 7572629158187435638, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}
-      propertyPath: 'startingSkills.Array.data[0]'
-      value:
-      objectReference: {fileID: 11400000, guid: 5b267e267f77829499bfde3f3f1fea17, type: 2}
-    - target: {fileID: 7572629158187435638, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}
-      propertyPath: 'startingSkills.Array.data[1]'
-      value:
-      objectReference: {fileID: 11400000, guid: 082162c60ebd4a7985b5f252e8376d26, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects:
     - {fileID: 1204427113363424705, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}

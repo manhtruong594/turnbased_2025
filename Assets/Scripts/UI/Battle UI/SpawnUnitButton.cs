@@ -4,6 +4,7 @@ using TMPro;
 using TurnBasedGame.Unit;
 using TurnBasedGame.Core;
 using TurnBasedGame.Resources;
+using TurnBasedGame.Command;
 
 namespace TurnBasedGame.UI
 {
@@ -115,7 +116,8 @@ namespace TurnBasedGame.UI
             }
 
             // Thử spawn unit
-            bool success = UnitSpawner.Instance.SpawnUnit(unit, currentPlayer);
+            var result = LocalMatchAuthority.SubmitSpawn(currentPlayer, unit);
+            bool success = result.Succeeded;
 
             if (success)
             {
@@ -124,7 +126,7 @@ namespace TurnBasedGame.UI
             }
             else
             {
-                Debug.LogWarning($"Failed to spawn {unit.UnitData.unitName}");
+                Debug.LogWarning($"Failed to spawn {unit.UnitData.unitName}: {result.FailureReason}");
                 OnSpawnFailed();
             }
         }

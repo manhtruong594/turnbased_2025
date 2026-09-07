@@ -4,6 +4,7 @@ using System.Linq;
 using TurnBasedGame.Resources;
 using TurnBasedGame.Unit;
 using TurnBasedGame.Core;
+using TurnBasedGame.Command;
 
 namespace TurnBasedGame.Unit
 {
@@ -64,10 +65,7 @@ namespace TurnBasedGame.Unit
         private void InitializeSpawnPoints()
         {
             // Tìm tất cả spawn points trong scene nếu chưa được gán
-            if (spawnPoints == null || spawnPoints.Count == 0)
-            {
-                spawnPoints = new List<SpawnPoint>(FindObjectsByType<SpawnPoint>(FindObjectsSortMode.None));
-            }
+            spawnPoints = new List<SpawnPoint>(FindObjectsByType<SpawnPoint>(FindObjectsSortMode.None));
             var validSpawnPoints = new List<SpawnPoint>(spawnPoints.Count);
             foreach (var point in spawnPoints)
             {
@@ -108,6 +106,15 @@ namespace TurnBasedGame.Unit
         /// Kiểm tra MP và spawn point hợp lệ
         /// </summary>
         public bool SpawnUnit(UnitController unit, PlayerID owner, SpawnPoint spawnPoint = null)
+        {
+            return LocalMatchAuthority.SubmitSpawn(owner, unit, spawnPoint).Succeeded;
+        }
+
+        internal bool TrySpawnUnitAuthorized(
+            UnitController unit,
+            PlayerID owner,
+            SpawnPoint spawnPoint,
+            out string failureReason)
         { 
             if (spawnPoint == null)
             {
@@ -116,6 +123,7 @@ namespace TurnBasedGame.Unit
 
             if (spawnPoint == null)
             {
+                failureReason = "Không có spawn point khả dụng.";
                 return false;
             }
 
@@ -123,6 +131,14 @@ namespace TurnBasedGame.Unit
             if (!spawnPoint.BelongsTo(owner) || !spawnPoint.IsAvailable)
             {
                 Debug.LogWarning("Spawn point is not valid");
+                failureReason = "Spawn point không thuộc người chơi hoặc đã bị chiếm.";
+                return false;
+            }
+
+            if (MapManager.Instance == null ||
+                !MapManager.Instance.IsTileAvailable(spawnPoint.GridPosition))
+            {
+                failureReason = "Tile tại spawn point không khả dụng.";
                 return false;
             }
 
@@ -141,6 +157,7 @@ namespace TurnBasedGame.Unit
             _gameMediator.NotifySpawnUnit(unitClone, unitClone.UnitData.spawnCost);
 
             Debug.Log($"Successfully spawned {unitClone.UnitData.unitName} for {owner} at {spawnPoint.GridPosition}");
+            failureReason = null;
             return true;
         }
 

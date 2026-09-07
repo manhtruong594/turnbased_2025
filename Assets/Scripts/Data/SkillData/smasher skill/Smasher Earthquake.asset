@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Smasher Earthquake
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Skills.SmasherEarthquakeSkill
   skillName: Dia Chan Toai Son
-  description: Strikes one tile, damages an enemy, pushes it back, and stuns on collision.
+  description: "Đánh vào một ô, gây sát thương lên một kẻ địch, đẩy lùi và áp dụng Stun khi va chạm."
   skillType: 3
   icon: {fileID: 21300000, guid: 7dfd68325eeac354d866d207e4d2744c, type: 3}
   cooldown: 4

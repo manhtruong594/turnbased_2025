@@ -13,9 +13,13 @@ MonoBehaviour:
   m_Name: Multi strike arrow
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Skills.NormalAttackSkill
   skillName: Multi strike arrow
-  description: Multi strike arrow
+  description: "B\u1EAFn nhi\u1EC1u m\u0169i t\xEAn li\xEAn ti\u1EBFp, mu\u0303i
+    t\xEAn \u0111\xE2\u0300u g\xE2y 1.2 l\xE2\u0300n sa\u0301t th\u01B0\u01A1ng,
+    nh\u01B0\u0303ng mu\u0303i t\xEAn sau g\xE2y sa\u0301t th\u01B0\u01A1ng gia\u0309m
+    d\xE2\u0300n bu\u0300 la\u0323i co\u0301 ti\u0309 l\xEA\u0323 25% \u0111o\u0301ng
+    b\u0103ng mu\u0323c ti\xEAu"
   skillType: 3
-  icon: {fileID: 21300000, guid: 43358b703766fee4ebe64c7fbd583376, type: 3}
+  icon: {fileID: 21300000, guid: 67e337d392cf3e04e8137438f47dfc04, type: 3}
   cooldown: 0
   mpCost: 1
   range: 5
@@ -42,4 +46,4 @@ MonoBehaviour:
     - rid: 5748816594849759309
       type: {class: FreezeEffect, ns: TurnBasedGame.SpellCard, asm: Assembly-CSharp}
       data:
-        duration: 1
+        duration: 2

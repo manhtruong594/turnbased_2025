@@ -5,6 +5,7 @@ using System.Linq;
 using RedBjorn.ProtoTiles;
 using TurnBasedGame.Capture;
 using TurnBasedGame.Core;
+using TurnBasedGame.Maps;
 using TurnBasedGame.Unit;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -16,7 +17,6 @@ public class BattleMapCreatorWindow : EditorWindow
 {
     private const string DefaultOutputFolder = "Assets/Maps";
 
-    [SerializeField] private SceneAsset templateScene;
     [SerializeField] private MapSettings sourceMap;
     [SerializeField] private string outputFolder = DefaultOutputFolder;
     [SerializeField] private string mapName = "BattleMap";
@@ -46,12 +46,6 @@ public class BattleMapCreatorWindow : EditorWindow
     private void OnEnable()
     {
         minSize = new Vector2(430f, 570f);
-        if (templateScene == null)
-        {
-            var activeScene = SceneManager.GetActiveScene();
-            templateScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(activeScene.path);
-        }
-
         if (sourceMap == null)
         {
             var manager = FindInActiveScene<MapManager>().FirstOrDefault();
@@ -65,11 +59,10 @@ public class BattleMapCreatorWindow : EditorWindow
     {
         scroll = EditorGUILayout.BeginScrollView(scroll);
         EditorGUILayout.HelpBox(
-            "Mỗi map được tạo từ một bản sao scene mẫu và một MapSettings riêng. Layout vuông được đối xứng theo trục X.",
+            "Mỗi map gồm MapSettings và BattleMapDefinition dùng chung một battle scene. Layout vuông được đối xứng theo trục X.",
             MessageType.Info);
 
         EditorGUI.BeginChangeCheck();
-        templateScene = (SceneAsset)EditorGUILayout.ObjectField("Scene mẫu", templateScene, typeof(SceneAsset), false);
         sourceMap = (MapSettings)EditorGUILayout.ObjectField("MapSettings nguồn", sourceMap, typeof(MapSettings), false);
         if (EditorGUI.EndChangeCheck())
         {
@@ -156,25 +149,20 @@ public class BattleMapCreatorWindow : EditorWindow
             return;
         }
 
-        if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
-        {
-            return;
-        }
-
-        var templatePath = AssetDatabase.GetAssetPath(templateScene);
         var sourceMapPath = AssetDatabase.GetAssetPath(sourceMap);
         var safeBaseName = SanitizeName(mapName);
         EnsureAssetFolder(outputFolder);
 
-        var plannedMaps = new List<(string Name, string Folder, string ScenePath, string MapPath)>();
+        var plannedMaps = new List<(string Name, string Folder, string MapPath, string DefinitionPath)>();
         for (var index = 0; index < mapCount; index++)
         {
             var generatedName = mapCount == 1 ? safeBaseName : $"{safeBaseName}_{index + 1:00}";
             var folder = $"{outputFolder.TrimEnd('/')}/{generatedName}";
-            plannedMaps.Add((generatedName, folder, $"{folder}/{generatedName}.unity", $"{folder}/{generatedName}_Map.asset"));
+            plannedMaps.Add((generatedName, folder, $"{folder}/{generatedName}_Map.asset", $"{folder}/{generatedName}_Definition.asset"));
         }
 
-        var existingPath = plannedMaps.SelectMany(item => new[] { item.ScenePath, item.MapPath }).FirstOrDefault(path => AssetDatabase.LoadMainAssetAtPath(path) != null);
+        var existingPath = plannedMaps.SelectMany(item => new[] { item.MapPath, item.DefinitionPath })
+            .FirstOrDefault(path => AssetDatabase.LoadMainAssetAtPath(path) != null);
         if (!string.IsNullOrEmpty(existingPath))
         {
             EditorUtility.DisplayDialog("Không thể tạo map", $"Asset đã tồn tại: {existingPath}\nHãy đổi tên để tránh ghi đè.", "Đóng");
@@ -183,6 +171,7 @@ public class BattleMapCreatorWindow : EditorWindow
 
         try
         {
+            var catalog = GetOrCreateCatalog();
             for (var index = 0; index < plannedMaps.Count; index++)
             {
                 var item = plannedMaps[index];
@@ -192,31 +181,29 @@ public class BattleMapCreatorWindow : EditorWindow
                     throw new InvalidOperationException($"Không thể sao chép MapSettings tới {item.MapPath}");
                 }
 
-                if (!AssetDatabase.CopyAsset(templatePath, item.ScenePath))
-                {
-                    throw new InvalidOperationException($"Không thể sao chép scene tới {item.ScenePath}");
-                }
-
                 AssetDatabase.Refresh();
                 var generatedMap = AssetDatabase.LoadAssetAtPath<MapSettings>(item.MapPath);
                 generatedMap.name = $"{item.Name}_Map";
                 GenerateTiles(generatedMap, seed + index);
                 EditorUtility.SetDirty(generatedMap);
-                AssetDatabase.SaveAssets();
 
-                var scene = EditorSceneManager.OpenScene(item.ScenePath, OpenSceneMode.Single);
-                ConfigureGeneratedScene(scene, generatedMap);
-                EditorSceneManager.SaveScene(scene);
-
-                if (!ValidateActiveScene(false))
+                var definition = CreateInstance<BattleMapDefinitionSO>();
+                definition.name = $"{item.Name}_Definition";
+                definition.ConfigureGenerated(item.Name, generatedMap, CreateSpawnData(), CreateCaptureData());
+                if (!definition.TryValidate(out var definitionError))
                 {
-                    throw new InvalidOperationException($"Map '{item.Name}' không vượt qua validation. Xem Console để biết chi tiết.");
+                    DestroyImmediate(definition);
+                    throw new InvalidOperationException($"Map '{item.Name}' không hợp lệ: {definitionError}");
                 }
+
+                AssetDatabase.CreateAsset(definition, item.DefinitionPath);
+                catalog.Add(definition);
             }
 
+            EditorUtility.SetDirty(catalog);
             AssetDatabase.SaveAssets();
             EditorUtility.DisplayDialog("Tạo map hoàn tất", $"Đã tạo {plannedMaps.Count} map trong {outputFolder}.", "Đóng");
-            Selection.activeObject = AssetDatabase.LoadAssetAtPath<SceneAsset>(plannedMaps[^1].ScenePath);
+            Selection.activeObject = AssetDatabase.LoadAssetAtPath<BattleMapDefinitionSO>(plannedMaps[^1].DefinitionPath);
         }
         catch (Exception exception)
         {
@@ -227,12 +214,6 @@ public class BattleMapCreatorWindow : EditorWindow
 
     private bool TryValidateInputs(out string error)
     {
-        if (templateScene == null)
-        {
-            error = "Chưa chọn scene mẫu.";
-            return false;
-        }
-
         if (sourceMap == null)
         {
             error = "Chưa chọn MapSettings nguồn.";
@@ -322,6 +303,41 @@ public class BattleMapCreatorWindow : EditorWindow
         UnityEngine.Random.state = randomState;
         map.Tiles = tiles.OrderBy(tile => tile.TilePos.x).ThenBy(tile => tile.TilePos.z).ToList();
         MapUtils.MarkAreas(map.Tiles, map.Type, map.Presets, map.Rules);
+    }
+
+    private List<BattleSpawnPointData> CreateSpawnData()
+    {
+        var rows = EvenlySpacedCoordinates(spawnCountPerPlayer, -height / 2 + 1, height / 2 - 1);
+        var points = new List<BattleSpawnPointData>(rows.Count * 2);
+        foreach (var row in rows)
+        {
+            points.Add(new BattleSpawnPointData(PlayerID.Player1, new Vector3Int(-width / 2 + 1, 0, row)));
+            points.Add(new BattleSpawnPointData(PlayerID.Player2, new Vector3Int(width / 2 - 1, 0, row)));
+        }
+        return points;
+    }
+
+    private List<Vector3Int> CreateCaptureData()
+    {
+        return EvenlySpacedCoordinates(capturePointCount, -height / 2 + 1, height / 2 - 1)
+            .Select(row => new Vector3Int(0, 0, row))
+            .ToList();
+    }
+
+    private static BattleMapCatalogSO GetOrCreateCatalog()
+    {
+        const string resourcesFolder = "Assets/Resources";
+        const string catalogPath = resourcesFolder + "/BattleMapCatalog.asset";
+        EnsureAssetFolder(resourcesFolder);
+        var catalog = AssetDatabase.LoadAssetAtPath<BattleMapCatalogSO>(catalogPath);
+        if (catalog != null)
+        {
+            return catalog;
+        }
+
+        catalog = CreateInstance<BattleMapCatalogSO>();
+        AssetDatabase.CreateAsset(catalog, catalogPath);
+        return catalog;
     }
 
     private static TileData CreateTile(int x, int z, string presetId)

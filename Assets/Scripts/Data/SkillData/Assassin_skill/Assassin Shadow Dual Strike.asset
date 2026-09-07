@@ -13,8 +13,7 @@ MonoBehaviour:
   m_Name: Assassin Shadow Dual Strike
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Skills.AssassinShadowDualStrikeSkill
   skillName: Anh Bo Song Sat
-  description: Teleports beside the target, strikes twice, executes low-health enemies,
-    and gains ShadowStep on kill.
+  description: "Dịch chuyển đến cạnh mục tiêu, tấn công hai lần, kết liễu kẻ địch còn ít Máu và nhận ShadowStep khi hạ gục mục tiêu."
   skillType: 3
   icon: {fileID: 21300000, guid: 9b0be4ef9a8e4b34eaa96ebc919f52a0, type: 3}
   cooldown: 4

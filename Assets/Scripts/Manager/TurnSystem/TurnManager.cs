@@ -3,6 +3,7 @@ using System;
 using TurnBasedGame.Unit;
 using System.Collections;
 using TMPro;
+using TurnBasedGame.Command;
 
 namespace TurnBasedGame.Core
 {
@@ -28,6 +29,7 @@ namespace TurnBasedGame.Core
         public TextMeshProUGUI ClockText;
         public float Timer { get; private set; }
         private bool _isTriggerTimer;
+        private bool _turnTransitionPending;
         private PlayerID? _winner;
 
         private void Awake()
@@ -45,6 +47,8 @@ namespace TurnBasedGame.Core
             base.Initialize(mediator);
             turnCount = 0;
             currentPlayer = StartingPlayer;
+            _turnTransitionPending = false;
+            LocalMatchAuthority.Reset();
             ChangeState(TurnState.Initialization);
 
             Invoke(nameof(StartFirstTurn), TurnTransitionDelay);
@@ -115,6 +119,7 @@ namespace TurnBasedGame.Core
         {
             currentPlayer = player;
             turnCount++;
+            _turnTransitionPending = false;
 
             Debug.Log($"=== Turn {turnCount}: Player {(int)player}'s Turn Started ===");
             _gameMediator.NotifyPlayerTurnStarted(currentPlayer);
@@ -125,21 +130,48 @@ namespace TurnBasedGame.Core
         /// </summary>
         public void EndCurrentTurn()
         {
-            _isTriggerTimer = false;
+            var result = LocalMatchAuthority.SubmitEndTurn(currentPlayer);
+            if (!result.Succeeded)
+                Debug.LogWarning($"Cannot end turn: {result.FailureReason}");
+        }
+
+        internal bool TryEndCurrentTurn(PlayerID actor, int expectedTurn, out string failureReason)
+        {
             if (currentState == TurnState.GameEnd || currentState == TurnState.Initialization)
             {
-                Debug.LogWarning("Cannot end turn in current state!");
-                return;
+                failureReason = "Không thể kết thúc lượt ở state hiện tại.";
+                return false;
             }
+
+            if (actor != currentPlayer || expectedTurn != turnCount)
+            {
+                failureReason = "Yêu cầu kết thúc lượt không khớp lượt hiện tại.";
+                return false;
+            }
+
+            if (_turnTransitionPending)
+            {
+                failureReason = "Lượt hiện tại đang trong quá trình kết thúc.";
+                return false;
+            }
+
+            _turnTransitionPending = true;
+            _isTriggerTimer = false;
 
             Debug.Log($"=== Player {(int)currentPlayer}'s Turn Ended ===");
             _gameMediator.NotifyPlayerTurnEnded(currentPlayer);
 
             // Chỉ chuyển lượt nếu game chưa kết thúc
-            if (currentState == TurnState.GameEnd) return;
+            if (currentState == TurnState.GameEnd)
+            {
+                failureReason = null;
+                return true;
+            }
 
             // Chuyển lượt sau delay ngắn
             Invoke(nameof(SwitchToNextPlayer), TurnTransitionDelay);
+            failureReason = null;
+            return true;
         }
 
         /// <summary>

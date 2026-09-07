@@ -13,8 +13,7 @@ MonoBehaviour:
   m_Name: Halberdier Crescent Slash
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Skills.HalberdierCrescentSlashSkill
   skillName: Nguyet Nha Tram Tran
-  description: Slashes a 2-tile line, applies HealBan when focused, and grants Shield
-    to the caster.
+  description: "Chém theo đường thẳng dài 2 ô, áp dụng HealBan khi tập trung và tạo Shield cho người thi triển."
   skillType: 3
   icon: {fileID: 21300000, guid: b3a100d8344187049b3f8b5c9e5aba88, type: 3}
   cooldown: 4

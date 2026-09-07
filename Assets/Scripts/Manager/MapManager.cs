@@ -2,6 +2,8 @@ using RedBjorn;
 using RedBjorn.ProtoTiles;
 using UnityEngine;
 using System.Collections.Generic;
+using TurnBasedGame.Core;
+using TurnBasedGame.Maps;
 using TurnBasedGame.Unit;
 
 public class MapManager : BaseManager
@@ -11,6 +13,12 @@ public class MapManager : BaseManager
     public KeyCode GridToggle = KeyCode.G;
     public MapView MapView;
     public MapEntity MapEntity { get; private set; }
+    public bool IsReady { get; private set; }
+
+#if UNITY_EDITOR
+    [Header("Editor Test")]
+    [SerializeField] private BattleMapDefinitionSO _editorTestMap;
+#endif
 
     // Dictionary theo dõi units trên map theo vị trí grid
     private Dictionary<Vector3Int, UnitController> _unitPositions = new Dictionary<Vector3Int, UnitController>();
@@ -18,6 +26,18 @@ public class MapManager : BaseManager
     void Awake()
     {
         Instance = this;
+        var selectedMap = BattleLaunchContext.SelectedMap;
+#if UNITY_EDITOR
+        if (selectedMap == null)
+        {
+            selectedMap = _editorTestMap;
+        }
+#endif
+        if (selectedMap != null)
+        {
+            Map = selectedMap.MapSettings;
+        }
+
         if (!Map)
         {
             Debug.LogError("[MapManager] MapSettings chưa được gán.", this);
@@ -40,8 +60,32 @@ public class MapManager : BaseManager
             return;
         }
 
+        if (selectedMap != null)
+        {
+            ClearMapView();
+        }
+
         MapEntity = new MapEntity(Map, MapView);
         MapView.Init(MapEntity);
+
+        if (selectedMap != null && !RuntimeMapBuilder.TryBuild(selectedMap, MapEntity, MapView, out var error))
+        {
+            Debug.LogError($"[MapManager] Không thể dựng map '{selectedMap.DisplayName}': {error}", selectedMap);
+            enabled = false;
+            return;
+        }
+
+        IsReady = true;
+    }
+
+    private void ClearMapView()
+    {
+        for (var index = MapView.transform.childCount - 1; index >= 0; index--)
+        {
+            var child = MapView.transform.GetChild(index).gameObject;
+            child.SetActive(false);
+            Destroy(child);
+        }
     }
 
     void Update()

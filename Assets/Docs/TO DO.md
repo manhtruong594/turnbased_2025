@@ -15,7 +15,7 @@ Cập nhật: `2026-09-04`
 ## P1 — Spell, AI và UI
 
 1. Hoàn thiện hoặc loại khỏi content các target `AllAllies` và `AllEnemies`.
-2. Chốt runtime behavior cho `Slow`, `Weaken` và `Freeze`.
+2. Playtest và cân bằng giá trị `Slow`, `Weaken`, `Freeze` cùng vòng đời duration của status.
 3. Thêm AI priority cho kill, capture point, spell và vị trí an toàn.
 4. Thêm decision log và Fast AI cho regression.
 5. Hoàn thiện cooldown, unavailable, invalid-target và status feedback.

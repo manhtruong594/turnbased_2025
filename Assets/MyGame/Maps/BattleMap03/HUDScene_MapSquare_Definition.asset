@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b46567fd500d5a4792dee672b18ce52, type: 3}
+  m_Name: HUDScene_MapSquare_Definition
+  m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Maps.BattleMapDefinitionSO
+  _displayName: HUDScene Map Square
+  _preview: {fileID: 0}
+  _mapSettings: {fileID: 11400000, guid: 83bfff9967e52864fa6f7aa285214312, type: 2}
+  _spawnPoints:
+  - Owner: 1
+    GridPosition: {x: 7, y: 0, z: 6}
+  - Owner: 1
+    GridPosition: {x: 7, y: 0, z: 7}
+  - Owner: 2
+    GridPosition: {x: -13, y: 0, z: -1}
+  - Owner: 2
+    GridPosition: {x: -13, y: 0, z: 0}
+  _capturePoints:
+  - {x: -9, y: 0, z: 7}
+  - {x: 1, y: 0, z: -3}
+  _environmentPrefab: {fileID: 0}
+  _enabled: 1

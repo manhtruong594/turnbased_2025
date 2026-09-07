@@ -13,9 +13,7 @@ MonoBehaviour:
   m_Name: Berserker Blood Hammer
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Skills.BerserkerBloodHammerSkill
   skillName: Huyet Chuy Pha Tran
-  description: Deals heavy damage to the main target, splash damage around it, then
-    spends current HP without killing the caster. Killing the main target grants
-    Blood Rage.
+  description: "Gây sát thương lớn lên mục tiêu chính và sát thương lan xung quanh, sau đó tiêu hao Máu hiện tại nhưng không khiến người thi triển tử trận. Tiêu diệt mục tiêu chính sẽ nhận Blood Rage."
   skillType: 3
   icon: {fileID: 21300000, guid: b9d3d7dbf5c4f114fbe9d15c62c0f9cc, type: 3}
   cooldown: 4

@@ -64,6 +64,13 @@ public class GameMediator : MonoBehaviour
 
     private void Start()
     {
+        if (mapManager == null || !mapManager.IsReady)
+        {
+            Debug.LogError("[GameMediator] Map chưa sẵn sàng. Dừng khởi tạo trận đấu.", this);
+            enabled = false;
+            return;
+        }
+
         turnManager.Initialize(this);
         mpManager.Initialize(this);
         mapManager.Initialize(this);

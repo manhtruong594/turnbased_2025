@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using TurnBasedGame.Unit;
 using TurnBasedGame.UI;
 using TurnBasedGame.SpellCard;
+using TurnBasedGame.Command;
 
 namespace TurnBasedGame.Core
 {
@@ -50,7 +51,7 @@ namespace TurnBasedGame.Core
             {
                 EndTurnButton.onClick.AddListener(() =>
                 {
-                    TurnManager.Instance?.EndCurrentTurn();
+                    LocalMatchAuthority.SubmitEndTurn(playerID);
                 });
             }
             if (GameMediator.Instance != null)

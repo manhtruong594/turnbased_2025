@@ -19,6 +19,7 @@ capture point và kết thúc trận. Trạng thái được đối chiếu vớ
 | `CapturePointManager` | Theo dõi owner và kiểm tra điều kiện chiến thắng |
 | `SpellCardManager` | Quản lý hand, selection, targeting, confirm và use card |
 | `ObjectPoolManager` | Tái sử dụng VFX/projectile/UI object được pool |
+| `LocalMatchAuthority` | Nhận và xác thực command local trước khi manager thay đổi gameplay state |
 
 Các manager kế thừa `BaseManager` và nhận `GameMediator`/map cache theo bootstrap hiện có. Không tạo
 singleton hoặc event channel mới nếu manager hiện tại đã sở hữu trách nhiệm đó.
@@ -64,6 +65,11 @@ Initialization order phụ thuộc reference trong scene. Missing manager hoặc
 thống không nhận được turn start; cần kiểm tra trong Play Mode sau thay đổi scene/bootstrap.
 
 ## 5. Luồng một lượt
+
+Các entry point local cho `EndTurn`, `SpawnUnit` và `MoveUnit` gửi `IMatchCommand` qua
+`LocalMatchAuthority`. Authority kiểm tra `CommandId`, phe đang có lượt và `ExpectedTurn` trước khi
+gọi manager sở hữu state. Command trùng, sai phe hoặc thuộc lượt cũ không được thực thi. Đây là seam
+để thay bằng network authority sau này; chưa bao gồm transport, lobby hoặc đồng bộ snapshot.
 
 ### Bắt đầu lượt
 

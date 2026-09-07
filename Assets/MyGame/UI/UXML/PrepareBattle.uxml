@@ -24,20 +24,25 @@
                 <ui:Label name="empty-label" text="Chưa có vật phẩm nào" class="prepare-empty-label" />
             </ui:VisualElement>
             <ui:VisualElement name="deck-panel" class="panel prepare-deck">
-                <ui:VisualElement name="deck-section-units" class="prepare-deck-section">
-                    <ui:Label name="deck-units-title" text="Đội Hình (0/6)" class="prepare-deck-title" />
-                    <ui:VisualElement name="deck-units-grid" class="prepare-deck-grid" />
-                </ui:VisualElement>
-                <ui:VisualElement class="separator" />
-                <ui:VisualElement name="deck-section-spells" class="prepare-deck-section">
-                    <ui:Label name="deck-spells-title" text="Phép (0/4)" class="prepare-deck-title" />
-                    <ui:VisualElement name="deck-spells-grid" class="prepare-deck-grid" />
-                </ui:VisualElement>
-                <ui:VisualElement class="separator" />
-                <ui:VisualElement name="deck-info" class="prepare-deck-info">
-                    <ui:Label name="total-cost-label" text="Tổng chi phí: 0" class="prepare-cost-label" />
-                    <ui:Label name="validation-label" class="prepare-validation-label" />
-                </ui:VisualElement>
+                <ui:ScrollView name="deck-scroll" class="prepare-deck-scroll">
+                    <ui:VisualElement name="deck-section-units" class="prepare-deck-section">
+                        <ui:Label name="deck-units-title" text="Đội Hình (0/6)" class="prepare-deck-title" />
+                        <ui:VisualElement name="deck-units-grid" class="prepare-deck-grid" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="separator" />
+                    <ui:VisualElement name="deck-section-spells" class="prepare-deck-section">
+                        <ui:Label name="deck-spells-title" text="Phép (0/4)" class="prepare-deck-title" />
+                        <ui:VisualElement name="deck-spells-grid" class="prepare-deck-grid" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="separator" />
+                    <ui:VisualElement name="deck-info" class="prepare-deck-info">
+                        <ui:Label text="Bản Đồ" class="prepare-deck-title" />
+                        <ui:DropdownField name="map-dropdown" class="prepare-map-dropdown" />
+                        <ui:Label name="map-description" class="prepare-map-description" />
+                        <ui:Label name="total-cost-label" text="Tổng chi phí: 0" class="prepare-cost-label" />
+                        <ui:Label name="validation-label" class="prepare-validation-label" />
+                    </ui:VisualElement>
+                </ui:ScrollView>
                 <ui:VisualElement name="action-buttons" class="prepare-actions" style="width: 275px;">
                     <ui:Button name="btn-clear" text="Xóa Tất Cả" class="btn prepare-btn-clear" style="width: 100px; min-width: 100px; max-width: 100px;" />
                     <ui:Button name="btn-confirm" text="⚔ Xác Nhận Chiến Đấu" class="btn prepare-btn-confirm" style="white-space: normal; min-width: 150px; max-width: 150px; width: 150px;" />

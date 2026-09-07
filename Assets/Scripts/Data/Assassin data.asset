@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86ab2ddd49f3b30409500291ade8d6b0, type: 3}
   m_Name: Assassin data
   m_EditorClassIdentifier: 
-  unitName: Axe Soldier
+  unitName: Assassin
   description: 
   Health: 100
   BaseDamage: 10
@@ -20,3 +20,7 @@ MonoBehaviour:
   moveRange: 6
   moveSpeed: 5
   icon: {fileID: 21300000, guid: 06823b49a1fcd154da0942a436195adb, type: 3}
+  startingSkills:
+  - {fileID: 11400000, guid: a5e2871c338541841aedca1a4fae0271, type: 2}
+  - {fileID: 11400000, guid: e81ddaa49dad491987c7b987e9e7d40e, type: 2}
+  - {fileID: 11400000, guid: 17cbaea1db222d24db000283a3f68aab, type: 2}

@@ -2,6 +2,7 @@ using RedBjorn.Utils;
 using System.Collections.Generic;
 using TurnBasedGame.Core;
 using TurnBasedGame.Unit;
+using TurnBasedGame.Command;
 using UnityEngine;
 
 namespace RedBjorn.ProtoTiles.Example
@@ -157,8 +158,13 @@ namespace RedBjorn.ProtoTiles.Example
                 HideMoveArea();
                 SetPathEnabled(false);
                 HidePath();
-                var path = _cachedMap.PathTiles(selectedUnit.transform.position, clickPos, selectedUnit.GetMoveRange());
-                selectedUnit.Move(path, OnCompleteMove);
+                var result = LocalMatchAuthority.SubmitMove(
+                    selectedUnit.GetOwner(), selectedUnit, _tileClicked.Position, OnCompleteMove);
+                if (!result.Succeeded)
+                {
+                    Debug.LogWarning($"Move rejected: {result.FailureReason}");
+                    OnCompleteMove();
+                }
             }
         }
 

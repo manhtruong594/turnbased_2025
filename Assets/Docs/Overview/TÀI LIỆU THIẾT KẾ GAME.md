@@ -89,7 +89,9 @@ Spell card dùng MP và có thể bị loại khỏi hand sau khi dùng. Target 
 damage buff, cleanse, root, damage, stun, freeze, bleed và composite effect.
 
 `AllAllies` và `AllEnemies` là mục tiêu thiết kế nhưng validation/execution diện rộng chưa hoàn chỉnh.
-Các status `Slow` và `Weaken` đã có enum nhưng chưa có logic runtime đầy đủ.
+`Slow` giảm move range theo phần trăm và `Weaken` giảm outgoing damage theo phần trăm. `Freeze` khóa
+hành động 2 lượt; hit trực tiếp đầu tiên nhận thêm 20% damage, phá Freeze và chuyển số lượt còn lại
+thành `Slow(20)`.
 
 ### Điều kiện thắng
 

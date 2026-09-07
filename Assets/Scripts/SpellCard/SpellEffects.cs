@@ -32,6 +32,20 @@ namespace TurnBasedGame.SpellCard
         }
     }
 
+    [Serializable]
+    public class HealOverTimeEffect : ISpellEffect
+    {
+        [Range(1, 100)] public int healPerTurn = 10;
+        [Range(1, 10)] public int duration = 3;
+
+        public void Apply(PlayerID caster, UnitController target)
+        {
+            if (target == null || target.IsDead() || target.BuffHandler == null) return;
+            target.BuffHandler.AddEffect(new ActiveStatusEffect(
+                StatusEffectType.HealOverTime, healPerTurn, duration, caster));
+        }
+    }
+
     /// <summary>Thêm Shield buff giảm sát thương nhận vào.</summary>
     [Serializable]
     public class ShieldEffect : ISpellEffect
@@ -78,8 +92,35 @@ namespace TurnBasedGame.SpellCard
             var handler = target.BuffHandler;
             if (handler == null) return;
 
-            handler.ClearAll();
+            handler.RemoveDebuffs();
             Debug.Log($"[Spell] Cleanse: Thanh tẩy debuff cho {target.name}");
+        }
+    }
+
+    public class SlowEffect : ISpellEffect
+    {
+        [Range(1, 100)] public int movePenaltyPercent = 50;
+        [Range(1, 10)] public int duration = 2;
+
+        public void Apply(PlayerID caster, UnitController target)
+        {
+            if (target == null || target.IsDead() || target.BuffHandler == null) return;
+            target.BuffHandler.AddEffect(new ActiveStatusEffect(
+                StatusEffectType.Slow, movePenaltyPercent, duration, caster));
+        }
+    }
+
+    [Serializable]
+    public class WeakenEffect : ISpellEffect
+    {
+        [Range(1, 100)] public int damagePenaltyPercent = 25;
+        [Range(1, 10)] public int duration = 2;
+
+        public void Apply(PlayerID caster, UnitController target)
+        {
+            if (target == null || target.IsDead() || target.BuffHandler == null) return;
+            target.BuffHandler.AddEffect(new ActiveStatusEffect(
+                StatusEffectType.Weaken, damagePenaltyPercent, duration, caster));
         }
     }
 
@@ -132,7 +173,7 @@ namespace TurnBasedGame.SpellCard
     [Serializable]
     public class FreezeEffect : ISpellEffect
     {
-        [Range(1, 5)] public int duration = 1;
+        [Range(1, 5)] public int duration = 2;
 
         public void Apply(PlayerID caster, UnitController target)
         {
@@ -141,7 +182,7 @@ namespace TurnBasedGame.SpellCard
             if (handler == null) return;
 
             handler.AddEffect(new ActiveStatusEffect(StatusEffectType.Freeze, 0, duration, caster));
-            Debug.Log($"[Spell] Freeze: Làm chậm {target.name} trong {duration} lượt");
+            Debug.Log($"[Spell] Freeze: Khóa hành động của {target.name} trong {duration} lượt");
         }
     }
 

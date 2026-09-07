@@ -37,3 +37,18 @@ MonoBehaviour:
   - type: 107
     icon: {fileID: 21300000, guid: 085755f0482334d49b07c62e349462d6, type: 3}
     color: {r: 1, g: 0.16078432, b: 0.101960786, a: 1}
+  - type: 6
+    icon: {fileID: 21300000, guid: 72cdd1b1bb49d5f47bd5d2b3ecd3e851, type: 3}
+    color: {r: 0.05882353, g: 1, b: 0.15294118, a: 1}
+  - type: 108
+    icon: {fileID: 21300000, guid: b6795c96fef3b01439d1de6a75d33651, type: 3}
+    color: {r: 1, g: 0.16078432, b: 0.101960786, a: 1}
+  - type: 109
+    icon: {fileID: 21300000, guid: 4d2a4136ebef6f041b43fdca42412caa, type: 3}
+    color: {r: 1, g: 0.16078432, b: 0.101960786, a: 1}
+  - type: 7
+    icon: {fileID: 21300000, guid: e1f6442593ca29045aa5d614cbdc210c, type: 3}
+    color: {r: 0.05882353, g: 1, b: 0.15294118, a: 1}
+  - type: 5
+    icon: {fileID: 21300000, guid: 5c27fc79dd2011c4ab50f507f7cfb7af, type: 3}
+    color: {r: 0.05882353, g: 1, b: 0.15294118, a: 1}

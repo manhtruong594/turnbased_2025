@@ -20,3 +20,7 @@ MonoBehaviour:
   moveRange: 5
   moveSpeed: 5
   icon: {fileID: 21300000, guid: 322058629e47df340a9cfbe5daf6c21a, type: 3}
+  startingSkills:
+  - {fileID: 11400000, guid: 5b267e267f77829499bfde3f3f1fea17, type: 2}
+  - {fileID: 11400000, guid: 082162c60ebd4a7985b5f252e8376d26, type: 2}
+  - {fileID: 11400000, guid: 17cbaea1db222d24db000283a3f68aab, type: 2}

@@ -45,11 +45,8 @@ namespace TurnBasedGame.Capture
         /// </summary>
         private void CollectCapturePoints()
         {
-            if (_capturePoints == null || _capturePoints.Count == 0)
-            {
-                _capturePoints = new List<CapturePoint>(
-                    FindObjectsByType<CapturePoint>(FindObjectsSortMode.None));
-            }
+            _capturePoints = new List<CapturePoint>(
+                FindObjectsByType<CapturePoint>(FindObjectsSortMode.None));
 
             foreach (var point in _capturePoints)
             {

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Slash attack
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Skills.NormalAttackSkill
   skillName: NormalAttack
-  description: Deals 125% of the caster's current damage to one enemy.
+  description: "Gây sát thương bằng 125% sát thương hiện tại của người thi triển lên một kẻ địch."
   skillType: 0
   icon: {fileID: 21300000, guid: 5aa0d71d789c93a468898d8acfcf2a09, type: 3}
   cooldown: 0

@@ -171,6 +171,15 @@
     padding: var(--spacing-sm);
 }
 
+.inv-unit-detail {
+    flex-grow: 1;
+    min-height: 0;
+}
+
+.inv-unit-detail .unity-scroll-view__content-container {
+    padding-right: var(--spacing-xs);
+}
+
 .inv-detail-icon {
     width: 96px;
     height: 96px;
@@ -227,6 +236,37 @@
     font-size: 13px;
     color: var(--color-text-primary);
     -unity-font-style: bold;
+}
+
+/* Unit skills */
+.inv-detail-section-title {
+    color: var(--color-gold);
+    font-size: 15px;
+    -unity-font-style: bold;
+    margin-bottom: var(--spacing-sm);
+}
+
+.inv-skill-entry {
+    padding: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+    background-color: rgba(30, 20, 15, 0.4);
+    border-radius: var(--border-radius-sm);
+    border-left-width: 2px;
+    border-left-color: var(--color-gold-dim);
+}
+
+.inv-skill-name {
+    color: var(--color-gold-bright);
+    font-size: 13px;
+    -unity-font-style: bold;
+    margin-bottom: 3px;
+}
+
+.inv-skill-description,
+.inv-skill-empty {
+    color: var(--color-text-secondary);
+    font-size: 12px;
+    white-space: normal;
 }
 
 /* Target info */

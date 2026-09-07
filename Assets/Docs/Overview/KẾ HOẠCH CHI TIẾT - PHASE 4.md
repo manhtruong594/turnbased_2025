@@ -11,7 +11,7 @@ của map/HUD. Kế hoạch dùng trạng thái chữ thay cho checkbox.
 |---|---|---|
 | Skill roster | Hiện có, cần kiểm chứng | Cooldown event, failure event, LOS, regression |
 | Spell card data/hand/UI | Hiện có | Area target và edge-case validation |
-| Spell effects | Một phần | `Slow`, `Weaken` và behavior `Freeze` cần chốt |
+| Spell effects | Hiện có, cần kiểm chứng | Playtest giá trị `Slow`, `Weaken`, `Freeze` và vòng đời status |
 | Buff/debuff icon | Hiện có, cần kiểm chứng | Fallback icon và vòng đời UI |
 | AI | Một phần | Spell, capture priority, utility score, debug UI |
 | Map 1 | Một phần | Gameplay/art/readability chưa nghiệm thu |

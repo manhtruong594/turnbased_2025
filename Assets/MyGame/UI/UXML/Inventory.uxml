@@ -56,7 +56,7 @@
                 </ui:VisualElement>
 
                 <!-- Unit detail -->
-                <ui:VisualElement name="unit-detail" class="inv-detail-content" style="display: none;">
+                <ui:ScrollView name="unit-detail" class="inv-detail-content inv-unit-detail" style="display: none;">
                     <ui:VisualElement name="unit-icon-large" class="inv-detail-icon" />
                     <ui:Label name="unit-detail-name" class="inv-detail-name" />
                     <ui:Label name="unit-detail-desc" class="inv-detail-desc" />
@@ -74,16 +74,15 @@
                             <ui:Label text="👣 Tầm di chuyển" class="inv-stat-label" />
                             <ui:Label name="unit-stat-move" class="inv-stat-value" />
                         </ui:VisualElement>
-                        <ui:VisualElement class="inv-stat-row">
-                            <ui:Label text="🏃 Tốc độ" class="inv-stat-label" />
-                            <ui:Label name="unit-stat-speed" class="inv-stat-value" />
-                        </ui:VisualElement>
                     </ui:VisualElement>
+                    <ui:VisualElement class="separator" />
+                    <ui:Label text="Kỹ năng" class="inv-detail-section-title" />
+                    <ui:VisualElement name="unit-skills-list" class="inv-skills-list" />
                     <ui:VisualElement class="separator" />
                     <ui:VisualElement name="unit-deck-status" class="inv-deck-status">
                         <ui:Label name="unit-in-deck-label" text="" class="inv-deck-status-label" />
                     </ui:VisualElement>
-                </ui:VisualElement>
+                </ui:ScrollView>
 
                 <!-- Spell detail -->
                 <ui:VisualElement name="spell-detail" class="inv-detail-content" style="display: none;">

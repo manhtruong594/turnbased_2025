@@ -12,8 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 65e443a4567d66244b7d585e46e2b439, type: 3}
   m_Name: Heavy slash attack
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Skills.NormalAttackSkill
-  skillName: NormalAttack
-  description: Deals 125% of the caster's current damage to one enemy.
+  skillName: Heavy smash attack
+  description: "G\xE2y s\xE1t th\u01B0\u01A1ng b\u1EB1ng 125% s\xE1t th\u01B0\u01A1ng
+    hi\u1EC7n t\u1EA1i c\u1EE7a ng\u01B0\u1EDDi thi tri\u1EC3n l\xEAn m\u1ED9t k\u1EBB
+    \u0111\u1ECBch."
   skillType: 0
   icon: {fileID: 21300000, guid: 7dfd68325eeac354d866d207e4d2744c, type: 3}
   cooldown: 0

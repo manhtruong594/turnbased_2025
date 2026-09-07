@@ -5,6 +5,8 @@ using TurnBasedGame.Unit;
 using TurnBasedGame.Skills;
 using System.Linq;
 using TurnBasedGame.SpellCard;
+using TurnBasedGame.Core;
+using TurnBasedGame.Maps;
 
 namespace TurnBasedGame.UI
 {
@@ -18,6 +20,7 @@ namespace TurnBasedGame.UI
     {
         [Header("Data")]
         [SerializeField] private PlayerDataSO _playerData;
+        [SerializeField] private BattleMapCatalogSO _mapCatalog;
 
         [Header("Scene")]
         [SerializeField] private string _battleSceneName = "HUDScene";
@@ -47,6 +50,8 @@ namespace TurnBasedGame.UI
         private VisualElement _deckSpellsGrid;
         private Label _totalCostLabel;
         private Label _validationLabel;
+        private DropdownField _mapDropdown;
+        private Label _mapDescription;
 
         // Actions
         private Button _btnClear;
@@ -55,6 +60,8 @@ namespace TurnBasedGame.UI
         // Slot cache
         private readonly List<DeckSlot> _unitSlots = new();
         private readonly List<DeckSlot> _spellSlots = new();
+        private readonly List<BattleMapDefinitionSO> _availableMaps = new();
+        private BattleMapDefinitionSO _selectedMap;
 
         // ─── Lifecycle ───
 
@@ -62,6 +69,7 @@ namespace TurnBasedGame.UI
         {
             QueryElements();
             CreateDeckSlots();
+            InitializeMapSelection();
             BindButtons();
             SubscribeDataEvents();
             SyncDeckFromData();
@@ -102,6 +110,8 @@ namespace TurnBasedGame.UI
             _deckSpellsGrid = Q("deck-spells-grid");
             _totalCostLabel = Q<Label>("total-cost-label");
             _validationLabel = Q<Label>("validation-label");
+            _mapDropdown = Q<DropdownField>("map-dropdown");
+            _mapDescription = Q<Label>("map-description");
 
             _btnClear = Q<Button>("btn-clear");
             _btnConfirm = Q<Button>("btn-confirm");
@@ -145,6 +155,7 @@ namespace TurnBasedGame.UI
             _btnClear?.RegisterCallback<ClickEvent>(OnClearClicked);
             _btnConfirm?.RegisterCallback<ClickEvent>(OnConfirmClicked);
             _searchField?.RegisterValueChangedCallback(OnSearchChanged);
+            _mapDropdown?.RegisterValueChangedCallback(OnMapChanged);
         }
 
         private void UnbindButtons()
@@ -155,6 +166,44 @@ namespace TurnBasedGame.UI
             _btnClear?.UnregisterCallback<ClickEvent>(OnClearClicked);
             _btnConfirm?.UnregisterCallback<ClickEvent>(OnConfirmClicked);
             _searchField?.UnregisterValueChangedCallback(OnSearchChanged);
+            _mapDropdown?.UnregisterValueChangedCallback(OnMapChanged);
+        }
+
+        private void InitializeMapSelection()
+        {
+            _mapCatalog ??= BattleMapCatalogSO.LoadDefault();
+            _availableMaps.Clear();
+            if (_mapCatalog != null)
+            {
+                _availableMaps.AddRange(_mapCatalog.Maps.Where(map => map != null && map.Enabled));
+            }
+
+            if (_mapDropdown == null)
+            {
+                return;
+            }
+
+            _mapDropdown.choices = _availableMaps.Select(map => map.DisplayName).ToList();
+            var selectedIndex = _availableMaps.IndexOf(BattleLaunchContext.SelectedMap);
+            if (selectedIndex < 0 && _availableMaps.Count > 0)
+            {
+                selectedIndex = 0;
+            }
+
+            _mapDropdown.index = selectedIndex;
+            SelectMap(selectedIndex);
+            _mapDropdown.SetEnabled(_availableMaps.Count > 0);
+        }
+
+        private void OnMapChanged(ChangeEvent<string> _)
+        {
+            SelectMap(_mapDropdown.index);
+            UpdateDeckInfo();
+        }
+
+        private void SelectMap(int index)
+        {
+            _selectedMap = index >= 0 && index < _availableMaps.Count ? _availableMaps[index] : null;
         }
 
         private void SubscribeDataEvents()
@@ -378,7 +427,8 @@ namespace TurnBasedGame.UI
             var result = DeckValidator.Validate(_playerData.SelectedDeck, _playerData.SelectedSpells);
             SetLabel(_validationLabel, result.Message);
 
-            _btnConfirm?.SetEnabled(result.IsValid);
+            var hasValidMap = _mapCatalog == null || _selectedMap != null;
+            _btnConfirm?.SetEnabled(result.IsValid && hasValidMap);
         }
 
         private void RefreshGold()
@@ -420,10 +470,17 @@ namespace TurnBasedGame.UI
                 return;
             }
 
+            if (_mapCatalog != null && _selectedMap == null)
+            {
+                PopupManager.Instance?.ShowNotification("Chưa có map hợp lệ để bắt đầu trận.");
+                return;
+            }
+
             PopupManager.Instance?.ShowConfirmDialog(
                 "Xác Nhận Chiến Đấu",
                 $"Vào trận với {_playerData.SelectedDeck.Count} binh lính" +
-                $" và {_playerData.SelectedSpells.Count} phép thuật?",
+                $" và {_playerData.SelectedSpells.Count} phép thuật" +
+                (_selectedMap != null ? $" trên map {_selectedMap.DisplayName}?" : "?"),
                 onConfirm: StartBattle,
                 onCancel: null,
                 confirmText: "Chiến!",
@@ -432,6 +489,7 @@ namespace TurnBasedGame.UI
 
         private void StartBattle()
         {
+            BattleLaunchContext.SelectMap(_selectedMap);
             Debug.Log($"[PrepareBattle] Loading battle scene: {_battleSceneName}");
             SceneLoader.Instance?.LoadSceneAsync(_battleSceneName);
         }

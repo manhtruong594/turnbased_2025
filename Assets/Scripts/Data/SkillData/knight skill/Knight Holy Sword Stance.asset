@@ -13,8 +13,7 @@ MonoBehaviour:
   m_Name: Knight Holy Sword Stance
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Skills.KnightHolySwordStanceSkill
   skillName: Thanh Kiem Lap The
-  description: Slashes a 3-tile line in front of the Knight, applies Guard Break
-    to the first enemy hit, then gains Stance Guard.
+  description: "Chém theo đường thẳng dài 3 ô phía trước Hiệp sĩ, áp dụng Guard Break lên kẻ địch đầu tiên trúng đòn, sau đó nhận Stance Guard."
   skillType: 3
   icon: {fileID: 21300000, guid: a59d6029d282ea148bf57966b0c2401e, type: 3}
   cooldown: 4

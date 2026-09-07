@@ -28,7 +28,6 @@ namespace TurnBasedGame.Unit
         [SerializeField] CanvasGroup _actionCanvasGroup;
 
         [Header("Skill System")]
-        [SerializeField] private List<SkillBase> startingSkills = new List<SkillBase>();
         [SerializeField] private GameObject skillButtonPrefab;
         [SerializeField] private Transform skillButtonContainer;
 
@@ -49,7 +48,7 @@ namespace TurnBasedGame.Unit
 
             {
                 activeSkills.Clear();
-                foreach (var skill in startingSkills)
+                foreach (var skill in _cachedUnitMove.UnitData.StartingSkills)
                 {
                     var iSkill = skill.Clone();
                     iSkill.ResetCooldown();
@@ -111,7 +110,7 @@ namespace TurnBasedGame.Unit
         /// </summary>
         public void EnterAttackMode()
         {
-            if (runtimeStats.IsInAttackMode) return;
+            if (runtimeStats.IsInAttackMode || !_cachedUnitMove.CanAct()) return;
             runtimeStats.IsInAttackMode = true;
             _actionCanvasGroup.alpha = 0;
             _actionCanvasGroup.interactable = false;
@@ -165,7 +164,7 @@ namespace TurnBasedGame.Unit
 
         public bool CanAttackFrom(UnitController targetUnit, Vector3Int originGridPos)
         {
-            if (targetUnit == null || targetUnit.IsDead())
+            if (!_cachedUnitMove.CanAct() || targetUnit == null || targetUnit.IsDead())
                 return false;
 
             if (targetUnit.GetOwner() == runtimeStats.Owner)

@@ -5,6 +5,7 @@ using TurnBasedGame.Capture;
 using TurnBasedGame.Unit;
 using RedBjorn.ProtoTiles;
 using TurnBasedGame.Resources;
+using TurnBasedGame.Command;
 
 namespace TurnBasedGame.Core
 {
@@ -79,7 +80,7 @@ namespace TurnBasedGame.Core
                     unit.FinishTurnActions();
             }
 
-            TurnManager.Instance.EndCurrentTurn();
+            LocalMatchAuthority.SubmitEndTurn(aiPlayerID);
         }
 
         /// <summary>
@@ -121,7 +122,7 @@ namespace TurnBasedGame.Core
                 return false;
             }
 
-            bool success = UnitSpawner.Instance.SpawnUnit(bestUnit, aiPlayerID);
+            bool success = LocalMatchAuthority.SubmitSpawn(aiPlayerID, bestUnit).Succeeded;
             if (success)
                 Debug.Log($"AI đã spawn {bestUnit.UnitData.unitName}");
             else
@@ -135,6 +136,9 @@ namespace TurnBasedGame.Core
         /// </summary>
         private IEnumerator ExecuteUnitAction(UnitController unit)
         {
+            if (!unit.CanAct())
+                yield break;
+
             var opponents = GetLivingUnits(opponentOfAI);
             var target = FindBestAttackTarget(unit, opponents);
             if (target != null)
@@ -176,6 +180,9 @@ namespace TurnBasedGame.Core
 
         private IEnumerator MoveToBestTile(UnitController unit, List<UnitController> opponents)
         {
+            if (!unit.CanMove())
+                yield break;
+
             var map = MapManager.Instance.MapEntity;
             var currentTile = map.Tile(unit.transform.position);
             if (currentTile == null)
@@ -216,7 +223,10 @@ namespace TurnBasedGame.Core
                 yield break;
 
             Debug.Log($"AI di chuyển {unit.name} đến {bestTile.Position} (utility {bestScore:0})");
-            unit.Move(path);
+            var moveResult = LocalMatchAuthority.SubmitMove(
+                aiPlayerID, unit, bestTile.Position);
+            if (!moveResult.Succeeded)
+                yield break;
             while (!unit.IsMoveDone() && IsAITurnActive())
                 yield return null;
         }

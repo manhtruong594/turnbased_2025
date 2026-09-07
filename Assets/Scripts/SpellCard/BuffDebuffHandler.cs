@@ -14,6 +14,7 @@ namespace TurnBasedGame.SpellCard
     {
         public StatusEffectType Type { get; }
         public int Value { get; }
+        public int InitialDuration { get; }
         public int RemainingTurns { get; private set; }
         public PlayerID SourcePlayer { get; }
 
@@ -21,7 +22,8 @@ namespace TurnBasedGame.SpellCard
         {
             Type = type;
             Value = value;
-            RemainingTurns = duration;
+            InitialDuration = Mathf.Max(1, duration);
+            RemainingTurns = InitialDuration;
             SourcePlayer = source;
         }
 
@@ -80,20 +82,25 @@ namespace TurnBasedGame.SpellCard
         {
             switch (effect.Type)
             {
+                case StatusEffectType.HealOverTime:
+                    _owner.Heal(effect.Value);
+                    Debug.Log($"[Tick] {_owner.name} receives {effect.Value} healing from HealOverTime");
+                    break;
+
                 case StatusEffectType.Burn:
-                    _owner.TakeDamage(effect.Value);
+                    _owner.TakeDamage(effect.Value, false);
                     Debug.Log($"[Tick] {_owner.name} bị Burn gây {effect.Value} sát thương");
                     break;
 
                 case StatusEffectType.Poison:
-                    // Poison: sát thương tăng dần theo số lượt đã chịu (Value = base dmg)
-                    int poisonDmg = Mathf.Max(1, effect.Value * (effect.RemainingTurns == 0 ? 1 : effect.Value));
-                    _owner.TakeDamage(poisonDmg);
+                    int elapsedTurns = effect.InitialDuration - effect.RemainingTurns + 1;
+                    int poisonDmg = Mathf.Max(1, effect.Value * elapsedTurns);
+                    _owner.TakeDamage(poisonDmg, false);
                     Debug.Log($"[Tick] {_owner.name} bị Poison gây {poisonDmg} sát thương");
                     break;
 
                 case StatusEffectType.Bleed:
-                    _owner.TakeDamage(effect.Value);
+                    _owner.TakeDamage(effect.Value, false);
                     Debug.Log($"[Tick] {_owner.name} bị Bleed gây {effect.Value} sát thương");
                     break;
 
@@ -104,25 +111,35 @@ namespace TurnBasedGame.SpellCard
         }
 
         /// <summary>
-        /// Gọi ở đầu mỗi lượt của unit này. Giảm duration, xóa effect hết hạn.
+        /// Gọi ở đầu mỗi lượt của unit này. Áp dụng tick và giảm duration.
+        /// Effect hết duration vẫn tồn tại hết lượt hiện tại và được xóa khi unit hoàn tất action.
         /// </summary>
         public void TickEffects()
+        {
+            for (int i = 0; i < _activeEffects.Count; i++)
+            {
+                if (_owner.IsDead())
+                    break;
+
+                var effect = _activeEffects[i];
+                ApplyTickEffects(effect);
+                effect.TickTurn();
+                _activeEffects[i] = effect;
+            }
+        }
+
+        public void RemoveExpiredEffects()
         {
             for (int i = _activeEffects.Count - 1; i >= 0; i--)
             {
                 var effect = _activeEffects[i];
-                ApplyTickEffects(effect);
-                if (effect.TickTurn())
-                {
-                    _activeEffects.RemoveAt(i);
-                    OnEffectRemoved?.Invoke(effect);
-                    DespawnVfx(effect.Type);
-                    Debug.Log($"[Effect] {_owner.name} hết hiệu ứng {effect.Type}");
-                }
-                else
-                {
-                    _activeEffects[i] = effect; // Write back mutated struct
-                }
+                if (effect.RemainingTurns > 0)
+                    continue;
+
+                _activeEffects.RemoveAt(i);
+                OnEffectRemoved?.Invoke(effect);
+                DespawnVfx(effect.Type);
+                Debug.Log($"[Effect] {_owner.name} hết hiệu ứng {effect.Type}");
             }
         }
 
@@ -197,15 +214,36 @@ namespace TurnBasedGame.SpellCard
             return total;
         }
 
-        public bool HasHealBan() => HasEffect(StatusEffectType.HealBan);
+        public int GetMovePercentPenalty()
+        {
+            int total = 0;
+            foreach (var effect in _activeEffects)
+            {
+                if (effect.Type == StatusEffectType.Slow)
+                    total += Mathf.Max(0, effect.Value);
+            }
 
-        public bool CanReceiveHealing() => !HasHealBan();
+            return Mathf.Clamp(total, 0, 100);
+        }
+
+        public int GetDamagePercentPenalty()
+        {
+            int total = 0;
+            foreach (var effect in _activeEffects)
+                if (effect.Type == StatusEffectType.Weaken)
+                    total += Mathf.Max(0, effect.Value);
+            return Mathf.Clamp(total, 0, 100);
+        }
+
+        public bool CanReceiveHealing() => HasEffect(StatusEffectType.HealBan) ;
 
         public bool IsUntargetableDirectly() => HasEffect(StatusEffectType.ShadowStep);
 
         public bool IsImmuneToDisplacement() => HasEffect(StatusEffectType.StanceGuard);
 
-        public bool IsRooted() => HasEffect(StatusEffectType.Root) || HasEffect(StatusEffectType.Stun);
+        public bool IsRooted() => HasEffect(StatusEffectType.Root) || PreventsAction();
+
+        public bool PreventsAction() => HasEffect(StatusEffectType.Stun, StatusEffectType.Freeze);
 
         /// <summary>Lấy tất cả debuff đang active trên unit.</summary>
         public List<ActiveStatusEffect> GetDebuffs()
@@ -232,6 +270,21 @@ namespace TurnBasedGame.SpellCard
             return false;
         }
 
+        /// <summary>Trả về true khi có ít nhất một effect trong danh sách truyền vào.</summary>
+        public bool HasEffect(params StatusEffectType[] types)
+        {
+            if (types == null || types.Length == 0)
+                return false;
+
+            foreach (var e in _activeEffects)
+            {
+                foreach (var type in types)
+                    if (e.Type == type) return true;
+            }
+
+            return false;
+        }
+
         public void ClearAll()
         {
             for (int i = _activeEffects.Count - 1; i >= 0; i--)
@@ -239,12 +292,29 @@ namespace TurnBasedGame.SpellCard
                 var removed = _activeEffects[i];
                 _activeEffects.RemoveAt(i);
                 OnEffectRemoved?.Invoke(removed);
+                DespawnVfx(removed.Type);
             }
         }
 
-        public float ModifyIncomingDamage(float rawDamage)
+        public void RemoveDebuffs()
+        {
+            for (int i = _activeEffects.Count - 1; i >= 0; i--)
+            {
+                if (!_activeEffects[i].Type.IsDebuff())
+                    continue;
+
+                var removed = _activeEffects[i];
+                _activeEffects.RemoveAt(i);
+                OnEffectRemoved?.Invoke(removed);
+                DespawnVfx(removed.Type);
+            }
+        }
+
+        public float ModifyIncomingDamage(float rawDamage, bool canBreakFreeze)
         {
             float modifiedDamage = rawDamage;
+            ActiveStatusEffect freeze = default;
+            bool shouldBreakFreeze = false;
 
             foreach (var effect in _activeEffects)
             {
@@ -252,6 +322,25 @@ namespace TurnBasedGame.SpellCard
                     modifiedDamage *= 1f + effect.Value / 100f;
                 else if (effect.Type == StatusEffectType.StanceGuard)
                     modifiedDamage *= Mathf.Max(0f, 1f - effect.Value / 100f);
+                else if (canBreakFreeze && effect.Type == StatusEffectType.Freeze)
+                {
+                    freeze = effect;
+                    shouldBreakFreeze = true;
+                    modifiedDamage *= 1.2f;
+                }
+            }
+
+            if (shouldBreakFreeze)
+            {
+                RemoveByType(StatusEffectType.Freeze);
+                if (freeze.RemainingTurns > 0)
+                {
+                    AddEffect(new ActiveStatusEffect(
+                        StatusEffectType.Slow,
+                        20,
+                        freeze.RemainingTurns,
+                        freeze.SourcePlayer));
+                }
             }
 
             return Mathf.Max(0, modifiedDamage - GetShieldValue());
