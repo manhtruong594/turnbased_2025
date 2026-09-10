@@ -1,0 +1,15 @@
+﻿<Solution>
+  <Project Path="RedBjorn.Utils.Runtime.csproj" />
+  <Project Path="Assembly-CSharp.csproj" />
+  <Project Path="RedBjorn.ProtoTiles.Map.Runtime.csproj" />
+  <Project Path="SidekickCharacters.Editor.csproj" />
+  <Project Path="Assembly-CSharp-Editor.csproj" />
+  <Project Path="TurnBasedGame.Protocol.Tests.csproj" />
+  <Project Path="RedBjorn.Utils.Editor.csproj" />
+  <Project Path="SidekickCharacters.csproj" />
+  <Project Path="Whinarn.IndMeshSimplifier.Runtime.csproj" />
+  <Project Path="Gilzoide.SqliteNet.csproj" />
+  <Project Path="Whinarn.IndMeshSimplifier.Editor.csproj" />
+  <Project Path="Gilzoide.SqliteNet.Tests.Editor.csproj" />
+  <Project Path="TurnBasedGame.Protocol.csproj" />
+</Solution>

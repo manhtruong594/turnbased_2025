@@ -77,7 +77,7 @@ public class MultiArrowSkill : SkillBase
     {
         float multiplier = arrowIndex == 1
             ? firstArrowDamageMultiplier
-            : Random.Range(extraArrowMinDamageMultiplier, extraArrowMaxDamageMultiplier);
+            : TurnBasedGame.Command.LocalMatchAuthority.Random.Range(extraArrowMinDamageMultiplier, extraArrowMaxDamageMultiplier);
 
         return Mathf.RoundToInt(caster.GetCurrentDamage() * multiplier);
     }
@@ -85,7 +85,7 @@ public class MultiArrowSkill : SkillBase
     private void TryApplyExtraArrowEffect(UnitController caster, UnitController target)
     {
         if (CurrentArrowEffect == null) return;
-        if (Random.value > extraArrowEffectChance) return;
+        if (TurnBasedGame.Command.LocalMatchAuthority.Random.Value() > extraArrowEffectChance) return;
 
         CurrentArrowEffect.Apply(caster.GetOwner(), target);
     }

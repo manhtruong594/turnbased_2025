@@ -23,6 +23,7 @@ namespace TurnBasedGame.Core
         public TurnState CurrentState => currentState;
         public PlayerID CurrentPlayer => currentPlayer;
         public int TurnCount => turnCount;
+        public bool IsTurnTransitionPending => _turnTransitionPending;
         public PlayerID? Winner => _winner;
 
         [Header("Display")]

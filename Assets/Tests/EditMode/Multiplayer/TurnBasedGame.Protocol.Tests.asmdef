@@ -1,0 +1,6 @@
+{
+  "name": "TurnBasedGame.Protocol.Tests",
+  "references": ["TurnBasedGame.Protocol"],
+  "includePlatforms": ["Editor"],
+  "optionalUnityReferences": ["TestAssemblies"]
+}

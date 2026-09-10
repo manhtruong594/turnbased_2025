@@ -66,10 +66,11 @@ thống không nhận được turn start; cần kiểm tra trong Play Mode sau 
 
 ## 5. Luồng một lượt
 
-Các entry point local cho `EndTurn`, `SpawnUnit` và `MoveUnit` gửi `IMatchCommand` qua
-`LocalMatchAuthority`. Authority kiểm tra `CommandId`, phe đang có lượt và `ExpectedTurn` trước khi
-gọi manager sở hữu state. Command trùng, sai phe hoặc thuộc lượt cũ không được thực thi. Đây là seam
-để thay bằng network authority sau này; chưa bao gồm transport, lobby hoặc đồng bộ snapshot.
+Các entry point local cho `EndTurn`, `SpawnUnit` và `MoveUnit` tạo `MatchCommandDto` qua
+`LocalMatchAuthority`. Gate kiểm tra protocol/content, match, actor, sequence và replay; executor giải
+content/runtime ID rồi kiểm tra turn/owner/MP/path trước khi gọi manager sở hữu state. Retry cùng payload
+trả acknowledgement đã cache, không thực thi lần hai. Callback di chuyển nằm ngoài DTO. Xem
+[Multiplayer protocol](Multiplayer_Protocol.md). Chưa bao gồm transport gameplay, lobby hoặc snapshot.
 
 ### Bắt đầu lượt
 

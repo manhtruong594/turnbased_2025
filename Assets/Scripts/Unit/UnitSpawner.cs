@@ -85,6 +85,9 @@ namespace TurnBasedGame.Unit
                 validSpawnPoints.Add(point);
             }
             spawnPoints = validSpawnPoints;
+            LocalMatchAuthority.Runtime.RegisterSpawnPoints(spawnPoints);
+            spawnPoints.Sort((a, b) => string.CompareOrdinal(
+                LocalMatchAuthority.Runtime.GetSpawnPointId(a), LocalMatchAuthority.Runtime.GetSpawnPointId(b)));
             // Phân loại spawn points theo người chơi
             playerSpawnPoints.Clear();
             playerSpawnPoints[PlayerID.Player1] = new List<SpawnPoint>();
@@ -144,6 +147,8 @@ namespace TurnBasedGame.Unit
 
             // Spawn unit
             var unitClone = Instantiate(unit, spawnPoint.transform.position, Quaternion.identity, unitsContainer);
+            unitClone.AssignMatchIdentity(
+                LocalMatchAuthority.Runtime.AllocateUnit(unitClone), LocalMatchAuthority.Content.GetId(unit));
             
             unitClone.Init(owner, spawnPoint.GridPosition);
             spawnPoint.MarkAsOccupied();

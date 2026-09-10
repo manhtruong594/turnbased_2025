@@ -69,6 +69,9 @@ public class DiceUI : MonoBehaviour
     {
         if (isRolling || _actionsLeft.Value <= 0) yield break;
         
+        if (TurnManager.Instance == null) yield break;
+        var actor = TurnManager.Instance.CurrentPlayer;
+        int expectedTurn = TurnManager.Instance.TurnCount;
         isRolling = true;
         DisableAllButtons();
 
@@ -94,7 +97,11 @@ public class DiceUI : MonoBehaviour
         }
 
         // Kết quả cuối cùng
-        diceValue = UnityEngine.Random.Range(1, 7);
+        if (!TurnBasedGame.Command.LocalMatchAuthority.TryRollDice(actor, expectedTurn, out diceValue))
+        {
+            isRolling = false;
+            yield break;
+        }
         
         if (indexOfDice == 1)
         {
@@ -108,7 +115,7 @@ public class DiceUI : MonoBehaviour
         Debug.Log($"Rolled dice {indexOfDice}: {diceValue}");
 
         // Thêm MP cho người chơi hiện tại
-        AddMPToCurrentPlayer(diceValue);
+        MPManager.Instance.AddMP(actor, diceValue);
 
         EnableButtons();
         HideUsedButton(indexOfDice);
@@ -130,17 +137,6 @@ public class DiceUI : MonoBehaviour
         {
             rollDiceButton2.interactable = false;
         }
-    }
-
-    /// <summary>
-    /// Thêm MP vào người chơi hiện tại
-    /// </summary>
-    private void AddMPToCurrentPlayer(int amount)
-    {
-        if (MPManager.Instance == null || TurnManager.Instance == null) return;
-
-        PlayerID currentPlayer = TurnManager.Instance.CurrentPlayer;
-        MPManager.Instance.AddMP(currentPlayer, amount);
     }
 
     /// <summary>

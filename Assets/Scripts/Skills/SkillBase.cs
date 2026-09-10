@@ -43,6 +43,7 @@ namespace TurnBasedGame.Skills
         public int CurrentCooldown => currentCooldown;
         public int MPCost => skillType == SkillType.Normal ? 0 : mpCost;
         public int Range => range;
+        public string SkillContentId { get; private set; }
         public SkillVfxConfig VfxConfig => GetVfxConfig();
 
         public bool CanTargetAllies => (targetTypes & TargetType.Ally) != 0;
@@ -248,7 +249,9 @@ namespace TurnBasedGame.Skills
 
         public virtual ISkill Clone()
         {
-            return Instantiate(this);
+            var clone = Instantiate(this);
+            clone.SkillContentId = TurnBasedGame.Command.LocalMatchAuthority.Content?.GetId(this);
+            return clone;
         }
         public GameObject GetCastVfxPrefab()
         {

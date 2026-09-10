@@ -1,6 +1,6 @@
 # Kế hoạch hoàn thiện multiplayer
 
-Cập nhật: `2026-09-07`
+Cập nhật: `2026-09-10`
 
 ## 1. Mục tiêu và phạm vi MVP
 
@@ -21,15 +21,15 @@ host migration và anti-cheat cấp competitive. Các mục này chỉ bắt đ�
 |---|---|---|
 | Command authority local | Một phần | `LocalMatchAuthority` nhận `EndTurn`, `SpawnUnit`, `MoveUnit` |
 | Validation lượt | Hiện có, cần Play Mode test | Kiểm tra `CommandId`, `Actor`, `ExpectedTurn` và command trùng |
-| Network-safe command DTO | Chưa có | Command còn giữ `UnityEngine.Object` và callback local |
-| Runtime ID ổn định | Chưa có | Chưa có ID dùng chung để tham chiếu unit/spawn point/content qua mạng |
+| Network-safe command DTO | Đã triển khai nền giai đoạn 2 | Binary DTO cho `EndTurn`, `SpawnUnit`, `MoveUnit`; callback nằm ngoài payload |
+| Runtime/content ID ổn định | Đã triển khai, chờ kiểm chứng Unity | Registry, catalog GUID, host unit ID, spawn ID theo owner/grid |
 | State snapshot/delta | Chưa có | Chưa thể dựng hoặc phục hồi toàn bộ trận từ dữ liệu mạng |
 | Transport/session/relay | Đã chốt, prototype đạt | NGO `2.13.2`, UTP `2.7.4`, Multiplayer Services `2.3.1`; chưa kiểm chứng Relay Internet |
 | Lobby/reconnect | Chưa có | Chưa có lifecycle phiên mạng |
 | Multiplayer test | Prototype transport đạt | Hai process loopback trao đổi message và disconnect sạch; chưa đồng bộ gameplay |
 
-`LocalMatchAuthority` là seam tạm thời để gom mutation. Nó chưa phải server và không được xem là ranh
-giới bảo mật cho tới khi authority chạy trên host/server, nhận DTO không chứa reference local.
+`LocalMatchAuthority` đã nhận DTO không chứa reference local qua executor. Nó vẫn chạy local, chưa phải
+server hoặc ranh giới bảo mật; transport gameplay và bao phủ mutation thuộc giai đoạn 3.
 
 ## 3. Kiến trúc mục tiêu
 
@@ -92,6 +92,11 @@ Giới hạn kiểm chứng: chưa chạy Relay qua hai mạng khác nhau vì c�
 environment và Authentication; hạng mục này thuộc giai đoạn 5.
 
 ### Giai đoạn 2 — Tạo protocol và ID ổn định
+
+Trạng thái `2026-09-10`: đã triển khai nền code; chưa đánh dấu hoàn thành milestone vì còn kiểm chứng
+Unity Editor/Play Mode và hai process. Chi tiết: [Multiplayer protocol](../Systems%20docs/Multiplayer_Protocol.md).
+15 test protocol đạt trên .NET; runtime/Editor compile không có lỗi. Catalog được Unity bake sau reload,
+trước Play Mode/build; 4 test registry Unity đã thêm nhưng chưa chạy.
 
 Thực hiện:
 

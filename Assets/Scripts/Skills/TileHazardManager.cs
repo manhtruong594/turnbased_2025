@@ -190,7 +190,7 @@ namespace TurnBasedGame.Skills
             if (hazard.Type != TileHazardType.BurningGround || unit.GetOwner() == hazard.Owner)
                 return;
 
-            if (Random.value > hazard.ApplyChance)
+            if (TurnBasedGame.Command.LocalMatchAuthority.Random.Value() > hazard.ApplyChance)
                 return;
 
             unit.BuffHandler?.AddEffect(new ActiveStatusEffect(

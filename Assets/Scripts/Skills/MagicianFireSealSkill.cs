@@ -74,7 +74,7 @@ namespace TurnBasedGame.Skills
 
         private void TryApplyBurn(UnitController caster, UnitController target, int burnDamage, float chance)
         {
-            if (target == null || target.IsDead() || Random.value > chance)
+            if (target == null || target.IsDead() || TurnBasedGame.Command.LocalMatchAuthority.Random.Value() > chance)
                 return;
 
             target.BuffHandler?.AddEffect(new ActiveStatusEffect(

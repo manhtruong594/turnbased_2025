@@ -26,6 +26,19 @@ namespace TurnBasedGame.Unit
         Coroutine _movingCoroutine;
         private Transform _myTrans;
         public Vector3Int currentGridPosition { get; private set; }
+        public ulong UnitRuntimeId { get; private set; }
+        public string UnitContentId { get; private set; }
+
+        internal void AssignMatchIdentity(ulong runtimeId, string contentId)
+        {
+            UnitRuntimeId = runtimeId;
+            UnitContentId = contentId;
+        }
+
+        private void OnDestroy()
+        {
+            LocalMatchAuthority.Runtime.RemoveUnit(this);
+        }
 
         [Header("Other Components")]
         [SerializeField] private UnitData unitData;

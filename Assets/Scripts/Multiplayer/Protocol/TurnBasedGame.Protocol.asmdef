@@ -1,0 +1,5 @@
+{
+  "name": "TurnBasedGame.Protocol",
+  "rootNamespace": "TurnBasedGame.Multiplayer.Protocol",
+  "noEngineReferences": true
+}

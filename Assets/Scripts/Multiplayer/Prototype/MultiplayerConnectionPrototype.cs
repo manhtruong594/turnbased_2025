@@ -3,6 +3,7 @@ using Unity.Collections;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using UnityEngine;
+using TurnBasedGame.Multiplayer.Protocol;
 
 namespace TurnBasedGame.Multiplayer.Prototype
 {
@@ -22,6 +23,7 @@ namespace TurnBasedGame.Multiplayer.Prototype
         private const float TimeoutSeconds = 20f;
 
         private NetworkManager _networkManager;
+        private MatchCompatibility _compatibility;
         private bool _isHost;
         private bool _completionReceived;
         private float _deadline;
@@ -39,6 +41,8 @@ namespace TurnBasedGame.Multiplayer.Prototype
             }
 
             ushort port = ReadPort();
+            var catalog = new MatchContentRegistry(UnityEngine.Resources.Load<MatchContentCatalog>(MatchContentCatalog.ResourceName));
+            _compatibility = new MatchCompatibility { ContentCatalogHash = catalog.ContentCatalogHash };
             var transport = GetComponent<UnityTransport>();
             _networkManager = GetComponent<NetworkManager>();
             if (transport == null || _networkManager == null || _networkManager.NetworkConfig == null)
@@ -108,13 +112,12 @@ namespace TurnBasedGame.Multiplayer.Prototype
                 return;
 
             Debug.Log($"{LogPrefix} CLIENT_CONNECTED clientId={clientId}");
-            SendInt(PingMessage, NetworkManager.ServerClientId, Nonce);
+            SendCompatibility(PingMessage, NetworkManager.ServerClientId);
         }
 
         private void OnPing(ulong senderClientId, FastBufferReader reader)
         {
-            reader.ReadValueSafe(out int nonce);
-            if (nonce != Nonce)
+            if (!ValidateCompatibility(reader))
             {
                 Debug.LogError($"{LogPrefix} FAIL: ping payload không hợp lệ.");
                 ShutdownAndQuit(5);
@@ -122,13 +125,12 @@ namespace TurnBasedGame.Multiplayer.Prototype
             }
 
             Debug.Log($"{LogPrefix} HOST_RECEIVED_PING clientId={senderClientId}");
-            SendInt(AckMessage, senderClientId, nonce);
+            SendCompatibility(AckMessage, senderClientId);
         }
 
         private void OnAck(ulong senderClientId, FastBufferReader reader)
         {
-            reader.ReadValueSafe(out int nonce);
-            if (senderClientId != NetworkManager.ServerClientId || nonce != Nonce)
+            if (senderClientId != NetworkManager.ServerClientId || !ValidateCompatibility(reader))
             {
                 Debug.LogError($"{LogPrefix} FAIL: ack không hợp lệ.");
                 ShutdownAndQuit(6);
@@ -136,7 +138,7 @@ namespace TurnBasedGame.Multiplayer.Prototype
             }
 
             Debug.Log($"{LogPrefix} CLIENT_RECEIVED_ACK");
-            SendInt(DoneMessage, NetworkManager.ServerClientId, nonce);
+            SendInt(DoneMessage, NetworkManager.ServerClientId, Nonce);
         }
 
         private void OnDone(ulong senderClientId, FastBufferReader reader)
@@ -197,6 +199,36 @@ namespace TurnBasedGame.Multiplayer.Prototype
                 clientId,
                 writer,
                 NetworkDelivery.ReliableSequenced);
+        }
+
+        private void SendCompatibility(string messageName, ulong clientId)
+        {
+            byte[] payload = MatchProtocol.SerializeCompatibility(_compatibility);
+            using var writer = new FastBufferWriter(payload.Length, Allocator.Temp);
+            writer.WriteBytesSafe(payload);
+            _networkManager.CustomMessagingManager.SendNamedMessage(messageName, clientId, writer,
+                NetworkDelivery.ReliableSequenced);
+        }
+
+        private bool ValidateCompatibility(FastBufferReader reader)
+        {
+            if (reader.Length != 70)
+            {
+                Debug.LogError($"{LogPrefix} REJECT: InvalidPayload");
+                return false;
+            }
+            var payload = new byte[70];
+            reader.ReadBytesSafe(ref payload, payload.Length);
+            MatchCompatibility peer;
+            try { peer = MatchProtocol.DeserializeCompatibility(payload); }
+            catch (ArgumentException)
+            {
+                Debug.LogError($"{LogPrefix} REJECT: InvalidPayload");
+                return false;
+            }
+            var reason = _compatibility.Compare(peer);
+            if (reason != CommandReason.None) Debug.LogError($"{LogPrefix} REJECT: {reason}");
+            return reason == CommandReason.None;
         }
 
         private void ShutdownAndQuit(int exitCode)
