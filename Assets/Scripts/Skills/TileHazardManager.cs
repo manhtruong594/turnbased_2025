@@ -49,6 +49,14 @@ namespace TurnBasedGame.Skills
     public class TileHazardManager : MonoBehaviour
     {
         private readonly List<TileHazardInstance> _hazards = new();
+        internal IReadOnlyList<TileHazardInstance> Hazards => _hazards;
+        internal System.Action CaptureRollback()
+        {
+            var saved = new List<TileHazardInstance>();
+            foreach (var h in _hazards)
+                saved.Add(new TileHazardInstance(h.Type, h.Position, h.RemainingTurns, h.Owner, h.Value, h.ApplyChance, h.StatusDuration));
+            return () => { _hazards.Clear(); _hazards.AddRange(saved); };
+        }
         private bool _subscribed;
 
         public static TileHazardManager Instance { get; private set; }
@@ -119,6 +127,7 @@ namespace TurnBasedGame.Skills
 
         public void TickHazards(PlayerID activePlayer)
         {
+            if (!TurnBasedGame.Command.LocalMatchAuthority.IsAuthoritative) return;
             for (int i = _hazards.Count - 1; i >= 0; i--)
             {
                 if (_hazards[i].TickTurn())
@@ -175,6 +184,7 @@ namespace TurnBasedGame.Skills
 
         private void TryApplyHazards(UnitController unit, Vector3Int tilePos)
         {
+            if (!TurnBasedGame.Command.LocalMatchAuthority.IsAuthoritative) return;
             if (unit == null || unit.IsDead())
                 return;
 

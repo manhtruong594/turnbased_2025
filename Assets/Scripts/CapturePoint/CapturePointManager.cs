@@ -85,6 +85,7 @@ namespace TurnBasedGame.Capture
         /// </summary>
         private void OnUnitMoved(UnitController unit, Vector3Int oldPos, Vector3Int newPos)
         {
+            if (!TurnBasedGame.Command.LocalMatchAuthority.IsAuthoritative || unit == null || unit.IsDead()) return;
             var point = GetPointAt(newPos);
             if (point == null) return;
 
@@ -97,6 +98,7 @@ namespace TurnBasedGame.Capture
         /// </summary>
         private void OnTurnEnded(PlayerID player)
         {
+            if (!TurnBasedGame.Command.LocalMatchAuthority.IsAuthoritative) return;
             RefreshAllPoints();
             CheckWinCondition();
         }

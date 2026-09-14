@@ -1,4 +1,3 @@
-using System.Collections;
 using TurnBasedGame.Unit;
 using UnityEngine;
 
@@ -13,17 +12,10 @@ namespace TurnBasedGame.Skills
         [SerializeField, Min(0f)] private float damageMultiplierPerTick = 0.25f;
         [SerializeField, Min(0)] private int minimumDamagePerTick = 1;
 
-        protected override IEnumerator ApplyEffectAsync(UnitController caster, Vector3Int targetPos)
+        protected override void ExecuteEffect(UnitController caster, Vector3Int targetPos)
         {
-            float elapsed = 0f;
-            var wait = new WaitForSeconds(tickInterval);
-
-            while (elapsed < duration)
-            {
-                ApplyDamageTick(caster, targetPos);
-                elapsed += tickInterval;
-                yield return wait;
-            }
+            int ticks = Mathf.CeilToInt(Mathf.Max(0.1f, duration) / Mathf.Max(0.05f, tickInterval));
+            for (int i = 0; i < ticks; i++) ApplyDamageTick(caster, targetPos);
         }
 
         private void ApplyDamageTick(UnitController caster, Vector3Int targetPos)

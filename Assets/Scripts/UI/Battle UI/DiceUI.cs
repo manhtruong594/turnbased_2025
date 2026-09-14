@@ -25,6 +25,12 @@ public class DiceUI : MonoBehaviour
     [SerializeField] private IntReference _actionsLeft;
    
     private bool isRolling = false;
+    private int usedButtons;
+
+    private void OnDestroy()
+    {
+        if (_actionsLeft != null) _actionsLeft.RemoveListener(UpdateActionsLeft);
+    }
 
     private void Awake()
     {
@@ -53,6 +59,7 @@ public class DiceUI : MonoBehaviour
     {
         if (isActive)
         {
+            usedButtons = 0;
             EnableButtons();
             ResetDiceDisplay();
         }
@@ -97,11 +104,21 @@ public class DiceUI : MonoBehaviour
         }
 
         // Kết quả cuối cùng
-        if (!TurnBasedGame.Command.LocalMatchAuthority.TryRollDice(actor, expectedTurn, out diceValue))
+        TurnBasedGame.Command.MatchCommandResult? received = null;
+        var submitted = TurnBasedGame.Command.LocalMatchAuthority.SubmitRoll(actor, expectedTurn, indexOfDice,
+            result => received = result);
+        if (!submitted.Pending) received = submitted;
+        while (!received.HasValue) yield return null;
+        if (!received.Value.Succeeded)
         {
             isRolling = false;
+            EnableButtons();
             yield break;
         }
+        diceValue = received.Value.Acknowledgement.DiceValue;
+        if (TurnManager.Instance == null || TurnManager.Instance.CurrentPlayer != actor ||
+            TurnManager.Instance.TurnCount != expectedTurn) { isRolling = false; yield break; }
+        usedButtons |= 1 << indexOfDice;
         
         if (indexOfDice == 1)
         {
@@ -115,7 +132,6 @@ public class DiceUI : MonoBehaviour
         Debug.Log($"Rolled dice {indexOfDice}: {diceValue}");
 
         // Thêm MP cho người chơi hiện tại
-        MPManager.Instance.AddMP(actor, diceValue);
 
         EnableButtons();
         HideUsedButton(indexOfDice);
@@ -162,7 +178,7 @@ public class DiceUI : MonoBehaviour
     /// </summary>
     private void EnableButtons()
     {
-        if (rollDiceButton2) rollDiceButton2.interactable = true;
-        if (rollDiceButton1) rollDiceButton1.interactable = true;
+        if (rollDiceButton2) rollDiceButton2.interactable = (usedButtons & (1 << 2)) == 0;
+        if (rollDiceButton1) rollDiceButton1.interactable = (usedButtons & (1 << 1)) == 0;
     }
 }

@@ -48,15 +48,13 @@ namespace TurnBasedGame.Core
             if (!IsAITurnActive())
                 yield break;
 
-            MPManager.Instance.AddMP(aiPlayerID, 3);
+            LocalMatchAuthority.GrantLocalAIMana(aiPlayerID);
             bool spawned = TrySpawnBestUnit();
 
             if (spawned)
                 yield return new WaitForSeconds(actionDelay);
 
             var myUnits = GetLivingUnits(aiPlayerID);
-            foreach (var unit in myUnits)
-                unit.OnTurnBegin();
 
             foreach (var unit in myUnits)
             {

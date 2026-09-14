@@ -33,6 +33,11 @@ namespace TurnBasedGame.Unit
         public Vector3Int GridPosition => gridPosition;
         public bool IsOccupied => isOccupied;
         public bool IsAvailable => !isOccupied;
+        internal System.Action CaptureRollback()
+        {
+            bool occupied = isOccupied;
+            return () => { isOccupied = occupied; };
+        }
 
         private void Awake()
         {

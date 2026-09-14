@@ -97,7 +97,7 @@ public class GameMediator : MonoBehaviour
 
     public void NotifyMPChanged(PlayerID player, int currentMP, int maxMP)
     {
-        OnMPChanged?.Invoke(player, currentMP, maxMP);
+        TurnBasedGame.Command.LocalMatchAuthority.PublishAfterCommit(() => OnMPChanged?.Invoke(player, currentMP, maxMP));
     }
 
     public void NotifySpawnUnit(UnitController unit, int mpSpent)
@@ -128,7 +128,7 @@ public class GameMediator : MonoBehaviour
     public void NotifyGameEnd(PlayerID winner)
     {
         turnManager.TriggerGameEnd(winner);
-        OnGameEnd?.Invoke(winner);
+        TurnBasedGame.Command.LocalMatchAuthority.PublishAfterCommit(() => OnGameEnd?.Invoke(winner));
     }
 
     public void NotifySpellCardUsed(SpellCardData card, PlayerID caster)

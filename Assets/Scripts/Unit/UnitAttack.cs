@@ -32,6 +32,7 @@ namespace TurnBasedGame.Unit
         [SerializeField] private Transform skillButtonContainer;
 
         private List<ISkill> activeSkills = new List<ISkill>();
+        internal IReadOnlyList<ISkill> ActiveSkills => activeSkills;
         private ISkill _normalSkill;
         private ISkill _selectedSkill;
 
@@ -103,6 +104,28 @@ namespace TurnBasedGame.Unit
         public void FinishAttack()
         {
              _cachedUnitMove.FinishTurnActions();
+        }
+
+        internal SkillBase ResolveSkill(string contentId)
+        {
+            foreach (var skill in activeSkills)
+                if (skill is SkillBase data && data.SkillContentId == contentId) return data;
+            return null;
+        }
+
+        internal bool HasLineOfSightFrom(Vector3Int origin, Vector3Int target)
+        {
+            if (canAttackThroughObstacles) return true;
+            var start = _cachedMap.WorldPosition(origin);
+            var end = _cachedMap.WorldPosition(target);
+            int steps = Mathf.Max(1, Mathf.CeilToInt(MapManager.Instance.GetDistance(origin, target) * 4));
+            for (int i = 1; i < steps; i++)
+            {
+                var tile = _cachedMap.Tile(Vector3.Lerp(start, end, i / (float)steps));
+                if (tile == null) return false;
+                if (tile.Position != origin && tile.Position != target && !tile.Vacant) return false;
+            }
+            return true;
         }
 
         /// <summary>
@@ -180,16 +203,14 @@ namespace TurnBasedGame.Unit
             // Kiểm tra line of sight nếu cần
             if (!canAttackThroughObstacles)
             {
-                return HasLineOfSight(targetUnit.currentGridPosition);
+                return HasLineOfSightFrom(originGridPos, targetUnit.currentGridPosition);
             }
             return true;
         }
  
         private bool HasLineOfSight(Vector3Int targetGridPos)
         {
-            // TODO: Implement proper line of sight check
-            // Hiện tại chỉ return true
-            return true;
+            return HasLineOfSightFrom(_cachedUnitMove.currentGridPosition, targetGridPos);
         }
     }
     #endregion

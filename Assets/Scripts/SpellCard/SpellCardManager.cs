@@ -7,6 +7,8 @@ using TurnBasedGame.ObjectPool;
 using TurnBasedGame.Resources;
 using TurnBasedGame.Unit;
 using UnityEngine;
+using TurnBasedGame.Command;
+using TurnBasedGame.Multiplayer.Protocol;
 
 namespace TurnBasedGame.SpellCard
 {
@@ -27,6 +29,24 @@ namespace TurnBasedGame.SpellCard
         [SerializeField] private SpellCardConfirmUI _confirmUI;
 
         private readonly Dictionary<PlayerID, List<SpellCardData>> _playerHands = new();
+        private readonly Dictionary<PlayerID, List<ulong>> _handIds = new();
+        private ulong _nextCardId;
+        public ulong SelectedCardInstanceId { get; private set; }
+
+        internal Action CaptureRollback()
+        {
+            var hands = new Dictionary<PlayerID, List<SpellCardData>>();
+            var ids = new Dictionary<PlayerID, List<ulong>>();
+            foreach (var pair in _playerHands) hands[pair.Key] = new List<SpellCardData>(pair.Value);
+            foreach (var pair in _handIds) ids[pair.Key] = new List<ulong>(pair.Value);
+            ulong counter = _nextCardId;
+            return () =>
+            {
+                _playerHands.Clear(); _handIds.Clear(); _nextCardId = counter;
+                foreach (var pair in hands) _playerHands.Add(pair.Key, pair.Value);
+                foreach (var pair in ids) _handIds.Add(pair.Key, pair.Value);
+            };
+        }
         private SpellCardState _currentState;
 
         // State context — exposed cho State & Command classes
@@ -90,15 +110,18 @@ namespace TurnBasedGame.SpellCard
         /// </summary>
         public void InitializeHand(PlayerID player, IReadOnlyList<SpellCardData> spells)
         {
+            if (!LocalMatchAuthority.IsAuthoritative) return;
             var hand = new List<SpellCardData>();
+            var ids = new List<ulong>();
             if (spells != null)
             {
                 foreach (var spell in spells)
                 {
-                    if (spell != null) hand.Add(spell);
+                    if (spell != null) { hand.Add(spell); ids.Add(++_nextCardId); }
                 }
             }
             _playerHands[player] = hand;
+            _handIds[player] = ids;
             GameMediator.Instance?.NotifyHandChanged(player);
         }
 
@@ -109,8 +132,12 @@ namespace TurnBasedGame.SpellCard
 
         public void RemoveCardFromHand(PlayerID player, SpellCardData card)
         {
+            if (!LocalMatchAuthority.IsAuthoritative) return;
             if (!_playerHands.TryGetValue(player, out var hand)) return;
-            hand.Remove(card);
+            int index = hand.IndexOf(card);
+            if (index < 0) return;
+            hand.RemoveAt(index);
+            _handIds[player].RemoveAt(index);
             GameMediator.Instance?.NotifyHandChanged(player);
         }
 
@@ -132,6 +159,7 @@ namespace TurnBasedGame.SpellCard
             }
 
             SelectedCard = card;
+            SelectedCardInstanceId = GetCardInstanceId(caster, card);
             CurrentCaster = caster;
             SetState(new SpellTargetingState());
         }
@@ -148,8 +176,65 @@ namespace TurnBasedGame.SpellCard
         public bool CanUseCard(SpellCardData card, PlayerID player)
         {
             if (card == null) return false;
-            if (!MPManager.Instance.HasEnoughMP(player, card.mpCost)) return false;
+            if (TurnManager.Instance == null || TurnManager.Instance.CurrentPlayer != player ||
+                TurnManager.Instance.IsTurnTransitionPending || TurnManager.Instance.CurrentState == TurnState.GameEnd) return false;
+            if (GetCardInstanceId(player, card) == 0 || MPManager.Instance == null ||
+                !MPManager.Instance.HasEnoughMP(player, card.mpCost)) return false;
             return true;
+        }
+
+        public ulong GetCardInstanceId(PlayerID player, SpellCardData card)
+        {
+            if (!_playerHands.TryGetValue(player, out var hand)) return 0;
+            int index = hand.IndexOf(card);
+            return index < 0 ? 0 : _handIds[player][index];
+        }
+
+        internal void AppendHandState(List<MatchStateChange> changes)
+        {
+            foreach (var pair in _playerHands)
+                for (int i = 0; i < pair.Value.Count; i++)
+                    changes.Add(new MatchStateChange { Kind = StateChangeKind.HandCard, Player = (PlayerId)pair.Key,
+                        Entity = _handIds[pair.Key][i], ContentId = LocalMatchAuthority.Content.GetId(pair.Value[i]) });
+        }
+
+        internal (CommandReason, string) CastAuthorized(PlayerID actor, ulong cardId, Vector3Int targetPosition)
+        {
+            if (!_handIds.TryGetValue(actor, out var ids)) return (CommandReason.InvalidCard, "Hand không tồn tại.");
+            int index = ids.IndexOf(cardId);
+            if (index < 0) return (CommandReason.InvalidCard, "Card instance không còn trong hand của actor.");
+            var card = _playerHands[actor][index];
+            if (card == null || card.spellEffect == null || card.mpCost < 0)
+                return (CommandReason.InvalidCard, "Card không có effect hợp lệ.");
+            var tile = CachedMap?.Tile(targetPosition);
+            if (tile == null) return (CommandReason.InvalidTarget, "Target tile không tồn tại.");
+            bool area = card.targetType == SpellTargetType.AllAllies || card.targetType == SpellTargetType.AllEnemies;
+            var candidates = area
+                ? (card.range == 0 ? GetAllUnitsOnMap() : MapManager.Instance.GetUnitsInRange(tile, card.range))
+                : new List<UnitController> { MapManager.Instance.GetUnitAtTile(targetPosition) };
+            var targets = new List<UnitController>();
+            foreach (var unit in candidates)
+                if (ValidateTarget(card, actor, unit)) targets.Add(unit);
+            if (targets.Count == 0) return (CommandReason.InvalidTarget, "Không có target hợp lệ.");
+            if (MPManager.Instance == null || !MPManager.Instance.HasEnoughMP(actor, card.mpCost))
+                return (CommandReason.InsufficientMP, "Không đủ MP để cast spell.");
+
+            // All rejection paths precede the transaction. Never trust a client-supplied target list/cost.
+            if (!MPManager.Instance.SpendMP(actor, card.mpCost)) return (CommandReason.InsufficientMP, "Không đủ MP.");
+            if (card.consumeOnUse)
+            {
+                _playerHands[actor].RemoveAt(index);
+                ids.RemoveAt(index);
+            }
+            foreach (var unit in targets) card.Cast(actor, unit);
+            LocalMatchAuthority.PublishAfterCommit(() =>
+            {
+                if (card.consumeOnUse) GameMediator.Instance?.NotifyHandChanged(actor);
+                GameMediator.Instance?.NotifySpellCardUsed(card, actor);
+                foreach (var unit in targets)
+                    if (unit != null) SpawnSpellVfx(card, unit);
+            });
+            return (CommandReason.None, null);
         }
 
         public bool ValidateTarget(SpellCardData card, PlayerID caster, UnitController target)

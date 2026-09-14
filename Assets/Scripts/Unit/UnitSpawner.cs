@@ -27,6 +27,13 @@ namespace TurnBasedGame.Unit
         private Dictionary<PlayerID, List<SpawnPoint>> playerSpawnPoints = new Dictionary<PlayerID, List<SpawnPoint>>();
         
         private Dictionary<PlayerID, List<UnitController>> playerUnits = new Dictionary<PlayerID, List<UnitController>>();
+        internal IReadOnlyList<SpawnPoint> SpawnPoints => spawnPoints;
+        internal System.Action CaptureRollback()
+        {
+            var saved = new Dictionary<PlayerID, List<UnitController>>();
+            foreach (var pair in playerUnits) saved[pair.Key] = new List<UnitController>(pair.Value);
+            return () => { playerUnits.Clear(); foreach (var pair in saved) playerUnits.Add(pair.Key, pair.Value); };
+        }
 
         private void Awake()
         {
@@ -211,6 +218,13 @@ namespace TurnBasedGame.Unit
                 return new List<UnitController>();
             }
             return playerUnits[player];
+        }
+
+        internal void RemoveDeadUnit(UnitController unit)
+        {
+            if (playerUnits.TryGetValue(unit.GetOwner(), out var units)) units.Remove(unit);
+            foreach (var point in spawnPoints)
+                if (point.GridPosition == unit.currentGridPosition) point.MarkAsAvailable();
         }
     }
 }

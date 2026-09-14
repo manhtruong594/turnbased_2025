@@ -2,7 +2,6 @@ using UnityEngine;
 using System.Collections.Generic;
 using TurnBasedGame.Unit;
 using TurnBasedGame.ObjectPool;
-using System.Collections;
 using Unity.VisualScripting;
 using System;
 using RedBjorn.ProtoTiles.Example;
@@ -44,6 +43,11 @@ namespace TurnBasedGame.Skills
         public int MPCost => skillType == SkillType.Normal ? 0 : mpCost;
         public int Range => range;
         public string SkillContentId { get; private set; }
+        internal Action CaptureRollback()
+        {
+            int savedCooldown = currentCooldown;
+            return () => { currentCooldown = savedCooldown; _isExecuting = false; };
+        }
         public SkillVfxConfig VfxConfig => GetVfxConfig();
 
         public bool CanTargetAllies => (targetTypes & TargetType.Ally) != 0;
@@ -122,7 +126,8 @@ namespace TurnBasedGame.Skills
             if (targetUnit == null)
                 return CanTargetEmptyTile;
 
-            if (targetUnit == caster || targetUnit.IsDead())
+            if (targetUnit.IsDead()) return false;
+            if (targetUnit == caster)
                 return CanTargetSelf;
 
             bool isSameOwner = targetUnit.GetOwner() == caster.GetOwner();
@@ -153,14 +158,38 @@ namespace TurnBasedGame.Skills
         
         public void Execute(UnitController caster, Vector3Int targetPos)
         {
+            var result = TurnBasedGame.Command.LocalMatchAuthority.SubmitSkill(caster, this, targetPos,
+                completed => { if (!completed.Succeeded) SkillEventBus.Instance?.TriggerSkillFailed(this, caster, completed.FailureReason); });
+            if (!result.Succeeded && !result.Pending)
+                SkillEventBus.Instance?.TriggerSkillFailed(this, caster, result.FailureReason);
+        }
+
+        internal bool ExecuteAuthorized(UnitController caster, Vector3Int targetPos)
+        {
+            if (_isExecuting || !CanUse(caster, targetPos)) return false;
             if (!TrySpendMP(caster))
             {
                 Debug.LogWarning($"Not enough MP to use {skillName}. Required MP: {MPCost}.");
                 SkillEventBus.Instance?.TriggerSkillFailed(this, caster, "Not enough MP.");
-                return;
+                return false;
             }
 
-            Updater.Instance.StartCoroutine(ExcuteAsync(caster, targetPos));
+            _currentExecutionContext = (caster, targetPos);
+            _isExecuting = true;
+            try
+            {
+                ExecuteEffect(caster, targetPos);
+                StartCooldown();
+            }
+            finally { _isExecuting = false; }
+            if (caster != null) caster.FinishTurnActionsAuthorized();
+            // Animation cues are presentation only; gameplay has already resolved once.
+            TurnBasedGame.Command.LocalMatchAuthority.PublishAfterCommit(() =>
+            {
+                if (caster != null && !caster.IsDead()) caster.PerformSkill(this, targetPos);
+                OnExecuteComplete(caster, targetPos);
+            });
+            return true;
         }
 
         private bool TrySpendMP(UnitController caster)
@@ -173,31 +202,6 @@ namespace TurnBasedGame.Skills
                 && MPManager.Instance.SpendMP(caster.GetOwner(), MPCost);
         }
 
-        const float EXECUTE_TIMEOUT = 10f;
-
-        IEnumerator ExcuteAsync(UnitController caster, Vector3Int targetPos)
-        {
-            _isExecuting = true;
-            _currentExecutionContext = (caster, targetPos);
-            caster.PerformSkill(this, targetPos);
-            StartCooldown();
-
-            float elapsed = 0f;
-            while (_isExecuting)
-            {
-                elapsed += Time.deltaTime;
-                if (elapsed >= EXECUTE_TIMEOUT)
-                {
-                    Debug.LogError($"[{skillName}] ApplyEffect was never called! Forcing completion after {EXECUTE_TIMEOUT}s.");
-                    _isExecuting = false;
-                    break;
-                }
-
-                yield return null;
-            }
-            OnExecuteComplete(caster, targetPos);
-        }
-
         protected virtual void StartCooldown()
         {
             if (skillType != SkillType.Normal)
@@ -208,21 +212,12 @@ namespace TurnBasedGame.Skills
 
         public virtual void ApplyEffect()
         {
-            if (!_isExecuting) return;
-            Updater.Instance.StartCoroutine(ApplyEffectAsync(_currentExecutionContext.Item1, _currentExecutionContext.Item2));
-        }
-
-        protected virtual IEnumerator ApplyEffectAsync(UnitController caster, Vector3Int targetPos)
-        {
-            yield return null;
-            ExecuteEffect(caster, targetPos);
-            _isExecuting = false;
+            // Kept for serialized animation/VFX callers. Authority resolves effects in ExecuteAuthorized.
         }
 
         protected virtual void OnExecuteComplete(UnitController caster, Vector3Int targetPos)
         {
             SkillEventBus.Instance?.TriggerSkillUsed(this, caster, targetPos);
-            caster.FinishTurnActions();
         }
         protected virtual void ExecuteEffect(UnitController caster, Vector3Int targetPos)
         {

@@ -1,5 +1,7 @@
 # Spell Card System
 
+Cập nhật multiplayer `2026-09-10`: confirm gửi `CastSpell` theo card instance ID; host resolve target, MP và consume. `AnyUnit` là single target; `AllAllies`/`AllEnemies` đã có targeting phía authority, chờ kiểm chứng Unity. Xem [Gameplay commands](Multiplayer_Gameplay_Commands.md) cho luồng hiện tại và quy tắc range.
+
 ## 1. Mục tiêu
 
 Spell card cho phép người chơi dùng MP để tạo hiệu ứng ngoài action riêng của unit. Hệ thống gồm data,

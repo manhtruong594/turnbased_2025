@@ -1,7 +1,6 @@
 using RedBjorn.ProtoTiles;
 using TurnBasedGame.Core;
 using TurnBasedGame.Resources;
-using TurnBasedGame.Unit;
 using UnityEngine;
 
 namespace TurnBasedGame.SpellCard
@@ -44,60 +43,11 @@ namespace TurnBasedGame.SpellCard
 
         public void Execute()
         {
-            if (!MPManager.Instance.SpendMP(_caster, _card.mpCost))
-            {
-                Debug.LogWarning($"[Spell] Không đủ MP để dùng {_card.spellName}");
-                return;
-            }
-
-            ExecuteOnTargets();
-
-            if (_card.consumeOnUse)
-                _manager.RemoveCardFromHand(_caster, _card);
-
-            GameMediator.Instance?.NotifySpellCardUsed(_card, _caster);
-            Debug.Log($"[Spell] {_caster} dùng {_card.spellName}");
+            if (!CanExecute()) return;
+            var result = TurnBasedGame.Command.LocalMatchAuthority.SubmitSpell(_caster,
+                _manager.GetCardInstanceId(_caster, _card), _targetTile.Position);
+            if (!result.Succeeded) Debug.LogWarning(result.FailureReason);
         }
 
-        private void ExecuteOnTargets()
-        {
-            if (_card.range == 0)
-            {
-                var allUnits = _manager.GetAllUnitsOnMap();
-                foreach (var unit in allUnits)
-                {
-                    if (_manager.ValidateTarget(_card, _caster, unit))
-                        ExecuteOnUnit(unit);
-                }
-            }
-            else if (IsMultiTarget(_card.targetType))
-            {
-                var unitsInRange = MapManager.Instance.GetUnitsInRange(_targetTile, _card.range);
-                foreach (var unit in unitsInRange)
-                {
-                    if (_manager.ValidateTarget(_card, _caster, unit))
-                        ExecuteOnUnit(unit);
-                }
-            }
-            else
-            {
-                var target = MapManager.Instance.GetUnitAtTile(_targetTile.Position);
-                if (target != null)
-                    ExecuteOnUnit(target);
-            }
-        }
-
-        private void ExecuteOnUnit(UnitController target)
-        {
-            _manager.SpawnSpellVfx(_card, target);
-            _card.Cast(_caster, target);
-        }
-
-        private static bool IsMultiTarget(SpellTargetType type)
-        {
-            return type == SpellTargetType.AllAllies
-                || type == SpellTargetType.AllEnemies
-                || type == SpellTargetType.AnyUnit;
-        }
     }
 }

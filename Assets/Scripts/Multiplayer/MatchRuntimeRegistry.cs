@@ -14,6 +14,21 @@ namespace TurnBasedGame.Multiplayer
         private readonly Dictionary<SpawnPoint, string> spawnIds = new();
         private ulong nextUnitId;
 
+        internal Action CaptureRollback()
+        {
+            var saved = new Dictionary<ulong, UnitController>(units);
+            ulong counter = nextUnitId;
+            return () =>
+            {
+                var added = new List<UnitController>();
+                foreach (var pair in units) if (!saved.ContainsKey(pair.Key)) added.Add(pair.Value);
+                foreach (var unit in added)
+                    if (unit != null) { unit.gameObject.SetActive(false); UnityEngine.Object.Destroy(unit.gameObject); }
+                units.Clear(); unitIds.Clear(); nextUnitId = counter;
+                foreach (var pair in saved) { units.Add(pair.Key, pair.Value); unitIds.Add(pair.Value, pair.Key); }
+            };
+        }
+
         public ulong AllocateUnit(UnitController unit)
         {
             ulong id = checked(nextUnitId + 1);

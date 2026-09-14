@@ -13,13 +13,36 @@ public sealed class MatchProtocolTests
         CommandId = 1, ExpectedTurn = 3, ClientSequence = 1, Kind = kind,
         UnitContentId = kind == MatchCommandKind.SpawnUnit ? new string('b', 32) : null,
         SpawnPointId = kind == MatchCommandKind.SpawnUnit ? "1:-3:0:8" : null,
-        UnitRuntimeId = kind == MatchCommandKind.MoveUnit ? 42ul : 0,
-        Destination = kind == MatchCommandKind.MoveUnit ? new GridCoordinate(-4, 0, 123) : default
+        UnitRuntimeId = kind == MatchCommandKind.MoveUnit || kind == MatchCommandKind.NormalAttack ||
+            kind == MatchCommandKind.UseSkill || kind == MatchCommandKind.FinishUnit || kind == MatchCommandKind.UndoMove ? 42ul : 0,
+        SkillContentId = kind == MatchCommandKind.NormalAttack || kind == MatchCommandKind.UseSkill ? new string('c', 32) : null,
+        CardInstanceId = kind == MatchCommandKind.CastSpell ? 77ul : 0,
+        DiceIndex = kind == MatchCommandKind.RollDice ? (byte)2 : (byte)0,
+        Destination = kind == MatchCommandKind.MoveUnit || kind == MatchCommandKind.NormalAttack ||
+            kind == MatchCommandKind.UseSkill || kind == MatchCommandKind.CastSpell ? new GridCoordinate(-4, 0, 123) : default
     };
+
+    [Test]
+    public void HostTimeoutDoesNotConsumeRemoteCommandIdentityOrSequence()
+    {
+        var gate = new MatchCommandGate(MatchId, Compatible());
+        var timeout = gate.ExecuteSystem(PlayerId.Player1, () => (CommandReason.None, null),
+            () => Array.Empty<MatchStateChange>(), null);
+        Assert.That(timeout.CommandId, Is.Zero);
+        Assert.That(timeout.ServerSequence, Is.EqualTo(1));
+        Assert.That(gate.NextClientSequence(PlayerId.Player1), Is.EqualTo(1));
+        Assert.That(gate.Submit(Command(), PlayerId.Player1, _ => (CommandReason.None, null)).ServerSequence, Is.EqualTo(2));
+    }
 
     [TestCase(MatchCommandKind.EndTurn)]
     [TestCase(MatchCommandKind.SpawnUnit)]
     [TestCase(MatchCommandKind.MoveUnit)]
+    [TestCase(MatchCommandKind.NormalAttack)]
+    [TestCase(MatchCommandKind.UseSkill)]
+    [TestCase(MatchCommandKind.CastSpell)]
+    [TestCase(MatchCommandKind.FinishUnit)]
+    [TestCase(MatchCommandKind.UndoMove)]
+    [TestCase(MatchCommandKind.RollDice)]
     public void EveryCommandRoundTripsWithoutLosingFields(MatchCommandKind kind)
     {
         var original = Command(kind);
@@ -33,6 +56,130 @@ public sealed class MatchProtocolTests
         Assert.That(restored.Destination.X, Is.EqualTo(original.Destination.X));
         Assert.That(restored.UnitContentId, Is.EqualTo(original.UnitContentId));
         Assert.That(restored.SpawnPointId, Is.EqualTo(original.SpawnPointId));
+        Assert.That(restored.SkillContentId, Is.EqualTo(original.SkillContentId));
+        Assert.That(restored.CardInstanceId, Is.EqualTo(original.CardInstanceId));
+        Assert.That(restored.DiceIndex, Is.EqualTo(original.DiceIndex));
+    }
+
+    [TestCase(MatchCommandKind.NormalAttack)]
+    [TestCase(MatchCommandKind.UseSkill)]
+    [TestCase(MatchCommandKind.CastSpell)]
+    [TestCase(MatchCommandKind.FinishUnit)]
+    [TestCase(MatchCommandKind.UndoMove)]
+    [TestCase(MatchCommandKind.RollDice)]
+    public void NewCommandsRejectEveryTruncationAndTrailingByte(MatchCommandKind kind)
+    {
+        var bytes = MatchProtocol.Serialize(Command(kind));
+        for (int size = 0; size < bytes.Length; size++)
+            Assert.That(MatchProtocol.TryDeserialize(bytes.Take(size).ToArray(), out _, out _), Is.False);
+        Assert.That(MatchProtocol.TryDeserialize(bytes.Concat(new byte[] { 0 }).ToArray(), out _, out _), Is.False);
+    }
+
+    [TestCase(MatchCommandKind.EndTurn)]
+    [TestCase(MatchCommandKind.SpawnUnit)]
+    [TestCase(MatchCommandKind.MoveUnit)]
+    [TestCase(MatchCommandKind.NormalAttack)]
+    [TestCase(MatchCommandKind.UseSkill)]
+    [TestCase(MatchCommandKind.CastSpell)]
+    [TestCase(MatchCommandKind.FinishUnit)]
+    [TestCase(MatchCommandKind.UndoMove)]
+    [TestCase(MatchCommandKind.RollDice)]
+    public void EveryGameplayCommandExecutesOnceAndCachesItsState(MatchCommandKind kind)
+    {
+        var gate = new MatchCommandGate(MatchId, Compatible());
+        var command = Command(kind);
+        int executions = 0;
+        var first = gate.Submit(command, PlayerId.Player1, _ => { executions++; return (CommandReason.None, null); },
+            () => new[] { new MatchStateChange { Kind = StateChangeKind.MP, Player = PlayerId.Player1, Value = 7 } }, () => 4);
+        first.StateChanges[0].Value = 999;
+        var retry = gate.Submit(command, PlayerId.Player1, _ => throw new Exception("Replay executed."));
+        Assert.That(executions, Is.EqualTo(1));
+        Assert.That(retry.StateChanges[0].Value, Is.EqualTo(7));
+        Assert.That(retry.DiceValue, Is.EqualTo(4));
+        Assert.That(retry.NextClientSequence, Is.EqualTo(2));
+    }
+
+    [TestCase(CommandReason.InvalidOwner)]
+    [TestCase(CommandReason.WrongTurn)]
+    [TestCase(CommandReason.InvalidTarget)]
+    [TestCase(CommandReason.OutOfRange)]
+    [TestCase(CommandReason.BlockedLineOfSight)]
+    [TestCase(CommandReason.InsufficientMP)]
+    [TestCase(CommandReason.Cooldown)]
+    [TestCase(CommandReason.InvalidCard)]
+    [TestCase(CommandReason.InvalidState)]
+    public void GameplayRejectHasNoStateChangesAndRetryKeepsReason(CommandReason reason)
+    {
+        var gate = new MatchCommandGate(MatchId, Compatible());
+        var command = Command(MatchCommandKind.UseSkill);
+        var result = gate.Submit(command, PlayerId.Player1, _ => (reason, "Rejected"),
+            () => throw new Exception("Rejected command captured state."));
+        Assert.That(result.Accepted, Is.False);
+        Assert.That(result.StateChanges, Is.Empty);
+        Assert.That(result.ServerSequence, Is.Zero);
+        Assert.That(gate.Submit(command, PlayerId.Player1, _ => throw new Exception()).Reason, Is.EqualTo(reason));
+    }
+
+    [Test]
+    public void FaultedExecutionStopsFurtherCommandsAndNeverRetriesMutation()
+    {
+        var gate = new MatchCommandGate(MatchId, Compatible());
+        Assert.That(gate.Submit(Command(), PlayerId.Player1,
+            _ => throw new InvalidOperationException("Fault")).Reason, Is.EqualTo(CommandReason.ExecutionFault));
+        Assert.That(gate.Submit(Command(), PlayerId.Player1, _ => throw new Exception("Retried fault")).Accepted, Is.False);
+        var next = Command(); next.CommandId = 2; next.ClientSequence = 2;
+        Assert.That(gate.Submit(next, PlayerId.Player1, _ => throw new Exception("Continued faulted match")).Accepted, Is.False);
+    }
+
+    [Test]
+    public void StateResultRoundTripsAllKindsAndRejectsTruncatedData()
+    {
+        var result = new CommandAcknowledgement { MatchId = MatchId, Actor = PlayerId.Player1,
+            Accepted = true, NextClientSequence = 12, DiceValue = 6,
+            StateChanges = Enum.GetValues(typeof(StateChangeKind)).Cast<StateChangeKind>().Select(kind =>
+                new MatchStateChange { Kind = kind, Entity = 123, Player = PlayerId.Player2, ContentId = new string('a', 32),
+                    Position = new GridCoordinate(-1, 0, 4), Value = 7, Value2 = 8, Value3 = 9, Value4 = 10, Scalar = 0.25f }).ToArray() };
+        var bytes = MatchProtocol.SerializeAcknowledgement(result);
+        var restored = MatchProtocol.DeserializeAcknowledgement(bytes);
+        CollectionAssert.AreEqual(bytes, MatchProtocol.SerializeAcknowledgement(restored));
+        Assert.That(restored.NextClientSequence, Is.EqualTo(12));
+        Assert.That(restored.StateChanges.Length, Is.EqualTo(result.StateChanges.Length));
+        Assert.Catch(() => MatchProtocol.DeserializeAcknowledgement(bytes.Take(bytes.Length - 1).ToArray()));
+    }
+
+    [Test]
+    public void FaultRollsBackBeforeAcknowledgementAndDoesNotPublishPartialState()
+    {
+        var gate = new MatchCommandGate(MatchId, Compatible());
+        int mp = 10, hp = 20, cards = 1, rollbacks = 0;
+        var result = gate.Submit(Command(MatchCommandKind.CastSpell), PlayerId.Player1, _ =>
+        {
+            mp -= 3; hp -= 10; cards--;
+            throw new InvalidOperationException("Effect failed after partial mutation.");
+        }, rollback: () => { mp = 10; hp = 20; cards = 1; rollbacks++; });
+        Assert.That(result.Reason, Is.EqualTo(CommandReason.ExecutionFault));
+        Assert.That(result.StateChanges, Is.Empty);
+        Assert.That(result.ServerSequence, Is.Zero);
+        Assert.That(new[] { mp, hp, cards, rollbacks }, Is.EqualTo(new[] { 10, 20, 1, 1 }));
+        gate.Submit(Command(MatchCommandKind.CastSpell), PlayerId.Player1, _ => throw new Exception("Replay"));
+        Assert.That(rollbacks, Is.EqualTo(1));
+    }
+
+    [Test]
+    public void NewCommandsRejectMissingIdentityAndSmuggledFields()
+    {
+        var c = Command(MatchCommandKind.UseSkill); c.SkillContentId = null;
+        Assert.Throws<ArgumentException>(() => MatchProtocol.Serialize(c));
+        c = Command(MatchCommandKind.CastSpell); c.CardInstanceId = 0;
+        Assert.Throws<ArgumentException>(() => MatchProtocol.Serialize(c));
+        c = Command(MatchCommandKind.RollDice); c.DiceIndex = 3;
+        Assert.Throws<ArgumentException>(() => MatchProtocol.Serialize(c));
+        c = Command(MatchCommandKind.NormalAttack); c.CardInstanceId = 77;
+        Assert.Throws<ArgumentException>(() => MatchProtocol.Serialize(c));
+        c = Command(MatchCommandKind.CastSpell); c.UnitRuntimeId = 42;
+        Assert.Throws<ArgumentException>(() => MatchProtocol.Serialize(c));
+        c = Command(MatchCommandKind.FinishUnit); c.Destination = new GridCoordinate(1, 0, 0);
+        Assert.Throws<ArgumentException>(() => MatchProtocol.Serialize(c));
     }
 
     [Test]

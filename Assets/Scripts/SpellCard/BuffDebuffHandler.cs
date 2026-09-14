@@ -46,6 +46,17 @@ namespace TurnBasedGame.SpellCard
         [SerializeField] private BuffIconDisplay _iconDisplay;
 
         public IReadOnlyList<ActiveStatusEffect> ActiveEffects => _activeEffects;
+        internal Action CaptureRollback()
+        {
+            var saved = _activeEffects.ToArray();
+            return () => { _activeEffects.Clear(); _activeEffects.AddRange(saved); };
+        }
+
+        internal void RestoreEffectsAuthorized(ActiveStatusEffect[] effects)
+        {
+            ClearAll();
+            foreach (var effect in effects) AddEffect(effect);
+        }
 
         public event Action<ActiveStatusEffect> OnEffectAdded;
         public event Action<ActiveStatusEffect> OnEffectRemoved;
@@ -66,6 +77,7 @@ namespace TurnBasedGame.SpellCard
 
         public void AddEffect(ActiveStatusEffect effect)
         {
+            if (!TurnBasedGame.Command.LocalMatchAuthority.IsAuthoritative) return;
             // Cùng loại thì thay thế (refresh duration)
             RemoveByType(effect.Type);
             _activeEffects.Add(effect);
@@ -80,6 +92,7 @@ namespace TurnBasedGame.SpellCard
         /// </summary>
         public void ApplyTickEffects(ActiveStatusEffect effect)
         {
+            if (!TurnBasedGame.Command.LocalMatchAuthority.IsAuthoritative) return;
             switch (effect.Type)
             {
                 case StatusEffectType.HealOverTime:
@@ -116,6 +129,7 @@ namespace TurnBasedGame.SpellCard
         /// </summary>
         public void TickEffects()
         {
+            if (!TurnBasedGame.Command.LocalMatchAuthority.IsAuthoritative) return;
             for (int i = 0; i < _activeEffects.Count; i++)
             {
                 if (_owner.IsDead())
@@ -130,6 +144,7 @@ namespace TurnBasedGame.SpellCard
 
         public void RemoveExpiredEffects()
         {
+            if (!TurnBasedGame.Command.LocalMatchAuthority.IsAuthoritative) return;
             for (int i = _activeEffects.Count - 1; i >= 0; i--)
             {
                 var effect = _activeEffects[i];
@@ -145,6 +160,7 @@ namespace TurnBasedGame.SpellCard
 
         public void RemoveByType(StatusEffectType type)
         {
+            if (!TurnBasedGame.Command.LocalMatchAuthority.IsAuthoritative) return;
             for (int i = _activeEffects.Count - 1; i >= 0; i--)
             {
                 if (_activeEffects[i].Type == type)
@@ -287,6 +303,7 @@ namespace TurnBasedGame.SpellCard
 
         public void ClearAll()
         {
+            if (!TurnBasedGame.Command.LocalMatchAuthority.IsAuthoritative) return;
             for (int i = _activeEffects.Count - 1; i >= 0; i--)
             {
                 var removed = _activeEffects[i];
@@ -298,6 +315,7 @@ namespace TurnBasedGame.SpellCard
 
         public void RemoveDebuffs()
         {
+            if (!TurnBasedGame.Command.LocalMatchAuthority.IsAuthoritative) return;
             for (int i = _activeEffects.Count - 1; i >= 0; i--)
             {
                 if (!_activeEffects[i].Type.IsDebuff())

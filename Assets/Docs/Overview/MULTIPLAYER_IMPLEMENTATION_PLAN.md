@@ -19,17 +19,17 @@ host migration và anti-cheat cấp competitive. Các mục này chỉ bắt đ�
 
 | Hạng mục | Trạng thái | Bằng chứng/giới hạn |
 |---|---|---|
-| Command authority local | Một phần | `LocalMatchAuthority` nhận `EndTurn`, `SpawnUnit`, `MoveUnit` |
+| Command authority | Đã triển khai coverage giai đoạn 3, chờ nghiệm thu Unity | 9 command, adapter NGO, transaction/result; chưa nối session/bootstrap |
 | Validation lượt | Hiện có, cần Play Mode test | Kiểm tra `CommandId`, `Actor`, `ExpectedTurn` và command trùng |
-| Network-safe command DTO | Đã triển khai nền giai đoạn 2 | Binary DTO cho `EndTurn`, `SpawnUnit`, `MoveUnit`; callback nằm ngoài payload |
+| Network-safe command DTO | Đã mở rộng giai đoạn 3 | Protocol/rules version 2, 9 command và result có state; callback nằm ngoài payload |
 | Runtime/content ID ổn định | Đã triển khai, chờ kiểm chứng Unity | Registry, catalog GUID, host unit ID, spawn ID theo owner/grid |
 | State snapshot/delta | Chưa có | Chưa thể dựng hoặc phục hồi toàn bộ trận từ dữ liệu mạng |
 | Transport/session/relay | Đã chốt, prototype đạt | NGO `2.13.2`, UTP `2.7.4`, Multiplayer Services `2.3.1`; chưa kiểm chứng Relay Internet |
 | Lobby/reconnect | Chưa có | Chưa có lifecycle phiên mạng |
 | Multiplayer test | Prototype transport đạt | Hai process loopback trao đổi message và disconnect sạch; chưa đồng bộ gameplay |
 
-`LocalMatchAuthority` đã nhận DTO không chứa reference local qua executor. Nó vẫn chạy local, chưa phải
-server hoặc ranh giới bảo mật; transport gameplay và bao phủ mutation thuộc giai đoạn 3.
+`LocalMatchAuthority` đã nhận DTO không chứa reference local qua executor. Scene production vẫn chạy local; adapter NGO cần session/replica bootstrap. Nó chưa phải
+server hoặc ranh giới bảo mật; xem phạm vi đã triển khai và giới hạn tại [Gameplay commands](../Systems%20docs/Multiplayer_Gameplay_Commands.md).
 
 ## 3. Kiến trúc mục tiêu
 
@@ -116,6 +116,16 @@ Tiêu chí hoàn thành:
 - Build có content/protocol không tương thích bị từ chối với lý do rõ ràng.
 
 ### Giai đoạn 3 — Bao phủ toàn bộ gameplay command
+
+Trạng thái `2026-09-10`: đã triển khai code, chưa đánh dấu hoàn thành milestone vì chưa có kết quả
+Unity Play Mode/hai process. Chi tiết: [Gameplay commands](../Systems%20docs/Multiplayer_Gameplay_Commands.md).
+
+- 9 command: EndTurn, SpawnUnit, MoveUnit, NormalAttack, UseSkill, CastSpell, FinishUnit, UndoMove, RollDice.
+- Executor xác thực gameplay, rollback authoritative state khi exception; effect không còn phụ thuộc animation cue.
+- Tick lượt/capture/death/victory phía host; timeout không chiếm command ID/client sequence của remote player.
+- Result có reason/sequence/state; adapter NGO kiểm tra peer mapping và lọc hand theo owner.
+- 50 test protocol/gate đạt trên Mono; runtime/Editor/test compile 0 lỗi. 5 test authority EditMode đã thêm,
+  chưa chạy trong Unity. Session/bootstrap và apply state client còn thuộc giai đoạn 4–5.
 
 Thực hiện theo thứ tự:
 

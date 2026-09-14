@@ -122,10 +122,6 @@ namespace TurnBasedGame.Core
         {
             if (_myUnits.Count == 0)
                 yield break;
-            foreach (var unit in _myUnits)
-            {
-                unit.FinishTurnActions();
-            }
             yield return null;
         }
 
@@ -137,18 +133,13 @@ namespace TurnBasedGame.Core
             yield return null;
             _actionLefts.Value = 2;
             _myUnits = UnitSpawner.Instance.GetPlayerUnits(playerID);
-            foreach (var unit in _myUnits)
-            {
-                unit.OnTurnBegin();
-            }
-            TurnManager.Instance.CalculateTimeLimitInTurn(_myUnits.Count);
         }
 
         IEnumerator WaitOpponentTurn()
         {
             yield return null;
-            TurnManager.Instance.SetTimeFixedTimeInTurn(30f);       // hack chờ AI
-            if (_aiOpponent != null)
+            if (_aiOpponent != null && LocalMatchAuthority.IsAuthoritative &&
+                (Unity.Netcode.NetworkManager.Singleton == null || !Unity.Netcode.NetworkManager.Singleton.IsListening))
             {
                 yield return StartCoroutine(_aiOpponent.ExecuteAITurn());
             }

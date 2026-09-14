@@ -26,6 +26,18 @@ namespace TurnBasedGame.Core
         public bool IsTurnTransitionPending => _turnTransitionPending;
         public PlayerID? Winner => _winner;
 
+        internal Action CaptureRollback()
+        {
+            var state = currentState; var player = currentPlayer; int count = turnCount;
+            var winner = _winner; float timer = Timer; bool pending = _turnTransitionPending;
+            return () =>
+            {
+                CancelInvoke(); currentState = state; currentPlayer = player; turnCount = count;
+                _winner = winner; Timer = timer; _turnTransitionPending = pending;
+                _isTriggerTimer = false; // Faulted transactions require recovery before accepting more input.
+            };
+        }
+
         [Header("Display")]
         public TextMeshProUGUI ClockText;
         public float Timer { get; private set; }
@@ -49,6 +61,7 @@ namespace TurnBasedGame.Core
             turnCount = 0;
             currentPlayer = StartingPlayer;
             _turnTransitionPending = false;
+            if (!LocalMatchAuthority.IsAuthoritative) return;
             LocalMatchAuthority.Reset();
             ChangeState(TurnState.Initialization);
 
@@ -57,13 +70,14 @@ namespace TurnBasedGame.Core
 
         void Update()
         {
+            if (!LocalMatchAuthority.IsAuthoritative) return;
             if (!_isTriggerTimer)
                 return;
             Timer -= Time.deltaTime;
             ClockText.text = Mathf.CeilToInt(Timer).ToString();
             if (Timer <= 0)
             {
-                EndCurrentTurn();
+                LocalMatchAuthority.SubmitTimeoutTurn();
             }
         }
 
@@ -121,6 +135,10 @@ namespace TurnBasedGame.Core
             currentPlayer = player;
             turnCount++;
             _turnTransitionPending = false;
+            var units = UnitSpawner.Instance.GetPlayerUnits(player).ToArray();
+            foreach (var unit in units)
+                if (unit != null && !unit.IsDead()) unit.OnTurnBegin();
+            CalculateTimeLimitInTurn(UnitSpawner.Instance.GetPlayerUnits(player).Count);
 
             Debug.Log($"=== Turn {turnCount}: Player {(int)player}'s Turn Started ===");
             _gameMediator.NotifyPlayerTurnStarted(currentPlayer);
@@ -132,7 +150,7 @@ namespace TurnBasedGame.Core
         public void EndCurrentTurn()
         {
             var result = LocalMatchAuthority.SubmitEndTurn(currentPlayer);
-            if (!result.Succeeded)
+            if (!result.Succeeded && !result.Pending)
                 Debug.LogWarning($"Cannot end turn: {result.FailureReason}");
         }
 
@@ -158,6 +176,8 @@ namespace TurnBasedGame.Core
 
             _turnTransitionPending = true;
             _isTriggerTimer = false;
+            foreach (var unit in UnitSpawner.Instance.GetPlayerUnits(actor))
+                if (unit != null && !unit.IsDead()) unit.FinishTurnActionsAuthorized();
 
             Debug.Log($"=== Player {(int)currentPlayer}'s Turn Ended ===");
             _gameMediator.NotifyPlayerTurnEnded(currentPlayer);
@@ -170,7 +190,7 @@ namespace TurnBasedGame.Core
             }
 
             // Chuyển lượt sau delay ngắn
-            Invoke(nameof(SwitchToNextPlayer), TurnTransitionDelay);
+            SwitchToNextPlayer();
             failureReason = null;
             return true;
         }
@@ -197,6 +217,7 @@ namespace TurnBasedGame.Core
         /// </summary>
         public void TriggerGameEnd(PlayerID winner)
         {
+            if (!LocalMatchAuthority.IsAuthoritative || currentState == TurnState.GameEnd) return;
             _winner = winner;
             _isTriggerTimer = false;
             CancelInvoke();

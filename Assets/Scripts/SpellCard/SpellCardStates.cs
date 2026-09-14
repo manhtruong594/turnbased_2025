@@ -61,6 +61,7 @@ namespace TurnBasedGame.SpellCard
     /// <summary>Trạng thái xác nhận — hiển thị ConfirmUI, chờ Confirm/Cancel.</summary>
     public class SpellConfirmingState : SpellCardState
     {
+        private bool pending;
         public override void Enter(SpellCardManager ctx)
         {
             ctx.ShowConfirmUI();
@@ -68,20 +69,25 @@ namespace TurnBasedGame.SpellCard
 
         public override void OnConfirm(SpellCardManager ctx)
         {
-            var command = new CastSpellCommand(ctx.SelectedCard, ctx.CurrentCaster, ctx.CachedTile, ctx);
-            if (command.CanExecute())
-            {
-                command.Execute();
-            }
-            else
-            {
-                Debug.Log("[Spell] Cannot execute spell on this tile.");
-            }
-            ctx.SetState(new SpellIdleState());
+            if (pending) return;
+            if (ctx.CachedTile == null) { ctx.SetState(new SpellTargetingState()); return; }
+            var result = TurnBasedGame.Command.LocalMatchAuthority.SubmitSpell(ctx.CurrentCaster,
+                ctx.SelectedCardInstanceId, ctx.CachedTile.Position, completed => Complete(ctx, completed));
+            pending = result.Pending;
+            if (!pending) Complete(ctx, result);
+        }
+
+        private void Complete(SpellCardManager ctx, TurnBasedGame.Command.MatchCommandResult result)
+        {
+            pending = false;
+            if (ctx == null) return;
+            if (!result.Succeeded) Debug.LogWarning(result.FailureReason);
+            ctx.SetState(result.Succeeded ? new SpellIdleState() : new SpellTargetingState());
         }
 
         public override void OnCancel(SpellCardManager ctx)
         {
+            if (pending) return;
             ctx.SetState(new SpellIdleState());
         }
 

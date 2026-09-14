@@ -23,6 +23,12 @@ namespace TurnBasedGame.Resources
 
         public int MaxMP => maxMP;
 
+        internal Action CaptureRollback()
+        {
+            int first = player1MP, second = player2MP;
+            return () => { player1MP = first; player2MP = second; };
+        }
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -48,6 +54,7 @@ namespace TurnBasedGame.Resources
         /// </summary>
         public void AddMP(PlayerID player, int amount)
         {
+            if (!TurnBasedGame.Command.LocalMatchAuthority.IsAuthoritative) return;
             if (amount <= 0) return;
 
             if (player == PlayerID.Player1)
@@ -69,6 +76,7 @@ namespace TurnBasedGame.Resources
         /// </summary>
         public bool SpendMP(PlayerID player, int amount)
         {
+            if (!TurnBasedGame.Command.LocalMatchAuthority.IsAuthoritative || amount < 0) return false;
             if (amount <= 0) return true;
             if (!HasEnoughMP(player, amount)) return false;
 

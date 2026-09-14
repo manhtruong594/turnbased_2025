@@ -23,6 +23,12 @@ public class MapManager : BaseManager
     // Dictionary theo dõi units trên map theo vị trí grid
     private Dictionary<Vector3Int, UnitController> _unitPositions = new Dictionary<Vector3Int, UnitController>();
 
+    internal System.Action CaptureRollback()
+    {
+        var saved = new Dictionary<Vector3Int, UnitController>(_unitPositions);
+        return () => { _unitPositions.Clear(); foreach (var pair in saved) _unitPositions.Add(pair.Key, pair.Value); };
+    }
+
     void Awake()
     {
         Instance = this;

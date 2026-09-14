@@ -1,4 +1,3 @@
-using System.Collections;
 using TurnBasedGame.Skills;
 using TurnBasedGame.SpellCard;
 using TurnBasedGame.Unit;
@@ -31,7 +30,7 @@ public class MultiArrowSkill : SkillBase
         int arrowCount = Mathf.Max(1, MaxArrowCount);
         for (_currentArrowCount = 1; _currentArrowCount <= arrowCount; _currentArrowCount++)
         {
-            if (target.IsDead()) break;
+            if (target == null || target.IsDead()) break;
 
             int damage = CalculateArrowDamage(caster, _currentArrowCount);
             target.TakeDamage(damage);
@@ -41,36 +40,6 @@ public class MultiArrowSkill : SkillBase
         }
 
         _currentArrowCount = 0;
-    }
-
-    // trong anim sẽ gọi 2 lần ApplyEffectAsync
-    protected override IEnumerator ApplyEffectAsync(UnitController caster, Vector3Int targetPos)
-    {
-        var target = MapManager.Instance?.GetUnitAtTile(targetPos);
-        if (target == null) yield break;
-        if (target.IsDead()) yield break;
-        if (_currentArrowCount == 0)
-        {
-            _currentArrowCount++;
-            int damage = CalculateArrowDamage(caster, _currentArrowCount);
-            target.TakeDamage(damage);
-
-            yield break;
-        }
-        else
-        {
-            _currentArrowCount++;
-            int damage = CalculateArrowDamage(caster, _currentArrowCount);
-            target.TakeDamage(damage);
-
-            TryApplyExtraArrowEffect(caster, target);
-        }
-        if (_currentArrowCount >= MaxArrowCount)
-        {
-            _currentArrowCount = 0;
-            _isExecuting = false;
-        }
-        yield break;
     }
 
     private int CalculateArrowDamage(UnitController caster, int arrowIndex)

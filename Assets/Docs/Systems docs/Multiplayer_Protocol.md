@@ -1,12 +1,13 @@
-# Multiplayer protocol — Giai đoạn 2
+# Multiplayer protocol — Giai đoạn 2 và 3
 
 Cập nhật: `2026-09-10`.
 
 ## Phạm vi
 
-Đã triển khai protocol cho `EndTurn`, `SpawnUnit`, `MoveUnit`, registry content/runtime, kiểm tra tương
-thích và RNG riêng của authority. Luồng production hiện vẫn chạy local. Transport gameplay, command
-attack/skill/spell, transaction và state delta thuộc giai đoạn 3; snapshot/bootstrap client thuộc giai đoạn 4.
+Protocol hiện bao phủ 9 gameplay command và acknowledgement có state, version 2. Registry content/runtime
+và RNG kế thừa giai đoạn 2. Chi tiết executor, transaction, NGO adapter và giới hạn kiểm chứng ở
+[Gameplay commands](Multiplayer_Gameplay_Commands.md). Scene production vẫn chạy local; session/bootstrap
+và apply state lên client chưa hoàn tất.
 
 ## ID
 
@@ -70,10 +71,14 @@ Header command gồm `ProtocolVersion`, `GameplayRulesVersion`, `ContentCatalogH
 | `EndTurn` | Không có |
 | `SpawnUnit` | `UnitContentId`, `SpawnPointId`; chuỗi rỗng nghĩa là authority chọn điểm khả dụng |
 | `MoveUnit` | `UnitRuntimeId`, `Destination` |
+| `NormalAttack` / `UseSkill` | `UnitRuntimeId`, `SkillContentId`, `Destination` |
+| `CastSpell` | `CardInstanceId`, `Destination` |
+| `FinishUnit` / `UndoMove` | `UnitRuntimeId` |
+| `RollDice` | `DiceIndex` (1 hoặc 2) |
 
 `MatchProtocol` dùng binary little-endian, header cố định và string length có giới hạn. Command tối đa
 `1024` byte; payload thiếu byte, thừa byte, enum/ID không hợp lệ và field không thuộc kind đều bị từ chối.
-`ProtocolVersion = 1`, `GameplayRulesVersion = 1`. Thay wire shape không tương thích phải tăng version.
+`ProtocolVersion = 2`, `GameplayRulesVersion = 2`. Thay wire shape không tương thích phải tăng version.
 
 `LocalMatchAuthority.SubmitBytes(payload, authenticatedActor)` deserialize rồi qua `MatchCommandGate`.
 Transport/session phải lấy `authenticatedActor` từ kết nối đã xác thực, không sao chép từ payload.
@@ -96,13 +101,12 @@ không được serialize và không được gọi lại khi replay command đ�
 - Gate chặn command gọi lồng từ mediator trong lúc executor đang chạy.
 
 `CommandAcknowledgement` chứa match/player/command ID, client/server sequence, `Accepted`, `Reason`,
-`Detail`; có codec riêng. Reason phân biệt protocol/rules/content mismatch, sai match/actor/sequence,
+`Detail`, `NextClientSequence`, `DiceValue`, `StateChanges`; có codec riêng. Reason phân biệt protocol/rules/content mismatch, sai match/actor/sequence,
 replay conflict, state/turn và gameplay reject.
 
-Accepted hiện nghĩa là executor đã nhận action; với move, coroutine có thể còn đang chạy. Đây chưa
-phải kết quả transaction chứa state changes sau toàn bộ animation. Exception của executor không được
-coi là reject an toàn hay rollback; command ID đã được giữ để không retry mutation. Atomicity và
-completion/result sau action phải được hoàn thiện ở giai đoạn 3.
+Accepted nghĩa là gameplay state đã commit; animation di chuyển/skill có thể còn trình diễn.
+Result chứa post-command collections và tombstone unit. Gate rollback state và dừng match nếu executor lỗi;
+không chạy lại command đã fault. Xem giới hạn rollback/presentation trong tài liệu Gameplay commands.
 
 ## RNG authority
 
@@ -115,8 +119,8 @@ hazard của `TileHazardManager`, kết quả cuối xúc xắc. `TryRollDice` k
 RNG; lượt đổi trong lúc animation thì không roll hoặc cộng MP cho phe kế tiếp. RNG của số nhấp nháy
 trên xúc xắc, floating text và loading hint vẫn là presentation RNG.
 
-Skill/hazard hiện vẫn được gọi từ pipeline local. Tách host/client execution, dice MP/action transaction
-và chuyển effect khỏi animation callback là phần giai đoạn 3; chỉ có RNG riêng chưa tạo ranh giới bảo mật.
+Giai đoạn 3 đã đưa skill/hazard về host, chuyển effect khỏi animation callback và gộp dice/MP vào command.
+`TryRollDice` là adapter local; UI hiện dùng `SubmitRoll` để chờ result của host.
 
 ## Compatibility prototype
 
@@ -126,7 +130,7 @@ Peer không khớp bị dừng với log `REJECT: ProtocolMismatch`, `RulesMisma
 
 Không thay gameplay scene hoặc thêm NGO component vào scene local. Prototype chưa chuyển gameplay command.
 
-## Kiểm chứng ngày 2026-09-10
+## Kiểm chứng nền giai đoạn 2 (trước khi mở rộng giai đoạn 3)
 
 - 15 test NUnit của `MatchProtocolTests` đạt trên .NET `9.0`: round-trip ba command, auto spawn point,
   payload lỗi, compatibility, replay, sequence, actor/match, reentrancy, acknowledgement Unicode và RNG restore.
@@ -141,3 +145,6 @@ Không thay gameplay scene hoặc thêm NGO component vào scene local. Prototyp
 Kiểm tra tiếp trong Editor: đợi import → rebuild catalog → chạy `MatchProtocolTests` và
 `MatchRegistryTests` trong Test Runner → smoke `SpawnUnit`, `MoveUnit`, `EndTurn` → chạy lại prototype
 hai process với cùng catalog và lần lượt thay version/hash để kiểm tra reject.
+
+Kết quả mới nhất giai đoạn 3: 50/50 test protocol/gate đạt, runtime/Editor/test compile 0 lỗi;
+5 test authority EditMode chưa chạy. Xem [Gameplay commands](Multiplayer_Gameplay_Commands.md).

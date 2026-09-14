@@ -28,6 +28,11 @@ namespace TurnBasedGame.Capture
         public PlayerID? Owner => _owner;
         public bool IsNeutral => !_owner.HasValue;
         public bool IsCapturedBy(PlayerID player) => _owner == player;
+        internal System.Action CaptureRollback()
+        {
+            var owner = _owner;
+            return () => { _owner = owner; };
+        }
         #endregion
 
         private void Awake()
@@ -51,6 +56,7 @@ namespace TurnBasedGame.Capture
         /// </summary>
         public bool TryCapture(PlayerID player)
         {
+            if (!TurnBasedGame.Command.LocalMatchAuthority.IsAuthoritative) return false;
             if (_owner == player) return false;
 
             var previous = _owner;
@@ -60,6 +66,12 @@ namespace TurnBasedGame.Capture
             Debug.Log($"[CapturePoint] {_gridPosition}: " +
                       $"{(previous.HasValue ? previous.ToString() : "Neutral")} → {player}");
             return true;
+        }
+
+        internal void RestoreOwnerAuthorized(PlayerID? owner)
+        {
+            _owner = owner;
+            UpdateVisual();
         }
 
         private Color GetOwnerColor()

@@ -1,5 +1,7 @@
 # Skill System
 
+Cập nhật multiplayer `2026-09-10`: `Execute` gửi command, authority kiểm tra rồi áp effect/cooldown/action đồng bộ. Animation cue `ApplyEffect` chỉ còn là hook tương thích, không gây damage. Phần sơ đồ animation-driven bên dưới mô tả luồng cũ; xem [Gameplay commands](Multiplayer_Gameplay_Commands.md) cho luồng hiện tại và giới hạn kiểm chứng.
+
 ## 1. Kiến trúc
 
 Skill dùng Strategy + Template Method:
