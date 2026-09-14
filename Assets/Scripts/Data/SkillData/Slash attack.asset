@@ -13,9 +13,11 @@ MonoBehaviour:
   m_Name: Slash attack
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Skills.NormalAttackSkill
   skillName: NormalAttack
-  description: "Gây sát thương bằng 125% sát thương hiện tại của người thi triển lên một kẻ địch."
+  description: "G\xE2y s\xE1t th\u01B0\u01A1ng b\u1EB1ng 125% s\xE1t th\u01B0\u01A1ng
+    hi\u1EC7n t\u1EA1i c\u1EE7a ng\u01B0\u1EDDi thi tri\u1EC3n l\xEAn m\u1ED9t k\u1EBB
+    \u0111\u1ECBch."
   skillType: 0
-  icon: {fileID: 21300000, guid: 5aa0d71d789c93a468898d8acfcf2a09, type: 3}
+  icon: {fileID: 617916888, guid: 247fb8c0e365794479602c6a4dd89184, type: 3}
   cooldown: 0
   mpCost: 0
   range: 1
@@ -28,9 +30,5 @@ MonoBehaviour:
     castSpawnPoint: 1
     releaseSpawnPoint: 1
     impactSpawnPoint: 2
-  VfxPrefab: {fileID: 0}
-  VfxHitPrefab: {fileID: 0}
-  HasDelayApplyEffect: 1
-  DelayApplyEffectTime: 0.15
   targetTypes: 10
   multipleDmg: 1.25

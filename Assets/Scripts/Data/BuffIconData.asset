@@ -14,41 +14,41 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.SpellCard.BuffIconData
   _entries:
   - type: 2
-    icon: {fileID: 21300000, guid: 1815ea71c4e799e45b0db8899c240c4a, type: 3}
+    icon: {fileID: -2089932880, guid: 247fb8c0e365794479602c6a4dd89184, type: 3}
     color: {r: 0.058490515, g: 1, b: 0.15432762, a: 1}
   - type: 104
-    icon: {fileID: 21300000, guid: e6d90fea7c6f7be4fb361575b0b18ab6, type: 3}
+    icon: {fileID: 586231409, guid: 247fb8c0e365794479602c6a4dd89184, type: 3}
     color: {r: 1, g: 0.15907308, b: 0.103773475, a: 1}
   - type: 103
-    icon: {fileID: 21300000, guid: e5da668c6557abb47a17a303cf69943f, type: 3}
+    icon: {fileID: -1328983509, guid: 247fb8c0e365794479602c6a4dd89184, type: 3}
     color: {r: 1, g: 0.16078432, b: 0.101960786, a: 1}
   - type: 100
-    icon: {fileID: 21300000, guid: e32b8056f5f2eb741bec42f791c7f1b5, type: 3}
+    icon: {fileID: 2094834366, guid: 247fb8c0e365794479602c6a4dd89184, type: 3}
     color: {r: 1, g: 0.16078432, b: 0.101960786, a: 1}
   - type: 101
-    icon: {fileID: 21300000, guid: f816f63babfcb3e4d92c5cd9bb193149, type: 3}
+    icon: {fileID: 2077079860, guid: 247fb8c0e365794479602c6a4dd89184, type: 3}
     color: {r: 1, g: 0.16078432, b: 0.101960786, a: 1}
   - type: 105
-    icon: {fileID: 21300000, guid: 81b5eb285ac5aba4388899b2542ff731, type: 3}
+    icon: {fileID: -985215835, guid: 247fb8c0e365794479602c6a4dd89184, type: 3}
     color: {r: 1, g: 0.16078432, b: 0.101960786, a: 1}
   - type: 106
-    icon: {fileID: 21300000, guid: 4a207447820cfe748b77f4fcb0c97980, type: 3}
+    icon: {fileID: 420572218, guid: 247fb8c0e365794479602c6a4dd89184, type: 3}
     color: {r: 1, g: 0.16078432, b: 0.101960786, a: 1}
   - type: 107
-    icon: {fileID: 21300000, guid: 085755f0482334d49b07c62e349462d6, type: 3}
+    icon: {fileID: -1676174274, guid: 247fb8c0e365794479602c6a4dd89184, type: 3}
     color: {r: 1, g: 0.16078432, b: 0.101960786, a: 1}
   - type: 6
-    icon: {fileID: 21300000, guid: 72cdd1b1bb49d5f47bd5d2b3ecd3e851, type: 3}
+    icon: {fileID: -850941434, guid: 247fb8c0e365794479602c6a4dd89184, type: 3}
     color: {r: 0.05882353, g: 1, b: 0.15294118, a: 1}
   - type: 108
-    icon: {fileID: 21300000, guid: b6795c96fef3b01439d1de6a75d33651, type: 3}
+    icon: {fileID: 45667914, guid: 247fb8c0e365794479602c6a4dd89184, type: 3}
     color: {r: 1, g: 0.16078432, b: 0.101960786, a: 1}
   - type: 109
-    icon: {fileID: 21300000, guid: 4d2a4136ebef6f041b43fdca42412caa, type: 3}
+    icon: {fileID: -380378736, guid: 247fb8c0e365794479602c6a4dd89184, type: 3}
     color: {r: 1, g: 0.16078432, b: 0.101960786, a: 1}
   - type: 7
-    icon: {fileID: 21300000, guid: e1f6442593ca29045aa5d614cbdc210c, type: 3}
+    icon: {fileID: -693082122, guid: 247fb8c0e365794479602c6a4dd89184, type: 3}
     color: {r: 0.05882353, g: 1, b: 0.15294118, a: 1}
   - type: 5
-    icon: {fileID: 21300000, guid: 5c27fc79dd2011c4ab50f507f7cfb7af, type: 3}
+    icon: {fileID: -109393304, guid: 247fb8c0e365794479602c6a4dd89184, type: 3}
     color: {r: 0.05882353, g: 1, b: 0.15294118, a: 1}

@@ -13,9 +13,11 @@ MonoBehaviour:
   m_Name: Halberdier Crescent Slash
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Skills.HalberdierCrescentSlashSkill
   skillName: Nguyet Nha Tram Tran
-  description: "Chém theo đường thẳng dài 2 ô, áp dụng HealBan khi tập trung và tạo Shield cho người thi triển."
+  description: "Ch\xE9m theo \u0111\u01B0\u1EDDng th\u1EB3ng d\xE0i 2 \xF4, \xE1p
+    d\u1EE5ng HealBan khi t\u1EADp trung v\xE0 t\u1EA1o Shield cho ng\u01B0\u1EDDi
+    thi tri\u1EC3n."
   skillType: 3
-  icon: {fileID: 21300000, guid: b3a100d8344187049b3f8b5c9e5aba88, type: 3}
+  icon: {fileID: -184057699, guid: 247fb8c0e365794479602c6a4dd89184, type: 3}
   cooldown: 4
   mpCost: 1
   range: 2
