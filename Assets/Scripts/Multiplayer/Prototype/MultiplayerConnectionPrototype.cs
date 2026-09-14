@@ -212,7 +212,7 @@ namespace TurnBasedGame.Multiplayer.Prototype
 
         private bool ValidateCompatibility(FastBufferReader reader)
         {
-            if (reader.Length != 70)
+            if (reader.Length - reader.Position != 70)
             {
                 Debug.LogError($"{LogPrefix} REJECT: InvalidPayload");
                 return false;
