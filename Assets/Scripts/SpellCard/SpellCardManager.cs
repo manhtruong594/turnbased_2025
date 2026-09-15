@@ -32,6 +32,22 @@ namespace TurnBasedGame.SpellCard
         private readonly Dictionary<PlayerID, List<ulong>> _handIds = new();
         private ulong _nextCardId;
         public ulong SelectedCardInstanceId { get; private set; }
+        internal void ApplyReplicaHand(MatchStateChange[] state)
+        {
+            _playerHands.Clear(); _handIds.Clear();
+            foreach (var entry in state)
+            {
+                if (entry.Kind != StateChangeKind.HandCard) continue;
+                var player = (PlayerID)entry.Player;
+                if (!_playerHands.ContainsKey(player))
+                {
+                    _playerHands[player] = new List<SpellCardData>();
+                    _handIds[player] = new List<ulong>();
+                }
+                _playerHands[player].Add(LocalMatchAuthority.Content.Resolve<SpellCardData>(entry.ContentId));
+                _handIds[player].Add(entry.Entity);
+            }
+        }
 
         internal Action CaptureRollback()
         {
@@ -175,6 +191,8 @@ namespace TurnBasedGame.SpellCard
 
         public bool CanUseCard(SpellCardData card, PlayerID player)
         {
+            if (!TurnBasedGame.Multiplayer.MatchGameplayBootstrap.InputReady) return false;
+            if (LocalMatchAuthority.Transport != null && LocalMatchAuthority.Transport.LocalPlayer != (PlayerId)player) return false;
             if (card == null) return false;
             if (TurnManager.Instance == null || TurnManager.Instance.CurrentPlayer != player ||
                 TurnManager.Instance.IsTurnTransitionPending || TurnManager.Instance.CurrentState == TurnState.GameEnd) return false;

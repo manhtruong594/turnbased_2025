@@ -1,6 +1,6 @@
 # Kế hoạch hoàn thiện multiplayer
 
-Cập nhật: `2026-09-10`
+Cập nhật: `2026-09-15`
 
 ## 1. Mục tiêu và phạm vi MVP
 
@@ -23,7 +23,7 @@ host migration và anti-cheat cấp competitive. Các mục này chỉ bắt đ�
 | Validation lượt | Hiện có, cần Play Mode test | Kiểm tra `CommandId`, `Actor`, `ExpectedTurn` và command trùng |
 | Network-safe command DTO | Đã mở rộng giai đoạn 3 | Protocol/rules version 2, 9 command và result có state; callback nằm ngoài payload |
 | Runtime/content ID ổn định | Đã triển khai, chờ kiểm chứng Unity | Registry, catalog GUID, host unit ID, spawn ID theo owner/grid |
-| State snapshot/delta | Chưa có | Chưa thể dựng hoặc phục hồi toàn bộ trận từ dữ liệu mạng |
+| State snapshot/delta | Đã thêm implementation Phase 4, chờ nghiệm thu | Snapshot, replica, ordered replacement state, hash/resync; chưa kiểm chứng hai process gameplay |
 | Transport/session/relay | Đã chốt, prototype đạt | NGO `2.13.2`, UTP `2.7.4`, Multiplayer Services `2.3.1`; chưa kiểm chứng Relay Internet |
 | Lobby/reconnect | Chưa có | Chưa có lifecycle phiên mạng |
 | Multiplayer test | Prototype transport đạt | Hai process loopback trao đổi message và disconnect sạch; chưa đồng bộ gameplay |
@@ -144,6 +144,11 @@ Tiêu chí hoàn thành:
 - UI chỉ phát action hoàn tất sau kết quả host; reject khôi phục trạng thái tương tác đúng.
 
 ### Giai đoạn 4 — Đồng bộ state và vào trận
+
+Trạng thái `2026-09-15`: đã thêm implementation snapshot/replica/handshake/hash/resync và entry point
+gameplay loopback/LAN. `61/61` test protocol/gate/snapshot đạt ngoài Unity; 3 test replica EditMode mới
+chưa chạy. Chưa nghiệm thu milestone vì thiếu Play Mode/hai process và fault injection gameplay.
+Chi tiết và cách chạy: [Đồng bộ state và vào trận](../Systems%20docs/Multiplayer_State_Sync.md).
 
 Snapshot tối thiểu phải chứa:
 

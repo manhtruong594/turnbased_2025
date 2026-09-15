@@ -50,6 +50,10 @@ namespace TurnBasedGame.Skills
     {
         private readonly List<TileHazardInstance> _hazards = new();
         internal IReadOnlyList<TileHazardInstance> Hazards => _hazards;
+        internal void ApplyReplica(IEnumerable<TileHazardInstance> hazards)
+        {
+            _hazards.Clear(); _hazards.AddRange(hazards);
+        }
         internal System.Action CaptureRollback()
         {
             var saved = new List<TileHazardInstance>();

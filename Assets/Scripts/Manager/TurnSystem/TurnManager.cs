@@ -25,15 +25,34 @@ namespace TurnBasedGame.Core
         public int TurnCount => turnCount;
         public bool IsTurnTransitionPending => _turnTransitionPending;
         public PlayerID? Winner => _winner;
+        public double Deadline { get; private set; }
+        private static double MatchTime => Unity.Netcode.NetworkManager.Singleton != null &&
+            Unity.Netcode.NetworkManager.Singleton.IsListening ? Unity.Netcode.NetworkManager.Singleton.ServerTime.Time : Time.timeAsDouble;
+
+        internal void ApplyReplica(TurnBasedGame.Multiplayer.Protocol.MatchStateChange state, double deadline)
+        {
+            CancelInvoke(); _isTriggerTimer = false; _turnTransitionPending = false;
+            currentPlayer = (PlayerID)state.Player; turnCount = state.Value; currentState = (TurnState)state.Value2;
+            _winner = state.Value3 == 0 ? null : (PlayerID?)state.Value3;
+            Deadline = deadline;
+        }
+
+        internal void BeginNetworkMatch()
+        {
+            if (LocalMatchAuthority.IsAuthoritative && currentState == TurnState.Initialization && turnCount == 0)
+                StartFirstTurn();
+        }
 
         internal Action CaptureRollback()
         {
             var state = currentState; var player = currentPlayer; int count = turnCount;
             var winner = _winner; float timer = Timer; bool pending = _turnTransitionPending;
+            double deadline = Deadline;
             return () =>
             {
                 CancelInvoke(); currentState = state; currentPlayer = player; turnCount = count;
                 _winner = winner; Timer = timer; _turnTransitionPending = pending;
+                Deadline = deadline;
                 _isTriggerTimer = false; // Faulted transactions require recovery before accepting more input.
             };
         }
@@ -65,17 +84,23 @@ namespace TurnBasedGame.Core
             LocalMatchAuthority.Reset();
             ChangeState(TurnState.Initialization);
 
-            Invoke(nameof(StartFirstTurn), TurnTransitionDelay);
+            if (!TurnBasedGame.Multiplayer.MatchGameplayBootstrap.Active)
+                Invoke(nameof(StartFirstTurn), TurnTransitionDelay);
         }
 
         void Update()
         {
-            if (!LocalMatchAuthority.IsAuthoritative) return;
+            if (!LocalMatchAuthority.IsAuthoritative)
+            {
+                Timer = (float)Math.Max(0, Deadline - MatchTime);
+                if (ClockText != null) ClockText.text = Mathf.CeilToInt(Timer).ToString();
+                return;
+            }
             if (!_isTriggerTimer)
                 return;
-            Timer -= Time.deltaTime;
-            ClockText.text = Mathf.CeilToInt(Timer).ToString();
-            if (Timer <= 0)
+            Timer = (float)Math.Max(0, Deadline - MatchTime);
+            if (ClockText != null) ClockText.text = Mathf.CeilToInt(Timer).ToString();
+            if (Timer <= 0 && TurnBasedGame.Multiplayer.MatchGameplayBootstrap.InputReady)
             {
                 LocalMatchAuthority.SubmitTimeoutTurn();
             }
@@ -99,6 +124,7 @@ namespace TurnBasedGame.Core
 
             currentState = newState;
             Timer = 0;
+            Deadline = 0;
             HandleStateChange(newState);
         }
 
@@ -243,11 +269,13 @@ namespace TurnBasedGame.Core
                 Timer = _flatTimeLimit;
             }
             _isTriggerTimer = true;
+            Deadline = MatchTime + Timer;
         }
 
         public void SetTimeFixedTimeInTurn(float fixedTime)
         {
             Timer = fixedTime;
+            Deadline = MatchTime + Timer;
             _isTriggerTimer = true;
         }
     }

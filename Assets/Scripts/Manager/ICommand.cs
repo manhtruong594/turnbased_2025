@@ -70,6 +70,19 @@ namespace TurnBasedGame.Command
     {
         private static MatchCommandGate gate;
         internal static ulong ServerSequence => gate?.ServerSequence ?? 0;
+        internal static ulong NextClientSequence(PlayerId player) => gate.NextClientSequence(player);
+        internal static long NextCommandId(PlayerId player) => gate.NextCommandId(player);
+        internal static void StartNetworkMatch()
+        {
+            if (!IsAuthoritative || gate == null) throw new System.InvalidOperationException("Authority not ready.");
+            var before = CaptureState();
+            var result = gate.ExecuteSystem((PlayerId)TurnManager.Instance.StartingPlayer, () =>
+            {
+                TurnManager.Instance.BeginNetworkMatch();
+                return (CommandReason.None, (string)null);
+            }, () => CaptureChanges(before), CaptureRollback());
+            if (!result.Accepted) throw new System.InvalidOperationException(result.Detail);
+        }
         public static MatchGameplayTransport Transport { get; private set; }
         public static event System.Action<CommandAcknowledgement> CommandCommitted;
         private static List<System.Action> presentation;
@@ -90,12 +103,17 @@ namespace TurnBasedGame.Command
             if (!IsAuthoritative)
                 Content = new MatchContentRegistry(UnityEngine.Resources.Load<MatchContentCatalog>(MatchContentCatalog.ResourceName));
         }
+        internal static void DetachTransport(MatchGameplayTransport transport)
+        {
+            if (Transport == transport) Transport = null;
+        }
         private static long nextCommandId;
         private static int diceTurn = -1;
         private static int usedDice;
         private static int aiManaTurn = -1;
         public static int LastDiceValue { get; private set; }
-        public static bool IsAuthoritative => Transport != null ? Transport.IsServer :
+        internal static int UsedDice => TurnManager.Instance != null && diceTurn == TurnManager.Instance.TurnCount ? usedDice : 0;
+        public static bool IsAuthoritative => MatchGameplayBootstrap.Active ? MatchGameplayBootstrap.Instance.IsHost : Transport != null ? Transport.IsServer :
             Unity.Netcode.NetworkManager.Singleton == null || !Unity.Netcode.NetworkManager.Singleton.IsListening ||
             Unity.Netcode.NetworkManager.Singleton.IsServer;
         public static string MatchId { get; private set; }
@@ -118,6 +136,19 @@ namespace TurnBasedGame.Command
             diceTurn = -1;
             usedDice = 0;
             aiManaTurn = -1;
+        }
+
+        internal static void PrepareReplica()
+        {
+            Content = new MatchContentRegistry(UnityEngine.Resources.Load<MatchContentCatalog>(MatchContentCatalog.ResourceName));
+            Runtime = new MatchRuntimeRegistry();
+            random = null;
+            gate = null;
+        }
+
+        internal static void ApplyReplicaDice(MatchStateChange state)
+        {
+            diceTurn = state.Value; usedDice = state.Value2;
         }
 
         internal static void GrantLocalAIMana(PlayerID actor)
@@ -160,6 +191,8 @@ namespace TurnBasedGame.Command
         private static MatchCommandResult SubmitLocal(MatchCommandDto command, PlayerId actor, System.Action onComplete,
             System.Action<MatchCommandResult> onResult = null)
         {
+            if (MatchGameplayBootstrap.Active && !MatchGameplayBootstrap.InputReady)
+                return MatchCommandResult.Failure("Đang đồng bộ trận đấu.");
             if (!IsAuthoritative)
                 return Transport != null ? Transport.Send(command, result =>
                 {
@@ -220,7 +253,7 @@ namespace TurnBasedGame.Command
             };
         }
 
-        private static List<MatchStateChange> CaptureState()
+        internal static List<MatchStateChange> CaptureState(ulong? sequence = null)
         {
             var changes = new List<MatchStateChange>();
             for (int index = 1; index <= 2; index++)
@@ -235,7 +268,8 @@ namespace TurnBasedGame.Command
                     var pos = unit.currentGridPosition;
                     changes.Add(new MatchStateChange { Kind = StateChangeKind.Unit, Player = (PlayerId)player,
                         Entity = unit.UnitRuntimeId, ContentId = unit.UnitContentId, Position = new GridCoordinate(pos.x, pos.y, pos.z),
-                        Value = unit.GetCurrentHealth(), Value2 = unit.IsMoveDone() ? 1 : 0, Value3 = unit.IsActionCommitted ? 1 : 0 });
+                        Value = unit.GetCurrentHealth(), Value2 = unit.IsMoveDone() ? 1 : 0, Value3 = unit.IsActionCommitted ? 1 : 0,
+                        Value4 = unit.CanUndoAt(sequence ?? ServerSequence) ? 1 : 0 });
                     foreach (var entry in unit.AttackComponent.ActiveSkills)
                         if (entry is SkillBase skill)
                             changes.Add(new MatchStateChange { Kind = StateChangeKind.Cooldown, Entity = unit.UnitRuntimeId,
@@ -271,7 +305,9 @@ namespace TurnBasedGame.Command
             changes.Add(new MatchStateChange { Kind = StateChangeKind.Dice, Value = diceTurn, Value2 = usedDice });
             if (turn != null) changes.Add(new MatchStateChange { Kind = StateChangeKind.Turn,
                 Player = (PlayerId)turn.CurrentPlayer, Value = turn.TurnCount, Value2 = (int)turn.CurrentState,
-                Value3 = turn.Winner.HasValue ? (int)turn.Winner.Value : 0 });
+                Value3 = turn.Winner.HasValue ? (int)turn.Winner.Value : 0,
+                ContentId = turn.Deadline.ToString("R", System.Globalization.CultureInfo.InvariantCulture),
+                Value4 = turn.Winner.HasValue ? 1 : 0 });
             if (random != null)
             {
                 var rng = random.Capture();
@@ -283,7 +319,7 @@ namespace TurnBasedGame.Command
 
         private static MatchStateChange[] CaptureChanges(List<MatchStateChange> before)
         {
-            var after = CaptureState();
+            var after = CaptureState(ServerSequence + 1);
             // Result carries complete post-command collections; explicit tombstones identify removed units.
             foreach (var previous in before)
             {

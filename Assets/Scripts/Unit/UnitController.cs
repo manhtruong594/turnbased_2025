@@ -31,6 +31,16 @@ namespace TurnBasedGame.Unit
         private TurnBasedGame.Capture.CapturePoint _movedCapturePoint;
         private PlayerID? _previousCaptureOwner;
         public bool IsMoving => _movingCoroutine != null;
+        internal bool CanUndoAt(ulong sequence) => _canUndoMove && (!LocalMatchAuthority.IsAuthoritative || _undoAtSequence == sequence) && CanAct();
+        internal void RefreshReplicaPresentation()
+        {
+            if (IsActionCommitted || !TurnBasedGame.Multiplayer.MatchGameplayBootstrap.CanControl(GetOwner()))
+            {
+                ChangeSelected(false);
+                AreaPathManager.Instance?.ResetAll(this);
+            }
+            _attackComponent.RefreshReplica();
+        }
 
         internal Action CaptureRollback()
         {
@@ -65,6 +75,19 @@ namespace TurnBasedGame.Unit
         {
             UnitRuntimeId = runtimeId;
             UnitContentId = contentId;
+        }
+
+        internal void ApplyReplica(TurnBasedGame.Multiplayer.Protocol.MatchStateChange state)
+        {
+            StopAllCoroutines(); _movingCoroutine = null; _deathCoroutine = null; OnCompleteMove = null;
+            _canUndoMove = state.Value4 != 0;
+            runtimeStats.Health = state.Value; runtimeStats.IsDead = false;
+            runtimeStats.IsMoveCompleted = state.Value2 != 0; runtimeStats.IsActionCompleted = state.Value3 != 0;
+            currentGridPosition = new Vector3Int(state.Position.X, state.Position.Y, state.Position.Z);
+            transform.position = MapManager.Instance.MapEntity.WorldPosition(currentGridPosition);
+            MapManager.Instance.RegisterUnit(currentGridPosition, this);
+            if (_cancelMoveButton != null) _cancelMoveButton.interactable = _canUndoMove;
+            _healthBar?.UpdateHealthBar(GetHealthPercent());
         }
 
         private void OnDestroy()

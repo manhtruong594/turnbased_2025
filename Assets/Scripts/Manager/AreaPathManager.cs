@@ -82,6 +82,7 @@ namespace RedBjorn.ProtoTiles.Example
 
         private void Update()
         {
+            if (!TurnBasedGame.Multiplayer.MatchGameplayBootstrap.InputReady) return;
             if (IsLocked) return;
             var mousePos = MyInput.GroundPosition(_cachedMap.Settings.Plane());
             if (MyInput.GetOnWorldUp(_cachedMap.Settings.Plane()))
@@ -117,6 +118,7 @@ namespace RedBjorn.ProtoTiles.Example
         void HandleWorldClickAndMove(Vector3 clickPos)
         {
             var clickedUnit = MapManager.Instance?.GetUnitAtTile(_tileClicked.Position);
+            if (clickedUnit != null && !TurnBasedGame.Multiplayer.MatchGameplayBootstrap.CanControl(clickedUnit.GetOwner())) return;
 
             if (clickedUnit != null && !clickedUnit.IsActionFinished())
             {

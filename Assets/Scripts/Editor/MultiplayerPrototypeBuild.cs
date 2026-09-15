@@ -43,6 +43,21 @@ public static class MultiplayerPrototypeBuild
         Build(DefaultOutput);
     }
 
+    [MenuItem("Tools/Multiplayer/Build Windows Gameplay Test")]
+    public static void BuildWindowsGameplayTest()
+    {
+        // Explicit menu action only; does not rewrite the user's Build Settings or scenes.
+        var scenes = new System.Collections.Generic.List<string> { "Assets/Scenes/HUDScene.unity" };
+        foreach (var scene in EditorBuildSettings.scenes)
+            if (scene.enabled && !scenes.Contains(scene.path) && scene.path != ScenePath) scenes.Add(scene.path);
+        string output = "Builds/MultiplayerGameplay/MultiplayerGameplay.exe";
+        Directory.CreateDirectory(Path.GetDirectoryName(output));
+        var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions { scenes = scenes.ToArray(), locationPathName = output,
+            target = BuildTarget.StandaloneWindows64, options = BuildOptions.Development });
+        if (report.summary.result != BuildResult.Succeeded) throw new InvalidOperationException("Gameplay test build failed: " + report.summary.result);
+        Debug.Log("[MP-GAMEPLAY] BUILD_PASS " + Path.GetFullPath(output));
+    }
+
     public static void BuildFromCommandLine()
     {
         string output = ReadArgument("-mp-output") ?? DefaultOutput;

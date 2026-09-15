@@ -34,8 +34,12 @@ namespace TurnBasedGame.Core
 
         private void Start()
         {
+            if (TurnBasedGame.Multiplayer.MatchGameplayBootstrap.Active)
+                playerID = TurnBasedGame.Multiplayer.MatchGameplayBootstrap.Instance.IsHost ? PlayerID.Player1 : PlayerID.Player2;
             SubscribeToEvents();
             SetupUI();
+            if (TurnBasedGame.Multiplayer.MatchGameplayBootstrap.Active && LocalMatchAuthority.IsAuthoritative)
+                SpellCardManager.Instance.InitializeHand(PlayerID.Player2, _playerData.SelectedSpells);
             if (_aiOpponent != null)
                 _aiOpponent.Initialize(playerID);
         }
@@ -58,6 +62,7 @@ namespace TurnBasedGame.Core
             {
                 GameMediator.Instance.OnPlayerTurnStarted += HandleTurnStarted;
                 GameMediator.Instance.OnPlayerTurnEnded += HandleTurnEnded;
+                GameMediator.Instance.OnReplicaApplied += HandleReplicaApplied;
             }
         }
 
@@ -71,6 +76,7 @@ namespace TurnBasedGame.Core
             {
                 GameMediator.Instance.OnPlayerTurnStarted -= HandleTurnStarted;
                 GameMediator.Instance.OnPlayerTurnEnded -= HandleTurnEnded;
+                GameMediator.Instance.OnReplicaApplied -= HandleReplicaApplied;
             }
         }
 
@@ -90,6 +96,7 @@ namespace TurnBasedGame.Core
         /// </summary>
         private void HandleTurnStarted(PlayerID player)
         {
+            if (TurnBasedGame.Multiplayer.MatchGameplayBootstrap.Active) { HandleReplicaApplied(); return; }
             _isMyTurn = (player == playerID);
             StopAllCoroutines();
             if (_isMyTurn)
@@ -102,6 +109,18 @@ namespace TurnBasedGame.Core
                 StartCoroutine(WaitOpponentTurn());
             }
 
+        }
+
+        private void HandleReplicaApplied()
+        {
+            var turn = TurnManager.Instance;
+            _isMyTurn = TurnBasedGame.Multiplayer.MatchGameplayBootstrap.InputReady && turn != null &&
+                turn.CurrentPlayer == playerID && turn.CurrentState != TurnState.Initialization && turn.CurrentState != TurnState.GameEnd;
+            _myUnits = UnitSpawner.Instance.GetPlayerUnits(playerID);
+            _myUI.ShowActionPanel(_isMyTurn);
+            if (EndTurnButton != null) EndTurnButton.interactable = _isMyTurn;
+            _diceUI.ApplyReplica(_isMyTurn, LocalMatchAuthority.UsedDice);
+            _spellCardPanel.UpdateInteractable();
         }
 
         /// <summary>

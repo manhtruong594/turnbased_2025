@@ -41,6 +41,7 @@ namespace TurnBasedGame.UI
             if (GameMediator.Instance != null)
             {
                 GameMediator.Instance.OnMPChanged += OnMPChanged;
+                GameMediator.Instance.OnReplicaApplied += UpdateButtonState;
             }
         }
 
@@ -49,6 +50,7 @@ namespace TurnBasedGame.UI
             if (GameMediator.Instance != null)
             {
                 GameMediator.Instance.OnMPChanged -= OnMPChanged;
+                GameMediator.Instance.OnReplicaApplied -= UpdateButtonState;
             }
         }
 
@@ -147,6 +149,8 @@ namespace TurnBasedGame.UI
             bool canAfford = CanAffordUnit();
             bool hasSpawnPoint = HasAvailableSpawnPoint();
             bool canSpawn = canAfford && hasSpawnPoint;
+            if (TurnManager.Instance != null)
+                canSpawn &= TurnBasedGame.Multiplayer.MatchGameplayBootstrap.CanControl(TurnManager.Instance.CurrentPlayer);
 
             spawnButton.interactable = canSpawn;
 

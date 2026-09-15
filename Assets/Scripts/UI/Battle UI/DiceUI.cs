@@ -26,6 +26,12 @@ public class DiceUI : MonoBehaviour
    
     private bool isRolling = false;
     private int usedButtons;
+    internal void ApplyReplica(bool active, int used)
+    {
+        usedButtons = used;
+        _actionsLeft.Value = 2 - ((used & 2) != 0 ? 1 : 0) - ((used & 4) != 0 ? 1 : 0);
+        if (active && !isRolling) EnableButtons(); else DisableAllButtons();
+    }
 
     private void OnDestroy()
     {
@@ -135,7 +141,9 @@ public class DiceUI : MonoBehaviour
 
         EnableButtons();
         HideUsedButton(indexOfDice);
-        _actionsLeft.Value--;
+        if (TurnBasedGame.Multiplayer.MatchGameplayBootstrap.Active)
+            _actionsLeft.Value = 2 - ((usedButtons & 2) != 0 ? 1 : 0) - ((usedButtons & 4) != 0 ? 1 : 0);
+        else _actionsLeft.Value--;
         yield return new WaitForSeconds(0.2f);
         isRolling = false;
     }
@@ -178,6 +186,8 @@ public class DiceUI : MonoBehaviour
     /// </summary>
     private void EnableButtons()
     {
+        if (TurnManager.Instance != null && !TurnBasedGame.Multiplayer.MatchGameplayBootstrap.CanControl(TurnManager.Instance.CurrentPlayer))
+        { DisableAllButtons(); return; }
         if (rollDiceButton2) rollDiceButton2.interactable = (usedButtons & (1 << 2)) == 0;
         if (rollDiceButton1) rollDiceButton1.interactable = (usedButtons & (1 << 1)) == 0;
     }

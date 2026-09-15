@@ -84,8 +84,10 @@ namespace TurnBasedGame.Multiplayer.Protocol
 
     public enum StateChangeKind : byte { MP, Unit, RemovedUnit, Cooldown, Status, HandCard, Capture, Turn, Random, Hazard, SpawnPoint, Dice }
 
-    // Unit: Value=HP, Value2=move done, Value3=action done. Status: Value=type, Value2=value, Value3=turns.
-    // Turn: Value=count, Value2=state, Value3=winner. Random: Entity=sequence, Value=seed, Value2=state.
+    // Unit: Value=HP, Value2=move done, Value3=action done, Value4=undo available.
+    // Status: Value=type, Value2=value, Value3=remaining, Value4=initial duration.
+    // Turn: Value=count, Value2=state, Value3=winner, Value4=end reason, ContentId=deadline.
+    // Random: Entity=sequence, Value=seed, Value2=state. Random never leaves the authority.
     [Serializable]
     public struct MatchStateChange
     {

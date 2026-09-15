@@ -33,6 +33,12 @@ namespace TurnBasedGame.SpellCard
             RemainingTurns--;
             return RemainingTurns <= 0;
         }
+
+        internal ActiveStatusEffect WithRemainingTurns(int turns)
+        {
+            RemainingTurns = turns;
+            return this;
+        }
     }
 
     /// <summary>
@@ -46,6 +52,16 @@ namespace TurnBasedGame.SpellCard
         [SerializeField] private BuffIconDisplay _iconDisplay;
 
         public IReadOnlyList<ActiveStatusEffect> ActiveEffects => _activeEffects;
+        internal void ApplyReplicaEffects(IEnumerable<ActiveStatusEffect> effects)
+        {
+            _activeEffects.Clear();
+            _activeEffects.AddRange(effects);
+            if (_iconDisplay != null)
+            {
+                _iconDisplay.Init();
+                foreach (var effect in _activeEffects) _iconDisplay.OnEffectAdded(effect);
+            }
+        }
         internal Action CaptureRollback()
         {
             var saved = _activeEffects.ToArray();

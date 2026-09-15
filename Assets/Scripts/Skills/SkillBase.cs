@@ -40,6 +40,7 @@ namespace TurnBasedGame.Skills
         public Sprite Icon => icon;
         public int Cooldown => cooldown;
         public int CurrentCooldown => currentCooldown;
+        internal void ApplyReplicaCooldown(int value) => currentCooldown = value;
         public int MPCost => skillType == SkillType.Normal ? 0 : mpCost;
         public int Range => range;
         public string SkillContentId { get; private set; }

@@ -22,6 +22,10 @@ namespace TurnBasedGame.Resources
         private int player2MP;
 
         public int MaxMP => maxMP;
+        internal void ApplyReplica(PlayerID player, int value)
+        {
+            if (player == PlayerID.Player1) player1MP = value; else player2MP = value;
+        }
 
         internal Action CaptureRollback()
         {

@@ -12,6 +12,12 @@ namespace TurnBasedGame.Multiplayer.Protocol
         private bool executing;
         private bool faulted;
         public ulong ServerSequence { get; private set; }
+        public long NextCommandId(PlayerId actor)
+        {
+            long maximum = 0;
+            foreach (var key in processed.Keys) if (key.Item1 == actor) maximum = Math.Max(maximum, key.Item2);
+            return checked(maximum + 1);
+        }
         public ulong NextClientSequence(PlayerId actor) => MatchProtocol.IsPlayer(actor)
             ? checked(clientSequences[(int)actor] + 1) : throw new ArgumentException("Invalid actor.");
 

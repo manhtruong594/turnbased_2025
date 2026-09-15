@@ -9,9 +9,9 @@ Editor và test không có lỗi; 50 test protocol/gate đạt trên Mono đi k�
 5 test `MatchGameplayAuthorityTests` chưa chạy trong Unity; chưa kiểm chứng Play Mode và hai process gameplay.
 
 `MatchGameplayTransport` cần session đang kết nối, `MatchId` của host và mapping peer/player do host xác nhận.
-Gameplay scene hiện chưa tự tạo session hoặc dựng replica từ kết quả. Initial snapshot, bind runtime ID,
-áp state lên client và scene handshake thuộc giai đoạn 4; session/authentication thuộc giai đoạn 5.
-Vì vậy thay đổi này chưa biến scene local thành một trận multiplayer chơi được ngay.
+Update `2026-09-15`: Phase 4 đã thêm bootstrap trực tiếp, snapshot/replica và scene handshake khi có flag
+`-mp-gameplay-role`; chưa nghiệm thu hai process. Session/authentication vẫn thuộc Phase 5.
+Xem [Đồng bộ state và vào trận](Multiplayer_State_Sync.md) để build/chạy gameplay, không dùng prototype ping/ack.
 
 ## Command và validation
 
@@ -57,7 +57,7 @@ trừ MP/consume. Card là phép toàn bản đồ, không có unit caster làm 
 
 `MatchCommandResult.Pending` phân biệt đang chờ mạng với reject. Spell/dice chờ callback; move không gọi
 callback hoàn tất ngay khi gửi. Nhánh reject trả UI về khả năng chọn lại. Phần dựng presentation từ
-`ResultReceived` phải nối với replica/snapshot ở giai đoạn 4.
+Phase 4 nối apply/hash trước `ResultReceived` và callback hoàn tất; gap yêu cầu snapshot.
 
 ## Authority và vòng đời lượt
 
@@ -125,8 +125,10 @@ accepted result có server sequence mới hơn. Hand của đối phương đư�
 nhận result từ NGO server; callback của request chỉ chạy khi match/actor/command ID khớp. Disconnect giải
 phóng request đang chờ. Session gọi `Dispose`, rồi `LocalMatchAuthority.AttachTransport(null)` khi rời match.
 
-Chưa có handshake session tự động trong gameplay scene, snapshot apply, phát hiện thiếu sequence để yêu cầu
-resync, timeout request hoặc reconnect. Các phần này thuộc giai đoạn 4–7 của plan.
+Phase 4 đã thêm snapshot apply, gap/resync và timeout qua `MatchGameplayBootstrap`; result được bọc trong
+snapshot envelope, lọc cả RNG và hand đối phương. `ResultReceived` chỉ phát sau khi apply/hash thành công.
+`Unit.Value4` chứa quyền UndoMove; `Turn.ContentId` chứa deadline invariant và `Turn.Value4` chứa end reason.
+Session dịch vụ và reconnect lifecycle vẫn chưa có. Xem tài liệu Phase 4 để biết giới hạn và kiểm chứng còn thiếu.
 
 ## Kiểm chứng
 

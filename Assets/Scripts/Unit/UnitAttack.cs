@@ -75,6 +75,7 @@ namespace TurnBasedGame.Unit
 
         void Update()
         {
+            if (runtimeStats == null || !TurnBasedGame.Multiplayer.MatchGameplayBootstrap.CanControl(runtimeStats.Owner)) return;
             if (!runtimeStats.IsInAttackMode)
                 return;
 
@@ -133,6 +134,7 @@ namespace TurnBasedGame.Unit
         /// </summary>
         public void EnterAttackMode()
         {
+            if (!TurnBasedGame.Multiplayer.MatchGameplayBootstrap.CanControl(runtimeStats.Owner)) return;
             if (runtimeStats.IsInAttackMode || !_cachedUnitMove.CanAct()) return;
             runtimeStats.IsInAttackMode = true;
             _actionCanvasGroup.alpha = 0;
@@ -179,6 +181,8 @@ namespace TurnBasedGame.Unit
             }
             _skillsBridge.UpdateSkillButtonsCooldowns();
         }
+
+        internal void RefreshReplica() => _skillsBridge.UpdateSkillButtonsCooldowns();
 
         public bool CanAttack(UnitController targetUnit)
         {

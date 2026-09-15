@@ -11,12 +11,17 @@ namespace TurnBasedGame.Multiplayer
     // Session supplies the host MatchId and authenticates peer bindings before admitting commands.
     public sealed class MatchGameplayTransport : IDisposable
     {
-        private const string CommandMessage = "match-command-v2", ResultMessage = "match-result-v2";
+        private const string CommandMessage = "match-command-v2", ResultMessage = "match-result-state-v1";
         private readonly NetworkManager network;
         private readonly Dictionary<ulong, PlayerId> players = new();
         private Action<MatchCommandResult> pending;
         private long pendingId, nextId;
         private ulong nextSequence = 1, serverSequence;
+        private byte[] pendingBytes;
+        private double pendingSince;
+        private bool pendingRecoveryRequested;
+        private readonly MatchReplicaSequence replica = new MatchReplicaSequence();
+        internal ulong AppliedSequence => replica.Applied;
         private readonly string matchId;
         public PlayerId LocalPlayer { get; }
         public bool IsServer { get; }
@@ -46,11 +51,9 @@ namespace TurnBasedGame.Multiplayer
         {
             // Copy before filtering so other recipients and replay cache retain their own visibility.
             var copy = MatchProtocol.DeserializeAcknowledgement(MatchProtocol.SerializeAcknowledgement(result));
-            var visible = new List<MatchStateChange>();
-            foreach (var change in copy.StateChanges)
-                if (change.Kind != StateChangeKind.HandCard || change.Player == player) visible.Add(change);
-            copy.StateChanges = visible.ToArray();
-            SendBytes(ResultMessage, peer, MatchProtocol.SerializeAcknowledgement(copy));
+            copy.StateChanges = MatchSnapshotProtocol.Visible(copy.StateChanges, player);
+            var snapshot = MatchGameplayBootstrap.Instance.Wrap(copy, player);
+            SendBytes(ResultMessage, peer, MatchSnapshotProtocol.Serialize(snapshot));
         }
 
         public void BindAuthenticatedPeer(ulong clientId, PlayerId player)
@@ -64,7 +67,7 @@ namespace TurnBasedGame.Multiplayer
 
         internal MatchCommandDto Create(MatchCommandKind kind, PlayerId actor, int turn)
         {
-            if (actor != LocalPlayer || pendingId != 0) return null;
+            if (actor != LocalPlayer || pendingId != 0 || !MatchGameplayBootstrap.InputReady) return null;
             return new MatchCommandDto { Compatibility = LocalMatchAuthority.Compatibility, MatchId = matchId,
                 Actor = actor, Kind = kind, ExpectedTurn = turn, CommandId = ++nextId,
                 ClientSequence = nextSequence, AcknowledgedServerSequence = serverSequence };
@@ -76,6 +79,9 @@ namespace TurnBasedGame.Multiplayer
                 return MatchCommandResult.Failure("Command đang chờ hoặc actor không hợp lệ.");
             var bytes = MatchProtocol.Serialize(command);
             pendingId = command.CommandId;
+            pendingBytes = bytes;
+            pendingSince = UnityEngine.Time.realtimeSinceStartupAsDouble;
+            pendingRecoveryRequested = false;
             pending = complete;
             try { SendBytes(CommandMessage, NetworkManager.ServerClientId, bytes); }
             catch { pendingId = 0; pending = null; throw; }
@@ -84,7 +90,7 @@ namespace TurnBasedGame.Multiplayer
 
         private void OnCommand(ulong sender, FastBufferReader reader)
         {
-            if (!network.IsServer || !players.TryGetValue(sender, out var actor)) return;
+            if (!network.IsServer || !MatchGameplayBootstrap.InputReady || !players.TryGetValue(sender, out var actor)) return;
             var bytes = ReadBytes(reader, MatchProtocol.MaxCommandBytes);
             if (bytes == null || !MatchProtocol.TryDeserialize(bytes, out _, out _)) return;
             var result = LocalMatchAuthority.SubmitBytes(bytes, actor).Acknowledgement;
@@ -96,24 +102,60 @@ namespace TurnBasedGame.Multiplayer
             if (sender != NetworkManager.ServerClientId) return;
             var bytes = ReadBytes(reader, 256 * 1024);
             if (bytes == null) return;
-            CommandAcknowledgement result;
-            try { result = MatchProtocol.DeserializeAcknowledgement(bytes); }
+            MatchSnapshot snapshot;
+            try { snapshot = MatchSnapshotProtocol.Deserialize(bytes); }
             catch (Exception e) when (e is IOException || e is ArgumentException) { return; }
+            var result = snapshot.State;
             if (result.MatchId != matchId) return;
-            if (result.Accepted && result.ServerSequence > serverSequence)
+            if (!result.Accepted && result.ServerSequence > replica.Applied)
             {
+                replica.Invalidate(); MatchGameplayBootstrap.Instance.RequestSnapshot(); return;
+            }
+            if (result.Accepted && result.ServerSequence > replica.Applied)
+            {
+                if (!replica.CanApply(result.ServerSequence) || !MatchGameplayBootstrap.Instance.ApplyCommit(snapshot))
+                {
+                    replica.Invalidate(); MatchGameplayBootstrap.Instance.RequestSnapshot(); return;
+                }
+                replica.Commit(result.ServerSequence);
                 serverSequence = result.ServerSequence;
                 ResultReceived?.Invoke(result);
             }
-            if (result.Actor != LocalPlayer || result.CommandId != pendingId) return;
+            if (replica.NeedsSnapshot) return;
+            if (pendingId == 0 || result.Actor != LocalPlayer || result.CommandId != pendingId) return;
             var callback = pending;
-            pending = null; pendingId = 0;
-            nextSequence = result.NextClientSequence;
-            serverSequence = Math.Max(serverSequence, result.ServerSequence);
+            pending = null; pendingId = 0; pendingBytes = null;
+            nextSequence = Math.Max(nextSequence, result.NextClientSequence);
             callback?.Invoke(new MatchCommandResult(result));
         }
 
-        private void SendBytes(string message, ulong recipient, byte[] bytes)
+        internal void RestoreSnapshot(MatchSnapshot snapshot)
+        {
+            replica.Commit(snapshot.State.ServerSequence);
+            serverSequence = replica.Applied;
+            nextSequence = snapshot.State.NextClientSequence;
+            nextId = Math.Max(nextId, snapshot.NextCommandId - 1);
+        }
+
+        internal void RetryPending()
+        {
+            // Exact bytes preserve CommandId and replay-cache identity. Never issue a new intent.
+            if (pendingBytes != null) SendBytes(CommandMessage, NetworkManager.ServerClientId, pendingBytes);
+        }
+
+        internal void Tick()
+        {
+            if (IsServer || pendingId == 0) return;
+            double elapsed = UnityEngine.Time.realtimeSinceStartupAsDouble - pendingSince;
+            if (elapsed >= 30) { MatchGameplayBootstrap.Instance.Abort("Command acknowledgement timeout (30s)."); return; }
+            if (elapsed >= 10 && !pendingRecoveryRequested)
+            {
+                pendingRecoveryRequested = true;
+                replica.Invalidate(); MatchGameplayBootstrap.Instance.RequestSnapshot();
+            }
+        }
+
+        internal void SendBytes(string message, ulong recipient, byte[] bytes)
         {
             using var writer = new FastBufferWriter(bytes.Length + sizeof(int), Allocator.Temp);
             writer.WriteValueSafe(bytes.Length);
@@ -121,7 +163,7 @@ namespace TurnBasedGame.Multiplayer
             network.CustomMessagingManager.SendNamedMessage(message, recipient, writer, NetworkDelivery.ReliableFragmentedSequenced);
         }
 
-        private static byte[] ReadBytes(FastBufferReader reader, int limit)
+        internal static byte[] ReadBytes(FastBufferReader reader, int limit)
         {
             if (!reader.TryBeginRead(sizeof(int))) return null;
             reader.ReadValueSafe(out int length);
@@ -140,7 +182,7 @@ namespace TurnBasedGame.Multiplayer
         private void FailPending()
         {
             var callback = pending;
-            pending = null; pendingId = 0;
+            pending = null; pendingId = 0; pendingBytes = null;
             callback?.Invoke(MatchCommandResult.Failure("Kết nối trận đấu đã đóng."));
         }
 
@@ -151,6 +193,7 @@ namespace TurnBasedGame.Multiplayer
             network.CustomMessagingManager?.UnregisterNamedMessageHandler(IsServer ? CommandMessage : ResultMessage);
             players.Clear();
             FailPending();
+            LocalMatchAuthority.DetachTransport(this);
         }
     }
 }

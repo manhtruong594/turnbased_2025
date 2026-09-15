@@ -28,6 +28,24 @@ namespace TurnBasedGame.Unit
         
         private Dictionary<PlayerID, List<UnitController>> playerUnits = new Dictionary<PlayerID, List<UnitController>>();
         internal IReadOnlyList<SpawnPoint> SpawnPoints => spawnPoints;
+        internal UnitController CreateReplica(TurnBasedGame.Multiplayer.Protocol.MatchStateChange state)
+        {
+            var prefab = LocalMatchAuthority.Content.ResolveUnitPrefab(state.ContentId);
+            var unit = Instantiate(prefab, unitsContainer);
+            LocalMatchAuthority.Runtime.BindUnit(state.Entity, unit);
+            unit.AssignMatchIdentity(state.Entity, state.ContentId);
+            unit.Init((PlayerID)state.Player, new Vector3Int(state.Position.X, state.Position.Y, state.Position.Z));
+            playerUnits[(PlayerID)state.Player].Add(unit);
+            return unit;
+        }
+
+        internal void RemoveReplica(UnitController unit)
+        {
+            playerUnits[unit.GetOwner()].Remove(unit);
+            LocalMatchAuthority.Runtime.RemoveUnit(unit);
+            unit.gameObject.SetActive(false);
+            Destroy(unit.gameObject);
+        }
         internal System.Action CaptureRollback()
         {
             var saved = new Dictionary<PlayerID, List<UnitController>>();

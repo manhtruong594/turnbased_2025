@@ -14,6 +14,15 @@ using RedBjorn.ProtoTiles.Example;
 public class GameMediator : MonoBehaviour
 {
     public static GameMediator Instance { get; private set; }
+    public bool IsInitialized { get; private set; }
+    public event Action OnReplicaApplied;
+    internal void NotifyReplicaApplied() => OnReplicaApplied?.Invoke();
+    private PlayerID? replicaWinner;
+    internal void NotifyReplicaGameEnd(PlayerID winner)
+    {
+        if (replicaWinner == winner) return;
+        replicaWinner = winner; OnGameEnd?.Invoke(winner);
+    }
 
     [Header("Manager References")]
     [SerializeField] private TurnManager turnManager;
@@ -81,6 +90,7 @@ public class GameMediator : MonoBehaviour
 
         if (capturePointManager != null)
             capturePointManager.Initialize(this);
+        IsInitialized = true;
     }
 
     #region  Notify Methods

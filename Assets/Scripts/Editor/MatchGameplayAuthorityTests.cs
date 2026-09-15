@@ -158,5 +158,62 @@ public sealed class MatchGameplayAuthorityTests
         Assert.That(mp.GetCurrentMP(PlayerID.Player1), Is.EqualTo(mana));
         Assert.That(LocalMatchAuthority.Random.Capture().State, Is.EqualTo(rng.State));
     }
+
+    private MatchSnapshot ReplicaFixture()
+    {
+        var mediator = Component<GameMediator>();
+        Static(typeof(GameMediator), "<Instance>k__BackingField", mediator);
+        Field(mediator, "<IsInitialized>k__BackingField", true);
+        Static(typeof(UnitSpawner), "<Instance>k__BackingField", Component<UnitSpawner>());
+        var state = (List<MatchStateChange>)typeof(LocalMatchAuthority).GetMethod("CaptureState", BindingFlags.Static | BindingFlags.NonPublic)
+            .Invoke(null, new object[] { null });
+        var visible = new List<MatchStateChange>(MatchSnapshotProtocol.Visible(state.ToArray(), PlayerId.Player2));
+        visible.Add(new MatchStateChange { Kind = StateChangeKind.HandCard, Player = PlayerId.Player2,
+            Entity = 91, ContentId = new string('b', 32) });
+        var snapshot = new MatchSnapshot { Compatibility = LocalMatchAuthority.Compatibility, SceneHash = new string('d', 64),
+            NextCommandId = 4, State = new CommandAcknowledgement { MatchId = Match, Actor = PlayerId.Player2,
+                NextClientSequence = 4, ServerSequence = 3, StateChanges = visible.ToArray() } };
+        snapshot.Hash = MatchSnapshotProtocol.Hash(snapshot.State.StateChanges, snapshot.Deadline);
+        Static(typeof(MatchGameplayBootstrap), "<Instance>k__BackingField", Component<MatchGameplayBootstrap>());
+        return snapshot;
+    }
+
+    [Test]
+    public void ReplicaSnapshotIsIdempotentAndDoesNotPublishTurnEvents()
+    {
+        var snapshot = ReplicaFixture();
+        int started = 0;
+        GameMediator.Instance.OnPlayerTurnStarted += _ => started++;
+        var applier = new MatchReplicaApplier();
+        applier.Apply(snapshot, PlayerId.Player2);
+        applier.Apply(snapshot, PlayerId.Player2);
+        Assert.That(TurnManager.Instance.TurnCount, Is.EqualTo(3));
+        Assert.That(mp.GetCurrentMP(PlayerID.Player1), Is.EqualTo(4));
+        Assert.That(spells.GetCardInstanceId(PlayerID.Player2, card), Is.EqualTo(91));
+        Assert.That(spells.GetHand(PlayerID.Player1), Is.Empty);
+        Assert.That(started, Is.Zero);
+    }
+
+    [Test]
+    public void ReplicaEmptyHandReplacesExistingHand()
+    {
+        var snapshot = ReplicaFixture(); var applier = new MatchReplicaApplier();
+        applier.Apply(snapshot, PlayerId.Player2);
+        var state = new List<MatchStateChange>(snapshot.State.StateChanges);
+        state.RemoveAll(entry => entry.Kind == StateChangeKind.HandCard);
+        snapshot.State.StateChanges = state.ToArray();
+        snapshot.Hash = MatchSnapshotProtocol.Hash(snapshot.State.StateChanges, snapshot.Deadline);
+        applier.Apply(snapshot, PlayerId.Player2);
+        Assert.That(spells.GetHand(PlayerID.Player2), Is.Empty);
+    }
+
+    [Test]
+    public void ReplicaRejectsIncompleteStateBeforeMutatingMana()
+    {
+        var snapshot = ReplicaFixture();
+        snapshot.State.StateChanges = new[] { new MatchStateChange { Kind = StateChangeKind.MP, Player = PlayerId.Player1, Value = 19 } };
+        Assert.Throws<ArgumentException>(() => new MatchReplicaApplier().Apply(snapshot, PlayerId.Player2));
+        Assert.That(mp.GetCurrentMP(PlayerID.Player1), Is.EqualTo(4));
+    }
 }
 #endif

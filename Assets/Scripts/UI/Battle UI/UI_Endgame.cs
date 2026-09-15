@@ -47,6 +47,8 @@ public class UI_Endgame : MonoBehaviour
 
     private void HandleGameEnd(PlayerID winner)
     {
+        if (TurnBasedGame.Multiplayer.MatchGameplayBootstrap.Active)
+            _localPlayerID = TurnBasedGame.Multiplayer.MatchGameplayBootstrap.Instance.IsHost ? PlayerID.Player1 : PlayerID.Player2;
         bool isWinner = winner == _localPlayerID;
         _resultText.text = isWinner ? _winText : _loseText;
         _subtitleText.text = isWinner ? _winSubtitle : _loseSubtitle;
@@ -55,6 +57,11 @@ public class UI_Endgame : MonoBehaviour
 
     private void OnRestartClicked()
     {
+        if (TurnBasedGame.Multiplayer.MatchGameplayBootstrap.Active)
+        {
+            Debug.LogWarning("Multiplayer rematch belongs to phase 5; start a new pair of processes.");
+            return;
+        }
         SceneLoader.Instance?.LoadSceneAsync(SceneManager.GetActiveScene().name);
     }
 
