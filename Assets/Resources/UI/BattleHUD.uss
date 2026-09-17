@@ -1,0 +1,201 @@
+.battle-hud {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    color: rgb(240, 234, 218);
+}
+
+.hidden { display: none; }
+
+.top-bar {
+    position: absolute;
+    left: 28px;
+    right: 28px;
+    top: 22px;
+    height: 112px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.player-frame {
+    width: 31%;
+    min-width: 260px;
+    max-width: 390px;
+    padding: 13px 16px 14px 16px;
+    background-color: rgba(16, 22, 32, 0.96);
+    border-width: 2px;
+    border-color: rgb(153, 119, 58);
+    border-radius: 10px;
+}
+
+.player-frame--right { align-items: stretch; }
+.player-header { flex-direction: row; align-items: center; justify-content: space-between; }
+.player-header--right { justify-content: space-between; }
+.player-name { font-size: 21px; -unity-font-style: bold; color: rgb(247, 241, 224); }
+
+.turn-label {
+    padding: 4px 8px;
+    font-size: 11px;
+    -unity-font-style: bold;
+    color: rgb(33, 28, 18);
+    background-color: rgb(229, 177, 70);
+    border-radius: 4px;
+    -unity-text-align: middle-center;
+}
+
+.mp-bar { margin-top: 10px; height: 22px; }
+.mp-bar .unity-progress-bar__background { background-color: rgb(32, 42, 57); border-radius: 4px; }
+.mp-bar .unity-progress-bar__progress { background-color: rgb(62, 146, 203); border-radius: 4px; }
+.mp-bar .unity-progress-bar__title { color: rgb(245, 248, 252); -unity-font-style: bold; }
+
+.battle-heading {
+    min-width: 170px;
+    margin-top: 2px;
+    padding: 9px 22px 10px 22px;
+    align-items: center;
+    background-color: rgba(16, 22, 32, 0.94);
+    border-bottom-width: 3px;
+    border-bottom-color: rgb(153, 119, 58);
+    border-radius: 9px;
+}
+
+.battle-kicker, .modal-kicker, .panel-caption {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: rgb(173, 158, 124);
+    -unity-font-style: bold;
+}
+
+.battle-title { margin-top: 2px; font-size: 20px; -unity-font-style: bold; color: rgb(240, 198, 91); }
+
+.turn-clock {
+    min-width: 116px;
+    margin-top: 7px;
+    padding: 5px 10px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    background-color: rgb(30, 39, 52);
+    border-radius: 5px;
+}
+
+.turn-clock-caption { font-size: 9px; color: rgb(173, 181, 194); -unity-font-style: bold; }
+.turn-timer { margin-left: 10px; font-size: 18px; color: rgb(247, 241, 224); -unity-font-style: bold; }
+
+.action-bar {
+    position: absolute;
+    left: 50%;
+    bottom: 24px;
+    translate: -50% 0;
+    width: 72%;
+    min-width: 760px;
+    max-width: 980px;
+    min-height: 76px;
+    padding: 10px 12px;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(16, 22, 32, 0.97);
+    border-width: 2px;
+    border-color: rgb(125, 101, 58);
+    border-radius: 12px;
+}
+
+.action-group { flex-direction: row; flex-grow: 1; justify-content: center; }
+.action-group--utility { flex-grow: 0.9; }
+.action-group--dice { flex-grow: 1.15; }
+.action-divider { width: 1px; height: 38px; margin-left: 8px; margin-right: 8px; background-color: rgb(76, 75, 72); }
+
+.hud-button {
+    min-width: 112px;
+    height: 46px;
+    margin: 3px 4px;
+    padding-left: 13px;
+    padding-right: 13px;
+    color: rgb(240, 234, 218);
+    background-color: rgb(43, 55, 72);
+    border-width: 1px;
+    border-color: rgb(108, 101, 82);
+    border-radius: 7px;
+    font-size: 14px;
+    -unity-font-style: bold;
+}
+
+.hud-button:hover { background-color: rgb(63, 79, 101); border-color: rgb(209, 169, 84); }
+.hud-button:active { background-color: rgb(35, 45, 59); }
+.hud-button:disabled { opacity: 0.48; }
+.hud-button--primary { background-color: rgb(39, 102, 75); border-color: rgb(78, 158, 116); }
+.hud-button--danger { background-color: rgb(119, 49, 44); border-color: rgb(172, 76, 65); }
+.hud-button--wide { width: 100%; margin-left: 0; margin-right: 0; }
+.dice-button { min-width: 132px; }
+.end-turn-button { min-width: 132px; }
+
+.side-panel, .skill-panel {
+    position: absolute;
+    top: 154px;
+    padding: 16px;
+    background-color: rgba(16, 22, 32, 0.97);
+    border-width: 2px;
+    border-color: rgb(125, 101, 58);
+    border-radius: 10px;
+}
+
+.side-panel { left: 28px; bottom: 124px; width: 350px; }
+.skill-panel { right: 28px; width: 326px; }
+.panel-heading { margin-bottom: 12px; padding-bottom: 9px; border-bottom-width: 1px; border-bottom-color: rgb(76, 75, 72); }
+.panel-title { font-size: 19px; -unity-font-style: bold; color: rgb(240, 198, 91); }
+.panel-caption { margin-top: 2px; }
+.card-list { flex-grow: 1; }
+
+.card-row {
+    min-height: 78px;
+    margin-bottom: 9px;
+    padding: 9px;
+    flex-direction: row;
+    align-items: center;
+    background-color: rgb(37, 48, 63);
+    border-width: 1px;
+    border-color: rgb(69, 77, 87);
+    border-radius: 7px;
+}
+
+.card-row:hover { background-color: rgb(50, 64, 83); border-color: rgb(153, 119, 58); }
+.card-icon { width: 56px; height: 56px; margin-right: 11px; -unity-background-scale-mode: scale-to-fit; }
+.card-text { flex-grow: 1; flex-shrink: 1; }
+.card-name { font-size: 15px; -unity-font-style: bold; color: rgb(244, 238, 220); }
+.card-description { margin-top: 3px; white-space: normal; font-size: 11px; color: rgb(185, 191, 202); }
+.card-cost { min-width: 50px; margin-left: 6px; color: rgb(103, 198, 255); -unity-font-style: bold; -unity-text-align: middle-center; }
+.skill-list { margin-bottom: 8px; }
+.skill-button { width: 100%; height: 46px; margin-left: 0; margin-right: 0; margin-bottom: 7px; }
+
+.overlay {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(4, 7, 11, 0.82);
+}
+
+.confirm-card, .endgame-panel {
+    width: 460px;
+    padding: 28px 30px;
+    align-items: center;
+    background-color: rgb(20, 27, 38);
+    border-width: 2px;
+    border-color: rgb(172, 132, 57);
+    border-radius: 12px;
+}
+
+.confirm-icon { width: 132px; height: 132px; margin-top: 15px; -unity-background-scale-mode: scale-to-fit; }
+.confirm-name, .endgame-result { margin-top: 11px; font-size: 29px; -unity-font-style: bold; color: rgb(240, 198, 91); }
+.confirm-description, .endgame-subtitle { margin: 13px 0; white-space: normal; -unity-text-align: middle-center; color: rgb(207, 210, 216); }
+.confirm-cost { padding: 5px 12px; font-size: 18px; color: rgb(103, 198, 255); background-color: rgb(29, 47, 65); border-radius: 5px; }
+.confirm-buttons { width: 100%; margin-top: 16px; flex-direction: row; justify-content: center; }
+.confirm-buttons .hud-button { flex-grow: 1; }
+.endgame-panel .hud-button { width: 240px; }

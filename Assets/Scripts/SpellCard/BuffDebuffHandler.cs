@@ -273,7 +273,7 @@ namespace TurnBasedGame.SpellCard
 
         public bool IsImmuneToDisplacement() => HasEffect(StatusEffectType.StanceGuard);
 
-        public bool IsRooted() => HasEffect(StatusEffectType.Root) || PreventsAction();
+        public bool IsRooted() => HasEffect(StatusEffectType.Root);
 
         public bool PreventsAction() => HasEffect(StatusEffectType.Stun, StatusEffectType.Freeze);
 

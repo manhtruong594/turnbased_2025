@@ -44,7 +44,7 @@ namespace TurnBasedGame.SpellCard
         public void Execute()
         {
             if (!CanExecute()) return;
-            var result = TurnBasedGame.Command.LocalMatchAuthority.SubmitSpell(_caster,
+            var result = TurnBasedGame.Command.LocalMatchAuthority.SubmitHumanSpell(
                 _manager.GetCardInstanceId(_caster, _card), _targetTile.Position);
             if (!result.Succeeded) Debug.LogWarning(result.FailureReason);
         }

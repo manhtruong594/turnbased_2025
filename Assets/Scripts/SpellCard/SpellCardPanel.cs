@@ -24,6 +24,7 @@ namespace TurnBasedGame.SpellCard
         public void Initialize(IReadOnlyList<SpellCardData> spells, PlayerID owner)
         {
             _ownerPlayer = owner;
+            TurnBasedGame.UI.BattleHUDToolkit.Instance?.SetSpellHand(owner, spells);
 
             // Đồng bộ hand với SpellCardManager
             SpellCardManager.Instance?.InitializeHand(owner, spells);
@@ -77,6 +78,9 @@ namespace TurnBasedGame.SpellCard
         }
         public void UpdateInteractable()
         {
+            var toolkitHand = SpellCardManager.Instance?.GetHand(_ownerPlayer);
+            if (toolkitHand != null)
+                TurnBasedGame.UI.BattleHUDToolkit.Instance?.SetSpellHand(_ownerPlayer, toolkitHand);
             foreach (var btn in _spells)
             {
                 if (btn == null || btn.Data == null) continue;

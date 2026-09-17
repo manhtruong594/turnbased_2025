@@ -118,7 +118,7 @@ namespace TurnBasedGame.UI
             }
 
             // Thử spawn unit
-            var result = LocalMatchAuthority.SubmitSpawn(currentPlayer, unit);
+            var result = LocalMatchAuthority.SubmitHumanSpawn(unit);
             bool success = result.Succeeded;
 
             if (success)

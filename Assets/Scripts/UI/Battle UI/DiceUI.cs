@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine.UI;
 using TurnBasedGame.Core;
 using TurnBasedGame.Resources;
+using TurnBasedGame.UI;
 using System;
 
 /// <summary>
@@ -26,6 +27,19 @@ public class DiceUI : MonoBehaviour
    
     private bool isRolling = false;
     private int usedButtons;
+    private PlayerID _toolkitPlayer;
+
+    public void BindToolkit(PlayerID player)
+    {
+        _toolkitPlayer = player;
+        BattleHUDToolkit.Instance?.BindDice(player, () => TriggerRoll(1), () => TriggerRoll(2));
+        ResetDiceDisplay();
+    }
+
+    public void TriggerRoll(int index)
+    {
+        if (!isRolling) StartCoroutine(RollDiceCoroutine(index));
+    }
     internal void ApplyReplica(bool active, int used)
     {
         usedButtons = used;
@@ -99,10 +113,12 @@ public class DiceUI : MonoBehaviour
             if (indexOfDice == 1)
             {
                 if (dice1Text) dice1Text.text = diceValue.ToString();
+                BattleHUDToolkit.Instance?.SetDice(_toolkitPlayer, 1, diceValue.ToString());
             }
             else if (indexOfDice == 2)
             {
                 if (dice2Text) dice2Text.text = diceValue.ToString();
+                BattleHUDToolkit.Instance?.SetDice(_toolkitPlayer, 2, diceValue.ToString());
             }
 
             elapsed += rollInterval;
@@ -111,7 +127,7 @@ public class DiceUI : MonoBehaviour
 
         // Kết quả cuối cùng
         TurnBasedGame.Command.MatchCommandResult? received = null;
-        var submitted = TurnBasedGame.Command.LocalMatchAuthority.SubmitRoll(actor, expectedTurn, indexOfDice,
+        var submitted = TurnBasedGame.Command.LocalMatchAuthority.SubmitHumanRoll(expectedTurn, indexOfDice,
             result => received = result);
         if (!submitted.Pending) received = submitted;
         while (!received.HasValue) yield return null;
@@ -129,10 +145,12 @@ public class DiceUI : MonoBehaviour
         if (indexOfDice == 1)
         {
             if (dice1Text) dice1Text.text = diceValue.ToString();
+            BattleHUDToolkit.Instance?.SetDice(_toolkitPlayer, 1, diceValue.ToString());
         }
         else if (indexOfDice == 2)
         {
             if (dice2Text) dice2Text.text = diceValue.ToString();
+            BattleHUDToolkit.Instance?.SetDice(_toolkitPlayer, 2, diceValue.ToString());
         }
 
         Debug.Log($"Rolled dice {indexOfDice}: {diceValue}");
@@ -156,10 +174,12 @@ public class DiceUI : MonoBehaviour
         if (indexOfDice == 1 && rollDiceButton1)
         {
             rollDiceButton1.interactable = false;
+            BattleHUDToolkit.Instance?.SetDiceEnabled(_toolkitPlayer, 1, false);
         }
         else if (indexOfDice == 2 && rollDiceButton2)
         {
             rollDiceButton2.interactable = false;
+            BattleHUDToolkit.Instance?.SetDiceEnabled(_toolkitPlayer, 2, false);
         }
     }
 
@@ -170,6 +190,8 @@ public class DiceUI : MonoBehaviour
     {
         if (dice1Text) dice1Text.text = "?";
         if (dice2Text) dice2Text.text = "?";
+        BattleHUDToolkit.Instance?.SetDice(_toolkitPlayer, 1, "?");
+        BattleHUDToolkit.Instance?.SetDice(_toolkitPlayer, 2, "?");
     }
 
     /// <summary>
@@ -179,6 +201,8 @@ public class DiceUI : MonoBehaviour
     {
         if (rollDiceButton2) rollDiceButton2.interactable = false;
         if (rollDiceButton1) rollDiceButton1.interactable = false;
+        BattleHUDToolkit.Instance?.SetDiceEnabled(_toolkitPlayer, 1, false);
+        BattleHUDToolkit.Instance?.SetDiceEnabled(_toolkitPlayer, 2, false);
     }
 
     /// <summary>
@@ -190,5 +214,7 @@ public class DiceUI : MonoBehaviour
         { DisableAllButtons(); return; }
         if (rollDiceButton2) rollDiceButton2.interactable = (usedButtons & (1 << 2)) == 0;
         if (rollDiceButton1) rollDiceButton1.interactable = (usedButtons & (1 << 1)) == 0;
+        BattleHUDToolkit.Instance?.SetDiceEnabled(_toolkitPlayer, 1, (usedButtons & (1 << 1)) == 0);
+        BattleHUDToolkit.Instance?.SetDiceEnabled(_toolkitPlayer, 2, (usedButtons & (1 << 2)) == 0);
     }
 }

@@ -31,11 +31,39 @@ namespace TurnBasedGame.Core
 
         private PlayerID aiPlayerID;
         private PlayerID opponentOfAI;
+        private Coroutine turnRoutine;
 
-        public void Initialize(PlayerID mainPlayer)
+        private void Start()
         {
-            opponentOfAI = mainPlayer;
-            aiPlayerID = mainPlayer == PlayerID.Player1 ? PlayerID.Player2 : PlayerID.Player1;
+            if (!MatchContext.IsVersusAI || !MatchContext.BotPlayer.HasValue || !LocalMatchAuthority.IsAuthoritative)
+            {
+                enabled = false;
+                return;
+            }
+
+            aiPlayerID = MatchContext.BotPlayer.Value;
+            opponentOfAI = MatchContext.LocalPlayer;
+            if (GameMediator.Instance != null)
+                GameMediator.Instance.OnPlayerTurnStarted += HandleTurnStarted;
+        }
+
+        private void OnDestroy()
+        {
+            if (GameMediator.Instance != null)
+                GameMediator.Instance.OnPlayerTurnStarted -= HandleTurnStarted;
+        }
+
+        private void HandleTurnStarted(PlayerID player)
+        {
+            if (player != aiPlayerID || turnRoutine != null)
+                return;
+            turnRoutine = StartCoroutine(RunTurn());
+        }
+
+        private IEnumerator RunTurn()
+        {
+            yield return ExecuteAITurn();
+            turnRoutine = null;
         }
 
         /// <summary>
@@ -75,7 +103,7 @@ namespace TurnBasedGame.Core
             foreach (var unit in myUnits)
             {
                 if (unit != null && !unit.IsDead())
-                    unit.FinishTurnActions();
+                    LocalMatchAuthority.SubmitUnitAction(unit);
             }
 
             LocalMatchAuthority.SubmitEndTurn(aiPlayerID);
@@ -315,7 +343,8 @@ namespace TurnBasedGame.Core
 
         private bool IsAITurnActive()
         {
-            return TurnManager.Instance != null &&
+            return MatchContext.IsBot(aiPlayerID) && LocalMatchAuthority.IsAuthoritative &&
+                   TurnManager.Instance != null &&
                    TurnManager.Instance.CurrentState != TurnState.GameEnd &&
                    TurnManager.Instance.CurrentPlayer == aiPlayerID;
         }

@@ -160,8 +160,8 @@ namespace RedBjorn.ProtoTiles.Example
                 HideMoveArea();
                 SetPathEnabled(false);
                 HidePath();
-                var result = LocalMatchAuthority.SubmitMove(
-                    selectedUnit.GetOwner(), selectedUnit, _tileClicked.Position, OnCompleteMove);
+                var result = LocalMatchAuthority.SubmitHumanMove(
+                    selectedUnit, _tileClicked.Position, OnCompleteMove);
                 if (!result.Succeeded && !result.Pending)
                 {
                     Debug.LogWarning($"Move rejected: {result.FailureReason}");

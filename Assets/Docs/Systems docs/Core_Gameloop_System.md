@@ -98,6 +98,13 @@ nhiều lần trong cùng một turn.
 
 ## 6. Lượt AI
 
+`MatchContext` phân biệt rõ `VersusAI` và `NetworkPvP`. Trận local mặc định có human `Player1`, bot
+`Player2`; trận network lấy `LocalPlayer` từ role host/client và không có `BotPlayer`. Input UI chỉ gửi
+qua các entry point `SubmitHuman*`, vì vậy không thể dùng owner của unit đối thủ làm actor.
+
+`AIController` tự đăng ký `OnPlayerTurnStarted`, chỉ hoạt động khi `MatchContext.IsVersusAI`, có
+`BotPlayer` và process hiện tại là authority. `PlayerController` không khởi chạy lượt AI.
+
 Implementation hiện tại:
 
 1. Chờ `actionDelay`.

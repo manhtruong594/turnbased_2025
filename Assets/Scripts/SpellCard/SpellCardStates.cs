@@ -44,7 +44,9 @@ namespace TurnBasedGame.SpellCard
 
             var mousePos = MyInput.GroundPosition(map.Settings.Plane());
 
-            if (MyInput.GetOnWorldUp(map.Settings.Plane()) && !EventSystem.current.IsPointerOverGameObject())
+            if (MyInput.GetOnWorldUp(map.Settings.Plane()) &&
+                !EventSystem.current.IsPointerOverGameObject() &&
+                !TurnBasedGame.UI.BattleHUDToolkit.IsPointerOverHUD(Input.mousePosition))
             {
                 var tileClicked = map.Tile(mousePos);
                 if (tileClicked == null) return;
@@ -71,7 +73,7 @@ namespace TurnBasedGame.SpellCard
         {
             if (pending) return;
             if (ctx.CachedTile == null) { ctx.SetState(new SpellTargetingState()); return; }
-            var result = TurnBasedGame.Command.LocalMatchAuthority.SubmitSpell(ctx.CurrentCaster,
+            var result = TurnBasedGame.Command.LocalMatchAuthority.SubmitHumanSpell(
                 ctx.SelectedCardInstanceId, ctx.CachedTile.Position, completed => Complete(ctx, completed));
             pending = result.Pending;
             if (!pending) Complete(ctx, result);

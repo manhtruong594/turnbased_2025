@@ -191,8 +191,7 @@ namespace TurnBasedGame.SpellCard
 
         public bool CanUseCard(SpellCardData card, PlayerID player)
         {
-            if (!TurnBasedGame.Multiplayer.MatchGameplayBootstrap.InputReady) return false;
-            if (LocalMatchAuthority.Transport != null && LocalMatchAuthority.Transport.LocalPlayer != (PlayerId)player) return false;
+            if (!TurnBasedGame.Multiplayer.MatchGameplayBootstrap.CanControl(player)) return false;
             if (card == null) return false;
             if (TurnManager.Instance == null || TurnManager.Instance.CurrentPlayer != player ||
                 TurnManager.Instance.IsTurnTransitionPending || TurnManager.Instance.CurrentState == TurnState.GameEnd) return false;
@@ -295,6 +294,14 @@ namespace TurnBasedGame.SpellCard
 
         public void ShowConfirmUI()
         {
+            if (TurnBasedGame.UI.BattleHUDToolkit.IsAvailable)
+            {
+                TurnBasedGame.UI.BattleHUDToolkit.Instance.ShowSpellConfirmation(
+                    SelectedCard,
+                    HandleConfirm,
+                    HandleCancel);
+                return;
+            }
             _confirmUI?.Show(SelectedCard, new RectTransform());
         }
 

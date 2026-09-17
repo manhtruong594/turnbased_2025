@@ -1,0 +1,85 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="BattleHUD.uss" />
+    <ui:VisualElement name="battle-hud" class="battle-hud" picking-mode="Ignore">
+        <ui:VisualElement name="top-bar" class="top-bar">
+            <ui:VisualElement name="player-1" class="player-frame">
+                <ui:VisualElement class="player-header">
+                    <ui:Label name="player-1-name" text="Player 1" class="player-name" />
+                    <ui:Label name="player-1-turn" text="ĐẾN LƯỢT" class="turn-label" />
+                </ui:VisualElement>
+                <ui:ProgressBar name="player-1-mp" title="0/0 MP" class="mp-bar" />
+            </ui:VisualElement>
+            <ui:VisualElement class="battle-heading">
+                <ui:Label text="TRẬN ĐẤU" class="battle-kicker" />
+                <ui:Label name="turn-label" text="CHIẾN ĐẤU" class="battle-title" />
+                <ui:VisualElement class="turn-clock">
+                    <ui:Label text="THỜI GIAN" class="turn-clock-caption" />
+                    <ui:Label name="turn-timer" text="00" class="turn-timer" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="player-2" class="player-frame player-frame--right">
+                <ui:VisualElement class="player-header player-header--right">
+                    <ui:Label name="player-2-turn" text="ĐẾN LƯỢT" class="turn-label" />
+                    <ui:Label name="player-2-name" text="Player 2" class="player-name" />
+                </ui:VisualElement>
+                <ui:ProgressBar name="player-2-mp" title="0/0 MP" class="mp-bar" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="side-panel" class="side-panel hidden">
+            <ui:VisualElement class="panel-heading">
+                <ui:Label name="side-title" text="TRIỆU HỒI" class="panel-title" />
+                <ui:Label text="CHỌN THẺ" class="panel-caption" />
+            </ui:VisualElement>
+            <ui:ScrollView name="side-list" class="card-list" />
+        </ui:VisualElement>
+
+        <ui:VisualElement name="skill-panel" class="skill-panel hidden">
+            <ui:VisualElement class="panel-heading">
+                <ui:Label name="unit-name" text="UNIT" class="panel-title" />
+                <ui:Label text="HÀNH ĐỘNG" class="panel-caption" />
+            </ui:VisualElement>
+            <ui:VisualElement name="skill-list" class="skill-list" />
+            <ui:Button name="undo-action" text="Hoàn tác di chuyển" class="hud-button hud-button--wide" />
+            <ui:Button name="finish-action" text="Kết thúc hành động" class="hud-button hud-button--wide hud-button--danger" />
+        </ui:VisualElement>
+
+        <ui:VisualElement name="action-bar" class="action-bar">
+            <ui:VisualElement class="action-group action-group--utility">
+                <ui:Button name="summon-button" text="Triệu hồi" class="hud-button" />
+                <ui:Button name="spell-button" text="Phép thuật" class="hud-button" />
+            </ui:VisualElement>
+            <ui:VisualElement class="action-divider" />
+            <ui:VisualElement class="action-group action-group--dice">
+                <ui:Button name="dice-1-button" text="Xúc xắc 1: ?" class="hud-button dice-button" />
+                <ui:Button name="dice-2-button" text="Xúc xắc 2: ?" class="hud-button dice-button" />
+            </ui:VisualElement>
+            <ui:VisualElement class="action-divider" />
+            <ui:Button name="end-turn-button" text="Kết thúc lượt" class="hud-button hud-button--danger end-turn-button" />
+        </ui:VisualElement>
+
+        <ui:VisualElement name="confirm-overlay" class="overlay hidden">
+            <ui:VisualElement class="confirm-card">
+                <ui:Label text="XÁC NHẬN PHÉP" class="modal-kicker" />
+                <ui:VisualElement name="confirm-icon" class="confirm-icon" />
+                <ui:Label name="confirm-name" class="confirm-name" />
+                <ui:Label name="confirm-description" class="confirm-description" />
+                <ui:Label name="confirm-cost" class="confirm-cost" />
+                <ui:VisualElement class="confirm-buttons">
+                    <ui:Button name="confirm-cancel" text="Hủy" class="hud-button" />
+                    <ui:Button name="confirm-accept" text="Xác nhận" class="hud-button hud-button--primary" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="endgame-overlay" class="overlay hidden">
+            <ui:VisualElement class="endgame-panel">
+                <ui:Label text="KẾT QUẢ TRẬN ĐẤU" class="modal-kicker" />
+                <ui:Label name="endgame-result" text="CHIẾN THẮNG" class="endgame-result" />
+                <ui:Label name="endgame-subtitle" class="endgame-subtitle" />
+                <ui:Button name="restart-button" text="Chơi lại" class="hud-button hud-button--wide hud-button--primary" />
+                <ui:Button name="main-menu-button" text="Về menu chính" class="hud-button hud-button--wide" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

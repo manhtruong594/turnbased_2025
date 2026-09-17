@@ -24,6 +24,11 @@ namespace TurnBasedGame.Skills
 
         public override bool CanUse(UnitController caster, Vector3Int targetPos)
         {
+            if (caster == null || !caster.CanAct())
+            {
+                Debug.LogWarning($"{skillName} cannot be used because the caster cannot act.");
+                return false;
+            }
             if (!ValidateCooldown() || !ValidateMP(caster) || !ValidateRange(caster, targetPos))
                 return false;
 

@@ -47,12 +47,16 @@ public class UI_Endgame : MonoBehaviour
 
     private void HandleGameEnd(PlayerID winner)
     {
-        if (TurnBasedGame.Multiplayer.MatchGameplayBootstrap.Active)
-            _localPlayerID = TurnBasedGame.Multiplayer.MatchGameplayBootstrap.Instance.IsHost ? PlayerID.Player1 : PlayerID.Player2;
+        _localPlayerID = MatchContext.LocalPlayer;
         bool isWinner = winner == _localPlayerID;
         _resultText.text = isWinner ? _winText : _loseText;
         _subtitleText.text = isWinner ? _winSubtitle : _loseSubtitle;
         _panel.SetActive(true);
+        BattleHUDToolkit.Instance?.ShowEndgame(
+            isWinner ? _winText : _loseText,
+            isWinner ? _winSubtitle : _loseSubtitle,
+            OnRestartClicked,
+            OnMainMenuClicked);
     }
 
     private void OnRestartClicked()

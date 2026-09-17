@@ -110,7 +110,7 @@ namespace TurnBasedGame.Unit
             _cancelMoveButton.onClick.AddListener(() =>
             {
                 // H?y di chuy?n v� tr? v? v? tr� ban d?u
-                LocalMatchAuthority.SubmitUnitAction(this, true);
+                LocalMatchAuthority.SubmitHumanUnitAction(this, true);
             });
         }
 
@@ -156,8 +156,7 @@ namespace TurnBasedGame.Unit
             }
 
             var destination = path[path.Count - 1].Position;
-            var result = LocalMatchAuthority.SubmitMove(
-                GetOwner(), this, destination, onComplete);
+            var result = LocalMatchAuthority.SubmitHumanMove(this, destination, onComplete);
             if (!result.Succeeded && !result.Pending)
                 onComplete?.Invoke();
         }
@@ -238,7 +237,8 @@ namespace TurnBasedGame.Unit
                 nextIndex++;
             }
             _movingCoroutine = null;
-            _actionPanel.SetActive(IsSelected);
+            _actionPanel.SetActive(!TurnBasedGame.UI.BattleHUDToolkit.IsAvailable && IsSelected);
+            _attackComponent.ShowToolkitActions(IsSelected);
             _cancelMoveButton.interactable = true;
             _unitAnimator.StopMoving();
             AreaPathManager.Instance.IsLocked = false;
@@ -250,13 +250,14 @@ namespace TurnBasedGame.Unit
         public void ChangeSelected(bool select)
         {
             IsSelected = select;
-            _actionPanel.SetActive(select);
+            _actionPanel.SetActive(!TurnBasedGame.UI.BattleHUDToolkit.IsAvailable && select);
+            _attackComponent.ShowToolkitActions(select);
             _attackComponent.ExitAttackMode();
         }
 
         public void UndoMoveAction(Vector3Int previousPosition)
         {
-            LocalMatchAuthority.SubmitUnitAction(this, true);
+            LocalMatchAuthority.SubmitHumanUnitAction(this, true);
         }
 
         internal bool TryUndoMoveAuthorized(out string reason)
@@ -432,7 +433,7 @@ namespace TurnBasedGame.Unit
 
         public void FinishTurnActions()
         {
-            LocalMatchAuthority.SubmitUnitAction(this);
+            LocalMatchAuthority.SubmitHumanUnitAction(this);
         }
 
         internal void FinishTurnActionsAuthorized()

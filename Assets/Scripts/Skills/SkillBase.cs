@@ -159,7 +159,7 @@ namespace TurnBasedGame.Skills
         
         public void Execute(UnitController caster, Vector3Int targetPos)
         {
-            var result = TurnBasedGame.Command.LocalMatchAuthority.SubmitSkill(caster, this, targetPos,
+            var result = TurnBasedGame.Command.LocalMatchAuthority.SubmitHumanSkill(caster, this, targetPos,
                 completed => { if (!completed.Succeeded) SkillEventBus.Instance?.TriggerSkillFailed(this, caster, completed.FailureReason); });
             if (!result.Succeeded && !result.Pending)
                 SkillEventBus.Instance?.TriggerSkillFailed(this, caster, result.FailureReason);
@@ -167,7 +167,7 @@ namespace TurnBasedGame.Skills
 
         internal bool ExecuteAuthorized(UnitController caster, Vector3Int targetPos)
         {
-            if (_isExecuting || !CanUse(caster, targetPos)) return false;
+            if (_isExecuting) return false;
             if (!TrySpendMP(caster))
             {
                 Debug.LogWarning($"Not enough MP to use {skillName}. Required MP: {MPCost}.");

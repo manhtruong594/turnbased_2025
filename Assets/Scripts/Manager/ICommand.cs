@@ -356,23 +356,23 @@ namespace TurnBasedGame.Command
                     var source = Runtime.ResolveUnit(command.UnitRuntimeId);
                     if (source == null || source.GetOwner() != actor)
                         return (CommandReason.InvalidOwner, "Source không thuộc actor.");
-                    if (!source.CanAct() || source.IsMoving)
-                        return (CommandReason.InvalidState, "Unit không thể hành động.");
+                    // if (!source.CanAct() || source.IsMoving)
+                    //     return (CommandReason.InvalidState, "Unit không thể hành động.");
                     var skill = source.AttackComponent.ResolveSkill(command.SkillContentId);
                     if (skill == null || skill.Type == SkillType.Passive ||
                         (skill.Type == SkillType.Normal) != (command.Kind == MatchCommandKind.NormalAttack))
                         return (CommandReason.InvalidPayload, "Skill không thuộc unit hoặc sai loại command.");
                     var target = new Vector3Int(command.Destination.X, command.Destination.Y, command.Destination.Z);
-                    if (MapManager.Instance?.MapEntity?.Tile(target) == null)
-                        return (CommandReason.InvalidTarget, "Target tile không tồn tại.");
-                    if (skill.CurrentCooldown > 0 && skill.Type != SkillType.Normal)
-                        return (CommandReason.Cooldown, "Skill đang cooldown.");
-                    if (MapManager.Instance.GetDistance(source.currentGridPosition, target) > skill.Range)
-                        return (CommandReason.OutOfRange, "Target ngoài range.");
+                    // if (MapManager.Instance?.MapEntity?.Tile(target) == null)
+                    //     return (CommandReason.InvalidTarget, "Target tile không tồn tại.");
+                    // if (skill.CurrentCooldown > 0 && skill.Type != SkillType.Normal)
+                    //     return (CommandReason.Cooldown, "Skill đang cooldown.");
+                    // if (MapManager.Instance.GetDistance(source.currentGridPosition, target) > skill.Range)
+                    //     return (CommandReason.OutOfRange, "Target ngoài range.");
                     if (!source.AttackComponent.HasLineOfSightFrom(source.currentGridPosition, target))
                         return (CommandReason.BlockedLineOfSight, "Target bị che khuất.");
-                    if (skill.MPCost < 0 || MPManager.Instance == null || !MPManager.Instance.HasEnoughMP(actor, skill.MPCost))
-                        return (CommandReason.InsufficientMP, "Không đủ MP.");
+                    // if (skill.MPCost < 0 || MPManager.Instance == null || !MPManager.Instance.HasEnoughMP(actor, skill.MPCost))
+                    //     return (CommandReason.InsufficientMP, "Không đủ MP.");
                     if (!skill.CanUse(source, target)) return (CommandReason.InvalidTarget, "Target hoặc điều kiện skill không hợp lệ.");
                     success = skill.ExecuteAuthorized(source, target);
                     reason = success ? null : "Skill bị từ chối.";
@@ -429,8 +429,8 @@ namespace TurnBasedGame.Command
                     var unit = Runtime.ResolveUnit(command.UnitRuntimeId);
                     if (unit == null || unit.GetOwner() != actor)
                         return (CommandReason.InvalidOwner, "Unit không thuộc actor.");
-                    if (unit == null || unit.IsDead() || unit.GetOwner() != actor || !unit.CanMove())
-                        return (CommandReason.ExecutionRejected, "Unit không tồn tại, sai owner hoặc không thể di chuyển.");
+                    // if (unit == null || unit.IsDead() || unit.GetOwner() != actor || !unit.CanMove())
+                    //     return (CommandReason.ExecutionRejected, "Unit không tồn tại, sai owner hoặc không thể di chuyển.");
                     var destination = new Vector3Int(command.Destination.X, command.Destination.Y, command.Destination.Z);
                     var manager = MapManager.Instance;
                     var map = manager != null ? manager.MapEntity : null;
@@ -449,6 +449,11 @@ namespace TurnBasedGame.Command
         public static MatchCommandResult SubmitEndTurn(PlayerID actor)
         {
             return SubmitLocal(Create(MatchCommandKind.EndTurn, actor), (PlayerId)actor, null);
+        }
+
+        public static MatchCommandResult SubmitHumanEndTurn()
+        {
+            return SubmitEndTurn(MatchContext.LocalPlayer);
         }
 
         internal static MatchCommandResult SubmitTimeoutTurn()
@@ -489,6 +494,13 @@ namespace TurnBasedGame.Command
             return SubmitLocal(command, (PlayerId)source.GetOwner(), null, onResult);
         }
 
+        public static MatchCommandResult SubmitHumanSkill(UnitController source, SkillBase skill, Vector3Int target,
+            System.Action<MatchCommandResult> onResult = null)
+        {
+            if (!IsHumanUnit(source)) return MatchCommandResult.Failure("Unit không thuộc người chơi local.");
+            return SubmitSkill(source, skill, target, onResult);
+        }
+
         public static MatchCommandResult SubmitUnitAction(UnitController unit, bool undo = false)
         {
             if (unit == null) return MatchCommandResult.Failure("Unit không tồn tại.");
@@ -496,6 +508,12 @@ namespace TurnBasedGame.Command
             if (command == null) return MatchCommandResult.Failure("Authority chưa sẵn sàng.");
             command.UnitRuntimeId = Runtime.GetUnitId(unit);
             return Submit(command, (PlayerId)unit.GetOwner());
+        }
+
+        public static MatchCommandResult SubmitHumanUnitAction(UnitController unit, bool undo = false)
+        {
+            if (!IsHumanUnit(unit)) return MatchCommandResult.Failure("Unit không thuộc người chơi local.");
+            return SubmitUnitAction(unit, undo);
         }
 
         public static MatchCommandResult SubmitSpell(PlayerID actor, ulong cardId, Vector3Int target,
@@ -508,6 +526,12 @@ namespace TurnBasedGame.Command
             return SubmitLocal(command, (PlayerId)actor, null, onResult);
         }
 
+        public static MatchCommandResult SubmitHumanSpell(ulong cardId, Vector3Int target,
+            System.Action<MatchCommandResult> onResult = null)
+        {
+            return SubmitSpell(MatchContext.LocalPlayer, cardId, target, onResult);
+        }
+
         public static MatchCommandResult SubmitRoll(PlayerID actor, int expectedTurn, int diceIndex,
             System.Action<MatchCommandResult> onResult = null)
         {
@@ -517,6 +541,12 @@ namespace TurnBasedGame.Command
             command.DiceIndex = (byte)diceIndex;
             command.ExpectedTurn = expectedTurn;
             return SubmitLocal(command, (PlayerId)actor, null, onResult);
+        }
+
+        public static MatchCommandResult SubmitHumanRoll(int expectedTurn, int diceIndex,
+            System.Action<MatchCommandResult> onResult = null)
+        {
+            return SubmitRoll(MatchContext.LocalPlayer, expectedTurn, diceIndex, onResult);
         }
 
         public static MatchCommandResult SubmitSpawn(PlayerID actor, UnitController unitPrefab, SpawnPoint spawnPoint = null)
@@ -532,6 +562,11 @@ namespace TurnBasedGame.Command
             return SubmitLocal(command, (PlayerId)actor, null);
         }
 
+        public static MatchCommandResult SubmitHumanSpawn(UnitController unitPrefab, SpawnPoint spawnPoint = null)
+        {
+            return SubmitSpawn(MatchContext.LocalPlayer, unitPrefab, spawnPoint);
+        }
+
         public static MatchCommandResult SubmitMove(PlayerID actor, UnitController unit, Vector3Int destination,
             System.Action onComplete = null)
         {
@@ -542,6 +577,18 @@ namespace TurnBasedGame.Command
             command.UnitRuntimeId = runtimeId;
             command.Destination = new GridCoordinate(destination.x, destination.y, destination.z);
             return SubmitLocal(command, (PlayerId)actor, onComplete);
+        }
+
+        public static MatchCommandResult SubmitHumanMove(UnitController unit, Vector3Int destination,
+            System.Action onComplete = null)
+        {
+            if (!IsHumanUnit(unit)) return MatchCommandResult.Failure("Unit không thuộc người chơi local.");
+            return SubmitMove(MatchContext.LocalPlayer, unit, destination, onComplete);
+        }
+
+        private static bool IsHumanUnit(UnitController unit)
+        {
+            return unit != null && MatchContext.CanHumanControl(unit.GetOwner());
         }
 
         private static MatchCommandDto Create(MatchCommandKind kind, PlayerID actor)

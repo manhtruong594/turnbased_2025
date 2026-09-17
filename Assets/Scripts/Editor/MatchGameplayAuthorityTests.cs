@@ -44,6 +44,7 @@ public sealed class MatchGameplayAuthorityTests
     [SetUp]
     public void Setup()
     {
+        MatchContext.ConfigureVersusAI(PlayerID.Player1);
         if (EditorApplication.isPlaying) Assert.Ignore("Run these isolated fixtures in EditMode.");
         if (Unity.Netcode.NetworkManager.Singleton != null && Unity.Netcode.NetworkManager.Singleton.IsListening)
             Assert.Ignore("Do not replace an active network session.");
@@ -84,6 +85,7 @@ public sealed class MatchGameplayAuthorityTests
         created.Clear();
         foreach (var pair in saved) pair.Key.SetValue(null, pair.Value);
         saved.Clear();
+        MatchContext.ConfigureVersusAI(PlayerID.Player1);
     }
 
     private MatchCommandDto Command(MatchCommandKind kind) => new MatchCommandDto
@@ -111,10 +113,37 @@ public sealed class MatchGameplayAuthorityTests
         var unit = Component<UnitController>();
         var stats = (UnitRuntimeStats)typeof(UnitController).GetField("runtimeStats", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(unit);
         stats.SetOwner(PlayerID.Player2);
+
         var command = Command(MatchCommandKind.NormalAttack);
         command.UnitRuntimeId = LocalMatchAuthority.Runtime.AllocateUnit(unit);
         command.SkillContentId = new string('c', 32);
         RejectWithoutMutation(command, CommandReason.InvalidOwner);
+    }
+
+    [Test]
+    public void HumanEntryPointCannotActForBotUnit()
+    {
+        var unit = Component<UnitController>();
+        var stats = (UnitRuntimeStats)typeof(UnitController).GetField("runtimeStats", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(unit);
+        stats.SetOwner(PlayerID.Player2);
+
+        var result = LocalMatchAuthority.SubmitHumanUnitAction(unit);
+
+        Assert.That(result.Succeeded, Is.False);
+        Assert.That(result.FailureReason, Is.EqualTo("Unit không thuộc người chơi local."));
+    }
+
+    [Test]
+    public void MatchContextSeparatesBotAndNetworkOpponent()
+    {
+        MatchContext.ConfigureVersusAI(PlayerID.Player1);
+        Assert.That(MatchContext.IsBot(PlayerID.Player2), Is.True);
+        Assert.That(MatchContext.CanHumanControl(PlayerID.Player2), Is.False);
+
+        MatchContext.ConfigureNetworkPvP(PlayerID.Player2, false);
+        Assert.That(MatchContext.BotPlayer, Is.Null);
+        Assert.That(MatchContext.CanHumanControl(PlayerID.Player2), Is.True);
+        Assert.That(MatchContext.CanHumanControl(PlayerID.Player1), Is.False);
     }
 
     [Test]

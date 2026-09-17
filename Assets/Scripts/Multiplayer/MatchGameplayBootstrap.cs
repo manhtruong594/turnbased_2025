@@ -37,10 +37,15 @@ namespace TurnBasedGame.Multiplayer
         private int readyFrames;
         private int snapshotFailures;
         private string gameplayScene;
+        private string role;
 
         private void Start()
         {
             if (failed) return;
+            // NGO registers built-in message handlers in its AfterSceneLoad callback.
+            // Starting earlier leaves ILPPMessageProvider empty in a player build.
+            try { Connect(); }
+            catch (Exception error) { Fail(error.Message); return; }
             string scene = Argument("-mp-gameplay-scene", "HUDScene");
             if (SceneManager.GetActiveScene().name != scene)
             {
@@ -51,8 +56,7 @@ namespace TurnBasedGame.Multiplayer
 
         public static bool CanControl(PlayerID player)
         {
-            if (!Active) return true;
-            return InputReady && player == (Instance.IsHost ? PlayerID.Player1 : PlayerID.Player2) &&
+            return InputReady && MatchContext.CanHumanControl(player) &&
                 TurnManager.Instance != null && TurnManager.Instance.CurrentPlayer == player &&
                 TurnManager.Instance.CurrentState != TurnState.Initialization && TurnManager.Instance.CurrentState != TurnState.GameEnd;
         }
@@ -66,7 +70,7 @@ namespace TurnBasedGame.Multiplayer
             DontDestroyOnLoad(go);
             var bootstrap = go.AddComponent<MatchGameplayBootstrap>();
             Instance = bootstrap;
-            try { bootstrap.Connect(role); }
+            try { bootstrap.PrepareRole(role); }
             catch (Exception error) { bootstrap.Fail(error.Message); }
         }
 
@@ -77,16 +81,22 @@ namespace TurnBasedGame.Multiplayer
             return fallback;
         }
 
-        private void Connect(string role)
+        private void PrepareRole(string requestedRole)
         {
-            if (role != "host" && role != "client") throw new ArgumentException("Expected -mp-gameplay-role host|client.");
+            if (requestedRole != "host" && requestedRole != "client") throw new ArgumentException("Expected -mp-gameplay-role host|client.");
+            role = requestedRole;
             IsHost = role == "host";
+            MatchContext.ConfigureNetworkPvP(IsHost ? PlayerID.Player1 : PlayerID.Player2, IsHost);
+            if (!IsHost) LocalMatchAuthority.PrepareReplica();
+        }
+
+        private void Connect()
+        {
             if (NetworkManager.Singleton != null) throw new InvalidOperationException("Another NetworkManager is active.");
             var utp = gameObject.AddComponent<UnityTransport>();
             network = gameObject.AddComponent<NetworkManager>();
             network.NetworkConfig = new NetworkConfig { NetworkTransport = utp, EnableSceneManagement = false };
             utp.SetConnectionData(Argument("-mp-address", "127.0.0.1"), ushort.Parse(Argument("-mp-port", "27982")), "0.0.0.0");
-            if (role == "client") LocalMatchAuthority.PrepareReplica();
             if (!(role == "host" ? network.StartHost() : network.StartClient())) throw new InvalidOperationException("Cannot start gameplay transport.");
             network.CustomMessagingManager.RegisterNamedMessageHandler(ControlMessage, OnControl);
             if (!network.IsServer) network.CustomMessagingManager.RegisterNamedMessageHandler(SnapshotMessage, OnSnapshot);

@@ -74,6 +74,11 @@ command mới. Kết thúc phiên và điều tra lỗi, không tự mở lại 
 
 Không dùng executable `MultiplayerPrototype`: nó chỉ test ping/ack, không có gameplay.
 
+Có thể dùng `Tools > Multiplayer > Gameplay Test Runner` để build, chạy/dừng Host và Client,
+đặt IP/port, trì hoãn Client và theo dõi các dòng log multiplayer. `Start Both` tạo log riêng cho
+mỗi phiên tại `Logs/MultiplayerGameplay/<yyyyMMdd-HHmmss>`. Tool chỉ điều phối hai process; các ca
+duplicate/gap/reorder/hash mismatch vẫn cần Unity Test hoặc runtime debug hook riêng.
+
 1. Chờ Unity import/compile sạch. Kiểm tra catalog, scene `HUDScene`, prefab/reference và loadout.
 2. Chạy EditMode: `MatchProtocolTests`, `MatchSnapshotTests`, `MatchRegistryTests`, `MatchGameplayAuthorityTests`.
 3. Khi sẵn sàng build, tự chọn `Tools > Multiplayer > Build Windows Gameplay Test`.

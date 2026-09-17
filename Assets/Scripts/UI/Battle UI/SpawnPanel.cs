@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using TurnBasedGame.Core;
 using TurnBasedGame.Unit;
 
 namespace TurnBasedGame.UI
@@ -26,7 +27,13 @@ namespace TurnBasedGame.UI
 
         public void Initialize(IReadOnlyList<UnitController> units)
         {
+            Initialize(units, TurnManager.Instance != null ? TurnManager.Instance.CurrentPlayer : PlayerID.Player1);
+        }
+
+        public void Initialize(IReadOnlyList<UnitController> units, PlayerID owner)
+        {
             availableUnits = new List<UnitController>(units);
+            BattleHUDToolkit.Instance?.SetSpawnUnits(owner, availableUnits);
             GenerateSpawnButtons();
         }
 

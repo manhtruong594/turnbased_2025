@@ -80,7 +80,9 @@ namespace TurnBasedGame.Unit
                 return;
 
             var mousePos = MyInput.GroundPosition(_cachedMap.Settings.Plane());
-            if (MyInput.GetOnWorldUp(_cachedMap.Settings.Plane()) && !EventSystem.current.IsPointerOverGameObject())
+            if (MyInput.GetOnWorldUp(_cachedMap.Settings.Plane()) &&
+                !EventSystem.current.IsPointerOverGameObject() &&
+                !TurnBasedGame.UI.BattleHUDToolkit.IsPointerOverHUD(Input.mousePosition))
             {
                 var tileClicked = _cachedMap.Tile(mousePos);
                 if (tileClicked == null)
@@ -105,6 +107,16 @@ namespace TurnBasedGame.Unit
         public void FinishAttack()
         {
              _cachedUnitMove.FinishTurnActions();
+        }
+
+        public void ShowToolkitActions(bool show)
+        {
+            if (!TurnBasedGame.UI.BattleHUDToolkit.IsAvailable) return;
+            if (show)
+                TurnBasedGame.UI.BattleHUDToolkit.Instance.ShowUnitActions(
+                    _cachedUnitMove, activeSkills, OnSkillButtonClicked, FinishAttack);
+            else
+                TurnBasedGame.UI.BattleHUDToolkit.Instance.HideUnitActions();
         }
 
         internal SkillBase ResolveSkill(string contentId)
@@ -137,6 +149,7 @@ namespace TurnBasedGame.Unit
             if (!TurnBasedGame.Multiplayer.MatchGameplayBootstrap.CanControl(runtimeStats.Owner)) return;
             if (runtimeStats.IsInAttackMode || !_cachedUnitMove.CanAct()) return;
             runtimeStats.IsInAttackMode = true;
+            TurnBasedGame.UI.BattleHUDToolkit.Instance?.HideUnitActions();
             _actionCanvasGroup.alpha = 0;
             _actionCanvasGroup.interactable = false;
             _actionCanvasGroup.blocksRaycasts = false;
@@ -154,6 +167,13 @@ namespace TurnBasedGame.Unit
             if (immidiate && !CanAttack(targetUnit))
                 return;
 
+            if (immidiate && _selectedSkill is SkillBase botSkill)
+            {
+                TurnBasedGame.Command.LocalMatchAuthority.SubmitSkill(
+                    _cachedUnitMove, botSkill, targetUnit.currentGridPosition);
+                return;
+            }
+
             _selectedSkill.Execute(_cachedUnitMove, targetUnit.currentGridPosition);
         }
 
@@ -168,6 +188,7 @@ namespace TurnBasedGame.Unit
             _actionCanvasGroup.interactable = true;
             _actionCanvasGroup.blocksRaycasts = true;
             AreaPathManager.Instance.HideAttackArea();
+            if (_cachedUnitMove != null && _cachedUnitMove.IsSelected) ShowToolkitActions(true);
         }
 
         #endregion
@@ -180,9 +201,14 @@ namespace TurnBasedGame.Unit
                 skill.ReduceCooldown();
             }
             _skillsBridge.UpdateSkillButtonsCooldowns();
+            if (_cachedUnitMove != null && _cachedUnitMove.IsSelected) ShowToolkitActions(true);
         }
 
-        internal void RefreshReplica() => _skillsBridge.UpdateSkillButtonsCooldowns();
+        internal void RefreshReplica()
+        {
+            _skillsBridge.UpdateSkillButtonsCooldowns();
+            if (_cachedUnitMove != null && _cachedUnitMove.IsSelected) ShowToolkitActions(true);
+        }
 
         public bool CanAttack(UnitController targetUnit)
         {

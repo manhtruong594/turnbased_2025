@@ -1,13 +1,12 @@
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 using System.Collections;
-using System;
 using System.Collections.Generic;
 using TurnBasedGame.Unit;
 using TurnBasedGame.UI;
 using TurnBasedGame.SpellCard;
 using TurnBasedGame.Command;
+using UnityEngine.Serialization;
 
 namespace TurnBasedGame.Core
 {
@@ -21,7 +20,7 @@ namespace TurnBasedGame.Core
         [SerializeField] private PlayerID playerID;
         [SerializeField] private PlayerDataSO _playerData;
         [SerializeField] private IntReference _actionLefts;
-        [SerializeField] private AIController _aiOpponent;
+        [FormerlySerializedAs("_aiOpponent")]
 
         [Header("UI References")]
         public Button EndTurnButton;
@@ -34,14 +33,11 @@ namespace TurnBasedGame.Core
 
         private void Start()
         {
-            if (TurnBasedGame.Multiplayer.MatchGameplayBootstrap.Active)
-                playerID = TurnBasedGame.Multiplayer.MatchGameplayBootstrap.Instance.IsHost ? PlayerID.Player1 : PlayerID.Player2;
+            playerID = MatchContext.LocalPlayer;
             SubscribeToEvents();
             SetupUI();
-            if (TurnBasedGame.Multiplayer.MatchGameplayBootstrap.Active && LocalMatchAuthority.IsAuthoritative)
+            if (MatchContext.Mode == MatchMode.NetworkPvP && LocalMatchAuthority.IsAuthoritative)
                 SpellCardManager.Instance.InitializeHand(PlayerID.Player2, _playerData.SelectedSpells);
-            if (_aiOpponent != null)
-                _aiOpponent.Initialize(playerID);
         }
 
         private void OnDestroy()
@@ -55,9 +51,10 @@ namespace TurnBasedGame.Core
             {
                 EndTurnButton.onClick.AddListener(() =>
                 {
-                    LocalMatchAuthority.SubmitEndTurn(playerID);
+                    LocalMatchAuthority.SubmitHumanEndTurn();
                 });
             }
+            BattleHUDToolkit.Instance?.BindPlayer(playerID, SubmitEndTurn);
             if (GameMediator.Instance != null)
             {
                 GameMediator.Instance.OnPlayerTurnStarted += HandleTurnStarted;
@@ -85,10 +82,17 @@ namespace TurnBasedGame.Core
         /// </summary>
         private void SetupUI()
         {
-            _spawnPanel.Initialize(_playerData.SelectedDeck);
-            _spellCardPanel.Initialize(_playerData.SelectedSpells, playerID);
-            _myUI.Setup(playerID.ToString());
+            _spawnPanel?.Initialize(_playerData.SelectedDeck, playerID);
+            _spellCardPanel?.Initialize(_playerData.SelectedSpells, playerID);
+            _myUI?.Setup(playerID.ToString());
+            _diceUI?.BindToolkit(playerID);
+            BattleHUDToolkit.Instance?.SetPlayerName(playerID, playerID.ToString());
             UpdateUI(false);
+        }
+
+        private void SubmitEndTurn()
+        {
+            LocalMatchAuthority.SubmitHumanEndTurn();
         }
 
         /// <summary>
@@ -104,11 +108,6 @@ namespace TurnBasedGame.Core
                 StartCoroutine(OnMyTurnStarted());
                 UpdateUI(_isMyTurn);
             }
-            else
-            {
-                StartCoroutine(WaitOpponentTurn());
-            }
-
         }
 
         private void HandleReplicaApplied()
@@ -117,10 +116,11 @@ namespace TurnBasedGame.Core
             _isMyTurn = TurnBasedGame.Multiplayer.MatchGameplayBootstrap.InputReady && turn != null &&
                 turn.CurrentPlayer == playerID && turn.CurrentState != TurnState.Initialization && turn.CurrentState != TurnState.GameEnd;
             _myUnits = UnitSpawner.Instance.GetPlayerUnits(playerID);
-            _myUI.ShowActionPanel(_isMyTurn);
+            _myUI?.ShowActionPanel(_isMyTurn);
+            BattleHUDToolkit.Instance?.SetTurnActive(playerID, _isMyTurn);
             if (EndTurnButton != null) EndTurnButton.interactable = _isMyTurn;
-            _diceUI.ApplyReplica(_isMyTurn, LocalMatchAuthority.UsedDice);
-            _spellCardPanel.UpdateInteractable();
+            _diceUI?.ApplyReplica(_isMyTurn, LocalMatchAuthority.UsedDice);
+            _spellCardPanel?.UpdateInteractable();
         }
 
         /// <summary>
@@ -154,23 +154,14 @@ namespace TurnBasedGame.Core
             _myUnits = UnitSpawner.Instance.GetPlayerUnits(playerID);
         }
 
-        IEnumerator WaitOpponentTurn()
-        {
-            yield return null;
-            if (_aiOpponent != null && LocalMatchAuthority.IsAuthoritative &&
-                (Unity.Netcode.NetworkManager.Singleton == null || !Unity.Netcode.NetworkManager.Singleton.IsListening))
-            {
-                yield return StartCoroutine(_aiOpponent.ExecuteAITurn());
-            }
-        }
-
         /// <summary>
         /// Update UI dựa trên trạng thái hiện tại
         /// </summary>
         private void UpdateUI(bool isMyTurn)
         {
-            _myUI.ShowActionPanel(isMyTurn);
-            _diceUI.ActiveDicePanel(isMyTurn);
+            _myUI?.ShowActionPanel(isMyTurn);
+            _diceUI?.ActiveDicePanel(isMyTurn);
+            BattleHUDToolkit.Instance?.SetTurnActive(playerID, isMyTurn);
             if (EndTurnButton != null)
             {
                 EndTurnButton.interactable = isMyTurn;

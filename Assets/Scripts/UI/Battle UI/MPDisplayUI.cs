@@ -81,6 +81,7 @@ namespace TurnBasedGame.UI
         /// </summary>
         private void UpdateDisplay(int currentMP, int maxMP)
         {
+            BattleHUDToolkit.Instance?.SetMP(playerID, currentMP, maxMP);
             // Cập nhật slider
             if (mpSlider)
             {
