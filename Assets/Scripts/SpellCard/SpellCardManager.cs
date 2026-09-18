@@ -25,9 +25,6 @@ namespace TurnBasedGame.SpellCard
         [Header("Settings")]
         [SerializeField] private IntReference _actionLefts;
 
-        [Header("Confirm UI")]
-        [SerializeField] private SpellCardConfirmUI _confirmUI;
-
         private readonly Dictionary<PlayerID, List<SpellCardData>> _playerHands = new();
         private readonly Dictionary<PlayerID, List<ulong>> _handIds = new();
         private ulong _nextCardId;
@@ -70,8 +67,6 @@ namespace TurnBasedGame.SpellCard
         public PlayerID CurrentCaster { get; set; }
         public TileEntity CachedTile { get; set; }
         public MapEntity CachedMap { get; private set; }
-        public SpellCardConfirmUI ConfirmUI => _confirmUI;
-
         // Events cho UI binding
         public event Action<SpellCardData> OnCardSelected;
         public event Action OnCardDeselected;
@@ -85,22 +80,7 @@ namespace TurnBasedGame.SpellCard
             }
             Instance = this;
 
-            if (_confirmUI != null)
-            {
-                _confirmUI.OnConfirmed += HandleConfirm;
-                _confirmUI.OnCanceled += HandleCancel;
-            }
-
             SetState(new SpellIdleState());
-        }
-
-        private void OnDestroy()
-        {
-            if (_confirmUI != null)
-            {
-                _confirmUI.OnConfirmed -= HandleConfirm;
-                _confirmUI.OnCanceled -= HandleCancel;
-            }
         }
 
         void Update() => _currentState?.Update(this);
@@ -294,15 +274,10 @@ namespace TurnBasedGame.SpellCard
 
         public void ShowConfirmUI()
         {
-            if (TurnBasedGame.UI.BattleHUDToolkit.IsAvailable)
-            {
-                TurnBasedGame.UI.BattleHUDToolkit.Instance.ShowSpellConfirmation(
-                    SelectedCard,
-                    HandleConfirm,
-                    HandleCancel);
-                return;
-            }
-            _confirmUI?.Show(SelectedCard, new RectTransform());
+            TurnBasedGame.UI.BattleHUDToolkit.Instance?.ShowSpellConfirmation(
+                SelectedCard,
+                HandleConfirm,
+                HandleCancel);
         }
 
         #endregion

@@ -5,20 +5,22 @@ namespace TurnBasedGame.Core
     public enum MatchMode
     {
         VersusAI,
-        NetworkPvP
+        NetworkPvP,
+        LocalPvP
     }
 
     /// <summary>Match identity is independent from the network transport lifecycle.</summary>
     public static class MatchContext
     {
-        public static MatchMode Mode { get; private set; } = MatchMode.VersusAI;
+        public static MatchMode Mode { get; private set; } = MatchMode.LocalPvP;
         public static PlayerID LocalPlayer { get; private set; } = PlayerID.Player1;
-        public static PlayerID? BotPlayer { get; private set; } = PlayerID.Player2;
+        public static PlayerID? BotPlayer { get; private set; }
         public static bool IsAuthoritative { get; private set; } = true;
         public static bool IsVersusAI => Mode == MatchMode.VersusAI;
+        public static bool IsLocalPvP => Mode == MatchMode.LocalPvP;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void Reset() => ConfigureVersusAI(PlayerID.Player1);
+        private static void Reset() => ConfigureLocalPvP();
 
         public static void ConfigureVersusAI(PlayerID localPlayer)
         {
@@ -38,7 +40,16 @@ namespace TurnBasedGame.Core
             IsAuthoritative = isAuthoritative;
         }
 
-        public static bool CanHumanControl(PlayerID player) => player == LocalPlayer;
+        public static void ConfigureLocalPvP()
+        {
+            Mode = MatchMode.LocalPvP;
+            LocalPlayer = PlayerID.Player1;
+            BotPlayer = null;
+            IsAuthoritative = true;
+        }
+
+        public static bool CanHumanControl(PlayerID player) =>
+            (player == PlayerID.Player1 || player == PlayerID.Player2) && (IsLocalPvP || player == LocalPlayer);
 
         public static bool IsBot(PlayerID player) => IsVersusAI && BotPlayer == player;
 

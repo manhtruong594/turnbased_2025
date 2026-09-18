@@ -1,6 +1,5 @@
 using RedBjorn.ProtoTiles.Example;
 using UnityEngine;
-using UnityEngine.EventSystems;
 
 namespace TurnBasedGame.SpellCard
 {
@@ -45,7 +44,6 @@ namespace TurnBasedGame.SpellCard
             var mousePos = MyInput.GroundPosition(map.Settings.Plane());
 
             if (MyInput.GetOnWorldUp(map.Settings.Plane()) &&
-                !EventSystem.current.IsPointerOverGameObject() &&
                 !TurnBasedGame.UI.BattleHUDToolkit.IsPointerOverHUD(Input.mousePosition))
             {
                 var tileClicked = map.Tile(mousePos);
@@ -93,9 +91,5 @@ namespace TurnBasedGame.SpellCard
             ctx.SetState(new SpellIdleState());
         }
 
-        public override void Exit(SpellCardManager ctx)
-        {
-            ctx.ConfirmUI?.Hide();
-        }
     }
 }

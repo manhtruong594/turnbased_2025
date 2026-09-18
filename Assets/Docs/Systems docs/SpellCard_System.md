@@ -15,9 +15,7 @@ hand, targeting, confirmation, effect strategy, buff/debuff, UI và VFX.
 | `ISpellEffect` | Contract áp effect lên target |
 | `SpellCardManager` | Hand, state, validation, range, selection, use và event |
 | `SpellCardState` | Idle, Targeting và Confirming |
-| `SpellCardPanel` | Tạo/refresh card UI cho một phe |
-| `SpellCardItem` | Hiển thị card và chuyển click vào manager |
-| `SpellCardConfirmUI` | Confirm/cancel trước khi cast |
+| `BattleHUDToolkit` | Hiển thị spell hand, chuyển click vào manager và confirm/cancel trước khi cast |
 | `BuffDebuffHandler` | Lưu status, tick duration và modifier runtime |
 | `BuffIconDisplay` | Đồng bộ status với icon trên unit |
 | `EffectManager` | Spawn visual theo `StatusEffectType` |
@@ -84,8 +82,8 @@ chỉ bị xóa khi unit hoàn tất action để duration 1 vẫn có hiệu l�
 
 ## 7. Luồng sử dụng card
 
-1. `PlayerController` khởi tạo `SpellCardPanel` từ `PlayerDataSO.SelectedSpells`.
-2. Panel gọi `SpellCardManager.InitializeHand` cho phe.
+1. `PlayerController` gọi `SpellCardManager.InitializeHand` từ `PlayerDataSO.SelectedSpells`.
+2. `PlayerController` chuyển hand cho `BattleHUDToolkit`.
 3. Click card gọi `SelectCard`; manager kiểm tra turn và MP.
 4. State chuyển sang Targeting và highlight vùng hợp lệ.
 5. Chọn target hợp lệ chuyển sang Confirming.

@@ -10,7 +10,8 @@ Editor và test không có lỗi; 50 test protocol/gate đạt trên Mono đi k�
 
 `MatchGameplayTransport` cần session đang kết nối, `MatchId` của host và mapping peer/player do host xác nhận.
 Update `2026-09-15`: Phase 4 đã thêm bootstrap trực tiếp, snapshot/replica và scene handshake khi có flag
-`-mp-gameplay-role`; chưa nghiệm thu hai process. Session/authentication vẫn thuộc Phase 5.
+`-mp-gameplay-role`; chưa nghiệm thu hai process. Update `2026-09-18`: session/authentication/Relay,
+loadout và rematch đã nối qua [Session, phòng chờ và UX](Multiplayer_Session_Lobby.md), chờ nghiệm thu Unity/Internet.
 Xem [Đồng bộ state và vào trận](Multiplayer_State_Sync.md) để build/chạy gameplay, không dùng prototype ping/ack.
 
 ## Command và validation
@@ -123,12 +124,13 @@ command; client phải có catalog và replica IDs/turn/hand từ bootstrap trư
 Host broadcast mỗi result đã commit; reply cho request/replay gồm cả reject. `ResultReceived` chỉ phát cho
 accepted result có server sequence mới hơn. Hand của đối phương được lọc khỏi payload trước gửi. Client chỉ
 nhận result từ NGO server; callback của request chỉ chạy khi match/actor/command ID khớp. Disconnect giải
-phóng request đang chờ. Session gọi `Dispose`, rồi `LocalMatchAuthority.AttachTransport(null)` khi rời match.
+phóng request đang chờ. Session gọi `Dispose`; adapter tự detach khỏi `LocalMatchAuthority` khi rời match.
 
 Phase 4 đã thêm snapshot apply, gap/resync và timeout qua `MatchGameplayBootstrap`; result được bọc trong
 snapshot envelope, lọc cả RNG và hand đối phương. `ResultReceived` chỉ phát sau khi apply/hash thành công.
 `Unit.Value4` chứa quyền UndoMove; `Turn.ContentId` chứa deadline invariant và `Turn.Value4` chứa end reason.
-Session dịch vụ và reconnect lifecycle vẫn chưa có. Xem tài liệu Phase 4 để biết giới hạn và kiểm chứng còn thiếu.
+Session dịch vụ đã có implementation Phase 5; reconnect lifecycle vẫn thuộc Phase 6. Xem tài liệu
+Phase 4–5 để biết giới hạn và kiểm chứng còn thiếu. Trong session, spawn còn bị giới hạn bởi loadout đã chốt.
 
 ## Kiểm chứng
 

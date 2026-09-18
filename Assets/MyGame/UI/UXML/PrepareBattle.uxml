@@ -39,14 +39,42 @@
                         <ui:Label text="Bản Đồ" class="prepare-deck-title" />
                         <ui:DropdownField name="map-dropdown" class="prepare-map-dropdown" />
                         <ui:Label name="map-description" class="prepare-map-description" />
+                        <ui:Label text="Chế Độ Chơi" class="prepare-deck-title" />
+                        <ui:VisualElement name="mode-selector" class="prepare-mode-selector">
+                            <ui:Button name="btn-mode-ai" text="Đấu Với AI" class="prepare-mode-button prepare-mode-button--active" />
+                            <ui:Button name="btn-mode-local-pvp" text="PvP Cùng Máy" class="prepare-mode-button" />
+                        </ui:VisualElement>
+                        <ui:Label name="mode-description" text="Đối đầu với máy." class="prepare-mode-description" />
                         <ui:Label name="total-cost-label" text="Tổng chi phí: 0" class="prepare-cost-label" />
                         <ui:Label name="validation-label" class="prepare-validation-label" />
                     </ui:VisualElement>
                 </ui:ScrollView>
-                <ui:VisualElement name="action-buttons" class="prepare-actions" style="width: 275px;">
+                <ui:VisualElement name="action-buttons" class="prepare-actions">
                     <ui:Button name="btn-clear" text="Xóa Tất Cả" class="btn prepare-btn-clear" style="width: 100px; min-width: 100px; max-width: 100px;" />
-                    <ui:Button name="btn-confirm" text="⚔ Xác Nhận Chiến Đấu" class="btn prepare-btn-confirm" style="white-space: normal; min-width: 150px; max-width: 150px; width: 150px;" />
+                    <ui:VisualElement class="prepare-battle-actions">
+                        <ui:Button name="btn-multiplayer" text="🌐 Multiplayer • Phòng riêng" class="btn prepare-btn-multiplayer" />
+                        <ui:Button name="btn-confirm" text="⚔ Xác Nhận Chiến Đấu" class="btn prepare-btn-confirm" />
+                    </ui:VisualElement>
                 </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="multiplayer-panel" class="multiplayer-overlay">
+            <ui:VisualElement name="multiplayer-dialog" class="panel multiplayer-dialog">
+                <ui:Label text="MULTIPLAYER • 1v1" class="multiplayer-title" />
+                <ui:Label name="multiplayer-status" text="Tạo phòng hoặc nhập mã phòng để tham gia." class="multiplayer-status" />
+                <ui:VisualElement name="multiplayer-lobby" class="multiplayer-lobby">
+                    <ui:Label name="multiplayer-room" text="Dùng đội hình đã chọn ở màn hình chuẩn bị." class="multiplayer-room" />
+                    <ui:Label name="multiplayer-players" class="multiplayer-players" />
+                    <ui:TextField name="multiplayer-code" label="Mã phòng" max-length="16" class="multiplayer-code" />
+                    <ui:VisualElement class="multiplayer-button-row">
+                        <ui:Button name="multiplayer-create" text="Tạo Phòng" class="btn multiplayer-button" />
+                        <ui:Button name="multiplayer-join" text="Tham Gia" class="btn multiplayer-button multiplayer-button--primary" />
+                    </ui:VisualElement>
+                    <ui:Button name="multiplayer-copy" text="Sao Chép Mã Phòng" class="btn multiplayer-button" />
+                    <ui:Button name="multiplayer-ready" text="Sẵn Sàng" class="btn multiplayer-button" />
+                    <ui:Button name="multiplayer-start" text="Bắt Đầu Trận" class="btn multiplayer-button multiplayer-button--primary" />
+                </ui:VisualElement>
+                <ui:Button name="multiplayer-leave" text="Đóng / Rời Phòng" class="btn multiplayer-button multiplayer-button--leave" />
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>

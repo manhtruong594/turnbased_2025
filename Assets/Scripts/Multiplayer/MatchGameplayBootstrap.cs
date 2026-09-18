@@ -16,14 +16,16 @@ using UnityEngine.SceneManagement;
 
 namespace TurnBasedGame.Multiplayer
 {
-    // Development-only direct connection entry point. Sessions/Relay and retained slots belong to phases 5–6.
+    // Shared snapshot handshake for service sessions and the development LAN entry point.
     [DefaultExecutionOrder(1000)]
     public sealed class MatchGameplayBootstrap : MonoBehaviour
     {
-        private const string ControlMessage = "match-bootstrap-v1", SnapshotMessage = "match-snapshot-v1";
+        private string ControlMessage = "match-bootstrap-v1", SnapshotMessage = "match-snapshot-v1";
+        private bool sessionOwned, disposed, sessionSceneLoaded;
         public static MatchGameplayBootstrap Instance { get; private set; }
         public static bool Active => Instance != null;
-        public static bool InputReady => Instance == null || Instance.ready;
+        public static bool InputReady => MatchSessionController.Instance != null && MatchSessionController.Instance.IsClosing ? false :
+            Instance != null ? Instance.ready : MatchSessionController.Instance == null || !MatchSessionController.Instance.InMatch;
         public bool IsHost { get; private set; }
         private NetworkManager network;
         private MatchGameplayTransport transport;
@@ -41,6 +43,7 @@ namespace TurnBasedGame.Multiplayer
 
         private void Start()
         {
+            if (sessionOwned) return;
             if (failed) return;
             // NGO registers built-in message handlers in its AfterSceneLoad callback.
             // Starting earlier leaves ILPPMessageProvider empty in a player build.
@@ -74,6 +77,35 @@ namespace TurnBasedGame.Multiplayer
             catch (Exception error) { bootstrap.Fail(error.Message); }
         }
 
+        internal static void BeginSession(NetworkManager connection, bool host, int round)
+        {
+            if (Instance != null) throw new InvalidOperationException("A gameplay handshake is already active.");
+            var go = new GameObject(nameof(MatchGameplayBootstrap));
+            DontDestroyOnLoad(go);
+            var bootstrap = go.AddComponent<MatchGameplayBootstrap>();
+            Instance = bootstrap;
+            bootstrap.sessionOwned = true;
+            bootstrap.ControlMessage += "-" + round;
+            bootstrap.SnapshotMessage += "-" + round;
+            bootstrap.PrepareRole(host ? "host" : "client");
+            bootstrap.network = connection;
+            bootstrap.RegisterHandlers();
+            SceneManager.sceneLoaded += bootstrap.OnSessionSceneLoaded;
+        }
+
+        private void OnSessionSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            sessionSceneLoaded = true;
+            SceneManager.sceneLoaded -= OnSessionSceneLoaded;
+        }
+
+        internal void CloseSessionMatch()
+        {
+            if (!sessionOwned) return;
+            Dispose();
+            Destroy(gameObject);
+        }
+
         private static string Argument(string name, string fallback)
         {
             var args = Environment.GetCommandLineArgs();
@@ -98,6 +130,11 @@ namespace TurnBasedGame.Multiplayer
             network.NetworkConfig = new NetworkConfig { NetworkTransport = utp, EnableSceneManagement = false };
             utp.SetConnectionData(Argument("-mp-address", "127.0.0.1"), ushort.Parse(Argument("-mp-port", "27982")), "0.0.0.0");
             if (!(role == "host" ? network.StartHost() : network.StartClient())) throw new InvalidOperationException("Cannot start gameplay transport.");
+            RegisterHandlers();
+        }
+
+        private void RegisterHandlers()
+        {
             network.CustomMessagingManager.RegisterNamedMessageHandler(ControlMessage, OnControl);
             if (!network.IsServer) network.CustomMessagingManager.RegisterNamedMessageHandler(SnapshotMessage, OnSnapshot);
             network.OnClientDisconnectCallback += OnDisconnect;
@@ -106,8 +143,9 @@ namespace TurnBasedGame.Multiplayer
 
         private void Update()
         {
-            if (failed || network == null) return;
+            if (failed || disposed || network == null) return;
             if (!ready && Time.realtimeSinceStartupAsDouble >= expires) { Fail("Gameplay bootstrap/resync timeout (30s)."); return; }
+            if (sessionOwned && !sessionSceneLoaded) return;
             if (!managersReady)
             {
                 if (GameMediator.Instance == null || !GameMediator.Instance.IsInitialized) return;
@@ -119,6 +157,10 @@ namespace TurnBasedGame.Multiplayer
                 SceneManager.sceneUnloaded += OnSceneUnloaded;
                 if (network.IsServer)
                 {
+                    if (sessionOwned)
+                    {
+                        TurnManager.Instance.StartingPlayer = MatchSessionController.Instance.Round % 2 == 1 ? PlayerID.Player1 : PlayerID.Player2;
+                    }
                     matchId = LocalMatchAuthority.MatchId;
                     transport = new MatchGameplayTransport(network, PlayerId.Player1, matchId);
                 }
@@ -173,6 +215,7 @@ namespace TurnBasedGame.Multiplayer
                 }
                 if (network.IsServer)
                 {
+                    if (sessionOwned && MatchSessionController.Instance.GuestPeer != sender) return;
                     if (sender == NetworkManager.ServerClientId || (peer.HasValue && peer.Value != sender))
                     { if (sender != NetworkManager.ServerClientId) network.DisconnectClient(sender); return; }
                     if (kind == 0)
@@ -315,20 +358,30 @@ namespace TurnBasedGame.Multiplayer
             failed = true; ready = false;
             GameMediator.Instance?.NotifyReplicaApplied();
             Debug.LogError("[MP-GAMEPLAY] " + reason);
+            if (sessionOwned) MatchSessionController.Instance?.Fail(reason);
             // Keep the replica role/closed gate after disconnect; never fall back to local authority.
-            if (network != null) network.Shutdown();
+            if (network != null && !sessionOwned) network.Shutdown();
         }
 
         private void OnDestroy()
         {
+            Dispose();
+        }
+
+        private void Dispose()
+        {
+            if (disposed) return;
+            disposed = true;
+            ready = false;
             transport?.Dispose();
             SceneManager.sceneUnloaded -= OnSceneUnloaded;
+            SceneManager.sceneLoaded -= OnSessionSceneLoaded;
             if (network != null)
             {
                 network.OnClientDisconnectCallback -= OnDisconnect;
                 network.CustomMessagingManager?.UnregisterNamedMessageHandler(ControlMessage);
                 network.CustomMessagingManager?.UnregisterNamedMessageHandler(SnapshotMessage);
-                network.Shutdown();
+                if (!sessionOwned) network.Shutdown();
             }
             if (Instance == this) Instance = null;
         }

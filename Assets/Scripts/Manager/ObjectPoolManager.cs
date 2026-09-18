@@ -247,25 +247,5 @@ namespace TurnBasedGame.ObjectPool
             ClearAllPools();
         }
 
-#if UNITY_EDITOR
-        [Header("Debug")]
-        [SerializeField] private bool showDebugInfo = true;
-
-        void OnGUI()
-        {
-            if (!showDebugInfo) return;
-
-            GUILayout.BeginArea(new Rect(10, 100, 300, 400));
-            GUILayout.Label("=== Object Pool Debug ===");
-
-            foreach (var kvp in _pools)
-            {
-                var info = GetPoolInfo(kvp.Key);
-                GUILayout.Label($"{kvp.Key}: Active={info.active}, Available={info.available}");
-            }
-
-            GUILayout.EndArea();
-        }
-#endif
     }
 }

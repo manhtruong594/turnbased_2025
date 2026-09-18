@@ -114,6 +114,7 @@ namespace TurnBasedGame.Command
         public static int LastDiceValue { get; private set; }
         internal static int UsedDice => TurnManager.Instance != null && diceTurn == TurnManager.Instance.TurnCount ? usedDice : 0;
         public static bool IsAuthoritative => MatchGameplayBootstrap.Active ? MatchGameplayBootstrap.Instance.IsHost : Transport != null ? Transport.IsServer :
+            MatchContext.Mode == MatchMode.NetworkPvP ? MatchContext.IsAuthoritative :
             Unity.Netcode.NetworkManager.Singleton == null || !Unity.Netcode.NetworkManager.Singleton.IsListening ||
             Unity.Netcode.NetworkManager.Singleton.IsServer;
         public static string MatchId { get; private set; }
@@ -144,6 +145,13 @@ namespace TurnBasedGame.Command
             Runtime = new MatchRuntimeRegistry();
             random = null;
             gate = null;
+        }
+
+        internal static void ClearSessionState()
+        {
+            gate = null; random = null; MatchId = null;
+            Runtime = new MatchRuntimeRegistry();
+            nextCommandId = 0; diceTurn = -1; usedDice = 0; aiManaTurn = -1; LastDiceValue = 0;
         }
 
         internal static void ApplyReplicaDice(MatchStateChange state)
@@ -409,6 +417,8 @@ namespace TurnBasedGame.Command
                     success = turn.TryEndCurrentTurn(actor, command.ExpectedTurn, out reason);
                     break;
                 case MatchCommandKind.SpawnUnit:
+                    if (MatchSessionController.Instance != null && !MatchSessionController.Instance.AllowsUnit(actor, command.UnitContentId))
+                        return (CommandReason.InvalidPayload, "Unit không thuộc loadout đã chốt của người chơi.");
                     var prefab = Content.ResolveUnitPrefab(command.UnitContentId);
                     if (prefab == null || prefab.UnitData == null || UnitSpawner.Instance == null)
                         return (CommandReason.InvalidPayload, "UnitContentId không tồn tại hoặc spawner chưa sẵn sàng.");
@@ -453,7 +463,7 @@ namespace TurnBasedGame.Command
 
         public static MatchCommandResult SubmitHumanEndTurn()
         {
-            return SubmitEndTurn(MatchContext.LocalPlayer);
+            return SubmitEndTurn(HumanActor);
         }
 
         internal static MatchCommandResult SubmitTimeoutTurn()
@@ -529,7 +539,7 @@ namespace TurnBasedGame.Command
         public static MatchCommandResult SubmitHumanSpell(ulong cardId, Vector3Int target,
             System.Action<MatchCommandResult> onResult = null)
         {
-            return SubmitSpell(MatchContext.LocalPlayer, cardId, target, onResult);
+            return SubmitSpell(HumanActor, cardId, target, onResult);
         }
 
         public static MatchCommandResult SubmitRoll(PlayerID actor, int expectedTurn, int diceIndex,
@@ -546,7 +556,7 @@ namespace TurnBasedGame.Command
         public static MatchCommandResult SubmitHumanRoll(int expectedTurn, int diceIndex,
             System.Action<MatchCommandResult> onResult = null)
         {
-            return SubmitRoll(MatchContext.LocalPlayer, expectedTurn, diceIndex, onResult);
+            return SubmitRoll(HumanActor, expectedTurn, diceIndex, onResult);
         }
 
         public static MatchCommandResult SubmitSpawn(PlayerID actor, UnitController unitPrefab, SpawnPoint spawnPoint = null)
@@ -564,7 +574,7 @@ namespace TurnBasedGame.Command
 
         public static MatchCommandResult SubmitHumanSpawn(UnitController unitPrefab, SpawnPoint spawnPoint = null)
         {
-            return SubmitSpawn(MatchContext.LocalPlayer, unitPrefab, spawnPoint);
+            return SubmitSpawn(HumanActor, unitPrefab, spawnPoint);
         }
 
         public static MatchCommandResult SubmitMove(PlayerID actor, UnitController unit, Vector3Int destination,
@@ -583,8 +593,12 @@ namespace TurnBasedGame.Command
             System.Action onComplete = null)
         {
             if (!IsHumanUnit(unit)) return MatchCommandResult.Failure("Unit không thuộc người chơi local.");
-            return SubmitMove(MatchContext.LocalPlayer, unit, destination, onComplete);
+            return SubmitMove(unit.GetOwner(), unit, destination, onComplete);
         }
+
+        private static PlayerID HumanActor => MatchContext.IsLocalPvP && TurnManager.Instance != null
+            ? TurnManager.Instance.CurrentPlayer
+            : MatchContext.LocalPlayer;
 
         private static bool IsHumanUnit(UnitController unit)
         {

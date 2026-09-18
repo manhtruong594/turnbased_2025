@@ -259,9 +259,9 @@
 
 /* ─── Deck Panel (Right) ─── */
 .prepare-deck {
-    flex-grow: 1;
-    min-width: 240px;
-    max-width: 320px;
+    flex-grow: 0;
+    flex-shrink: 0;
+    width: 420px;
 }
 
 .prepare-deck-scroll {
@@ -360,6 +360,42 @@
     margin-bottom: var(--spacing-sm);
 }
 
+.prepare-mode-selector {
+    flex-direction: row;
+    margin-bottom: var(--spacing-xs);
+}
+
+.prepare-mode-button {
+    flex-grow: 1;
+    min-height: 34px;
+    margin-right: var(--spacing-xs);
+    padding: 6px 8px;
+    background-color: var(--color-bg-medium);
+    border-width: 1px;
+    border-color: var(--color-border);
+    border-radius: var(--border-radius-sm);
+    color: var(--color-text-secondary);
+    -unity-font-style: bold;
+}
+
+.prepare-mode-button:hover {
+    border-color: var(--color-gold-dim);
+    color: var(--color-text-primary);
+}
+
+.prepare-mode-button--active {
+    background-color: var(--color-bg-panel);
+    border-color: var(--color-gold);
+    color: var(--color-gold-bright);
+}
+
+.prepare-mode-description {
+    min-height: 18px;
+    margin-bottom: var(--spacing-sm);
+    color: var(--color-text-secondary);
+    font-size: 12px;
+}
+
 .prepare-cost-label {
     font-size: 14px;
     color: var(--color-text-secondary);
@@ -378,6 +414,25 @@
     flex-direction: row;
     justify-content: space-between;
     margin-top: var(--spacing-sm);
+}
+
+.prepare-battle-actions {
+    flex-grow: 1;
+}
+
+.prepare-btn-multiplayer {
+    min-height: 38px;
+    margin-bottom: var(--spacing-xs);
+    background-color: rgb(33, 65, 78);
+    border-width: 1px;
+    border-color: rgb(78, 156, 176);
+    color: rgb(225, 248, 255);
+    -unity-font-style: bold;
+}
+
+.prepare-btn-multiplayer:hover {
+    background-color: rgb(45, 86, 102);
+    border-color: var(--color-gold-bright);
 }
 
 .prepare-btn-clear {
@@ -422,4 +477,78 @@
     background-color: rgb(80, 55, 45);
     border-color: var(--color-border);
     color: var(--color-text-dim);
+}
+
+/* ─── Phase 5 Multiplayer Lobby ─── */
+.multiplayer-overlay {
+    display: none;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.72);
+}
+
+.multiplayer-dialog {
+    width: 430px;
+    max-width: 90%;
+    padding: 20px;
+    border-width: 2px;
+    border-color: var(--color-gold-dim);
+}
+
+.multiplayer-title {
+    margin-bottom: var(--spacing-sm);
+    color: var(--color-gold-bright);
+    font-size: 22px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+.multiplayer-status,
+.multiplayer-room,
+.multiplayer-players {
+    margin-bottom: var(--spacing-sm);
+    color: var(--color-text-secondary);
+    white-space: normal;
+}
+
+.multiplayer-room {
+    color: var(--color-gold);
+    -unity-font-style: bold;
+}
+
+.multiplayer-code {
+    margin-bottom: var(--spacing-sm);
+}
+
+.multiplayer-button-row {
+    flex-direction: row;
+}
+
+.multiplayer-button {
+    min-height: 36px;
+    flex-grow: 1;
+    margin: 3px;
+    background-color: var(--color-bg-medium);
+    border-width: 1px;
+    border-color: var(--color-border-light);
+    color: var(--color-text-primary);
+}
+
+.multiplayer-button:hover {
+    border-color: var(--color-gold);
+}
+
+.multiplayer-button--primary {
+    background-color: rgb(33, 65, 78);
+    border-color: rgb(78, 156, 176);
+}
+
+.multiplayer-button--leave {
+    margin-top: var(--spacing-md);
+    color: rgb(235, 145, 130);
 }

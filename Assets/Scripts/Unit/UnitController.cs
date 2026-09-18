@@ -9,7 +9,6 @@ using TurnBasedGame.Skills;
 using TurnBasedGame.SpellCard;
 using TurnBasedGame.UI;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace TurnBasedGame.Unit
 {
@@ -18,8 +17,6 @@ namespace TurnBasedGame.Unit
         public float Speed = 5f;
         public bool IsSelected { get; private set; }
         public Transform RotationNode;
-        [SerializeField] Button _cancelMoveButton;
-
         readonly UnitRuntimeStats runtimeStats = new();
         Coroutine _movingCoroutine;
         Coroutine _deathCoroutine;
@@ -86,7 +83,6 @@ namespace TurnBasedGame.Unit
             currentGridPosition = new Vector3Int(state.Position.X, state.Position.Y, state.Position.Z);
             transform.position = MapManager.Instance.MapEntity.WorldPosition(currentGridPosition);
             MapManager.Instance.RegisterUnit(currentGridPosition, this);
-            if (_cancelMoveButton != null) _cancelMoveButton.interactable = _canUndoMove;
             _healthBar?.UpdateHealthBar(GetHealthPercent());
         }
 
@@ -101,17 +97,11 @@ namespace TurnBasedGame.Unit
         [SerializeField] private BuffDebuffHandler _buffHandler;
         [SerializeField] private HealthBar _healthBar;
         [SerializeField] private UnitAnimator _unitAnimator;
-        [SerializeField] private GameObject _actionPanel;
 
         private void Awake()
         {
             _attackComponent = GetComponent<UnitAttack>();
             _myTrans = transform;
-            _cancelMoveButton.onClick.AddListener(() =>
-            {
-                // H?y di chuy?n v� tr? v? v? tr� ban d?u
-                LocalMatchAuthority.SubmitHumanUnitAction(this, true);
-            });
         }
 
         public void Init(PlayerID owner, Vector3Int startGridPos)
@@ -213,7 +203,6 @@ namespace TurnBasedGame.Unit
             var nextIndex = 0;
             AreaPathManager.Instance.IsLocked = true;
             _myTrans.position = runtimeStats.MapEntity.Settings.Projection(_myTrans.position);
-            _actionPanel.SetActive(false);
             while (nextIndex < path.Count)
             {
                 var targetPoint = runtimeStats.MapEntity.WorldPosition(path[nextIndex]);
@@ -237,9 +226,7 @@ namespace TurnBasedGame.Unit
                 nextIndex++;
             }
             _movingCoroutine = null;
-            _actionPanel.SetActive(!TurnBasedGame.UI.BattleHUDToolkit.IsAvailable && IsSelected);
             _attackComponent.ShowToolkitActions(IsSelected);
-            _cancelMoveButton.interactable = true;
             _unitAnimator.StopMoving();
             AreaPathManager.Instance.IsLocked = false;
             var complete = OnCompleteMove;
@@ -250,7 +237,6 @@ namespace TurnBasedGame.Unit
         public void ChangeSelected(bool select)
         {
             IsSelected = select;
-            _actionPanel.SetActive(!TurnBasedGame.UI.BattleHUDToolkit.IsAvailable && select);
             _attackComponent.ShowToolkitActions(select);
             _attackComponent.ExitAttackMode();
         }
@@ -273,7 +259,6 @@ namespace TurnBasedGame.Unit
             if (_buffHandler != null && _effectsBeforeMove != null) _buffHandler.RestoreEffectsAuthorized(_effectsBeforeMove);
             LocalMatchAuthority.Random.Restore(_randomBeforeMove);
             runtimeStats.IsMoveCompleted = false;
-            _cancelMoveButton.interactable = false;
             AreaPathManager.Instance.RealeaseSelectedUnit();
             reason = null;
             return true;
@@ -332,7 +317,6 @@ namespace TurnBasedGame.Unit
         public void ResetComponents()
         {
             ResetMove();
-            _cancelMoveButton.interactable = false;
         }
 
         public UnitAttack AttackComponent => _attackComponent;

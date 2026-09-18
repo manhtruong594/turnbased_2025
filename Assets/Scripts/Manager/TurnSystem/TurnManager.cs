@@ -2,7 +2,6 @@ using UnityEngine;
 using System;
 using TurnBasedGame.Unit;
 using System.Collections;
-using TMPro;
 using TurnBasedGame.Command;
 
 namespace TurnBasedGame.Core
@@ -57,8 +56,6 @@ namespace TurnBasedGame.Core
             };
         }
 
-        [Header("Display")]
-        public TextMeshProUGUI ClockText;
         public float Timer { get; private set; }
         private bool _isTriggerTimer;
         private bool _turnTransitionPending;
@@ -93,13 +90,11 @@ namespace TurnBasedGame.Core
             if (!LocalMatchAuthority.IsAuthoritative)
             {
                 Timer = (float)Math.Max(0, Deadline - MatchTime);
-                if (ClockText != null) ClockText.text = Mathf.CeilToInt(Timer).ToString();
                 return;
             }
             if (!_isTriggerTimer)
                 return;
             Timer = (float)Math.Max(0, Deadline - MatchTime);
-            if (ClockText != null) ClockText.text = Mathf.CeilToInt(Timer).ToString();
             if (Timer <= 0 && TurnBasedGame.Multiplayer.MatchGameplayBootstrap.InputReady)
             {
                 LocalMatchAuthority.SubmitTimeoutTurn();

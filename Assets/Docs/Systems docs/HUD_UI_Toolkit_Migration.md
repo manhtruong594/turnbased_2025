@@ -1,14 +1,20 @@
-# Chuyển HUDScene sang UI Toolkit
+# HUD UI Toolkit
 
-## Phạm vi đã chuyển
+## Phạm vi
 
-`HUDScene` tạo HUD UI Toolkit khi scene được load. Cấu trúc nằm trong
-`Assets/Resources/UI/BattleHUD.uxml`, style nằm trong `BattleHUD.uss`, và controller runtime là
+`HUDScene` chỉ khởi tạo HUD bằng UI Toolkit. Cấu trúc nằm trong
+`Assets/Resources/UI/BattleHUD.uxml`, style nằm trong `BattleHUD.uss`, controller runtime là
 `BattleHUDToolkit`.
 
-HUD mới xử lý:
+Hai vị trí `local-frame-slot` và `opponent-frame-slot` được dựng tại runtime theo `MatchContext`.
+Local player luôn nằm ở slot local, kể cả khi client mạng là `Player2`. Trong `VersusAI`, slot đối
+thủ dùng biến thể AI; trong `LocalPvP` và `NetworkPvP`, slot đối thủ dùng biến thể player và bind với
+`MatchContext.OpponentOf(MatchContext.LocalPlayer)`. Ở `LocalPvP`, action bar đổi binding theo player
+đang tới lượt. Frame chỉ hiển thị state, không tạo thêm `PlayerController` hoặc `AIController`.
 
-- tên player, trạng thái lượt và MP;
+HUD xử lý:
+
+- tên player, trạng thái lượt, thời gian lượt và MP;
 - tung hai xúc xắc, kết thúc lượt;
 - danh sách unit để triệu hồi và trạng thái đủ MP/spawn point;
 - spell hand, trạng thái có thể dùng và xác nhận spell;
@@ -16,19 +22,13 @@ HUD mới xử lý:
 - màn hình thắng/thua, chơi lại và về menu chính;
 - chặn thao tác map khi con trỏ nằm trên UI Toolkit.
 
-Canvas uGUI cũ vẫn giữ nguyên serialized reference để rollback. Khi HUD UI Toolkit khởi tạo thành
-công, các `Canvas` screen-space và `GraphicRaycaster` cũ bị tắt; world-space UI không bị tác động.
+Gameplay không giữ reference đến `Button`, `CanvasGroup`, `TextMeshProUGUI` hoặc `EventSystem` của
+uGUI. `TurnManager`, `PlayerController`, `UnitController`, `UnitAttack` và `SpellCardManager` chỉ giữ
+state/gameplay command; dữ liệu hiển thị được chuyển cho `BattleHUDToolkit`.
 
-## Rollback
-
-Đặt PlayerPrefs `BattleHUD.UseUIToolkit` thành `0` trước khi load `HUDScene` để dùng lại toàn bộ HUD
-uGUI cũ. Giá trị mặc định là `1`.
-
-```csharp
-PlayerPrefs.SetInt("BattleHUD.UseUIToolkit", 0);
-```
-
-Đặt lại thành `1` để bật UI Toolkit.
+Không còn PlayerPrefs `BattleHUD.UseUIToolkit` hoặc đường rollback sang HUD uGUI. Các Canvas
+screen-space cũ còn được `BattleHUDToolkit` tắt khi load `HUDScene` để tránh prefab/scene cũ render
+chồng trong giai đoạn dọn asset. World-space UI như health bar và floating text không bị tác động.
 
 ## Kiểm chứng runtime
 
@@ -42,4 +42,4 @@ Trong Play Mode cần kiểm tra lần lượt:
 6. Chọn unit hiển thị đúng skill và cooldown; nút hoàn tác chỉ bật sau khi di chuyển.
 7. Click lên HUD không chọn tile hoặc kích hoạt attack/spell target phía sau.
 8. Endgame hiển thị đúng winner; restart và main menu tải đúng scene.
-9. Đặt `BattleHUD.UseUIToolkit = 0`, load lại scene và xác nhận HUD uGUI cũ vẫn hoạt động.
+9. HUD cũ không render và không nhận input.

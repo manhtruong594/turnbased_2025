@@ -52,22 +52,28 @@ namespace TurnBasedGame.UI
         private Label _validationLabel;
         private DropdownField _mapDropdown;
         private Label _mapDescription;
+        private Button _btnModeAI;
+        private Button _btnModeLocalPvP;
+        private Label _modeDescription;
 
         // Actions
         private Button _btnClear;
         private Button _btnConfirm;
+        private Button _btnMultiplayer;
 
         // Slot cache
         private readonly List<DeckSlot> _unitSlots = new();
         private readonly List<DeckSlot> _spellSlots = new();
         private readonly List<BattleMapDefinitionSO> _availableMaps = new();
         private BattleMapDefinitionSO _selectedMap;
+        private MatchMode _selectedMode = MatchMode.VersusAI;
 
         // ─── Lifecycle ───
 
         protected override void OnScreenShow()
         {
             QueryElements();
+            SelectMatchMode(MatchMode.VersusAI);
             CreateDeckSlots();
             InitializeMapSelection();
             BindButtons();
@@ -112,9 +118,13 @@ namespace TurnBasedGame.UI
             _validationLabel = Q<Label>("validation-label");
             _mapDropdown = Q<DropdownField>("map-dropdown");
             _mapDescription = Q<Label>("map-description");
+            _btnModeAI = Q<Button>("btn-mode-ai");
+            _btnModeLocalPvP = Q<Button>("btn-mode-local-pvp");
+            _modeDescription = Q<Label>("mode-description");
 
             _btnClear = Q<Button>("btn-clear");
             _btnConfirm = Q<Button>("btn-confirm");
+            _btnMultiplayer = Q<Button>("btn-multiplayer");
         }
 
         // ─── Deck Slots ───
@@ -154,8 +164,11 @@ namespace TurnBasedGame.UI
             _tabSpells?.RegisterCallback<ClickEvent>(OnTabSpellsClicked);
             _btnClear?.RegisterCallback<ClickEvent>(OnClearClicked);
             _btnConfirm?.RegisterCallback<ClickEvent>(OnConfirmClicked);
+            _btnMultiplayer?.RegisterCallback<ClickEvent>(OnMultiplayerClicked);
             _searchField?.RegisterValueChangedCallback(OnSearchChanged);
             _mapDropdown?.RegisterValueChangedCallback(OnMapChanged);
+            _btnModeAI?.RegisterCallback<ClickEvent>(OnModeAIClicked);
+            _btnModeLocalPvP?.RegisterCallback<ClickEvent>(OnModeLocalPvPClicked);
         }
 
         private void UnbindButtons()
@@ -165,8 +178,11 @@ namespace TurnBasedGame.UI
             _tabSpells?.UnregisterCallback<ClickEvent>(OnTabSpellsClicked);
             _btnClear?.UnregisterCallback<ClickEvent>(OnClearClicked);
             _btnConfirm?.UnregisterCallback<ClickEvent>(OnConfirmClicked);
+            _btnMultiplayer?.UnregisterCallback<ClickEvent>(OnMultiplayerClicked);
             _searchField?.UnregisterValueChangedCallback(OnSearchChanged);
             _mapDropdown?.UnregisterValueChangedCallback(OnMapChanged);
+            _btnModeAI?.UnregisterCallback<ClickEvent>(OnModeAIClicked);
+            _btnModeLocalPvP?.UnregisterCallback<ClickEvent>(OnModeLocalPvPClicked);
         }
 
         private void InitializeMapSelection()
@@ -445,6 +461,20 @@ namespace TurnBasedGame.UI
 
         private void OnTabSpellsClicked(ClickEvent _) => SwitchTab(CollectionTab.Spells);
 
+        private void OnModeAIClicked(ClickEvent _) => SelectMatchMode(MatchMode.VersusAI);
+
+        private void OnModeLocalPvPClicked(ClickEvent _) => SelectMatchMode(MatchMode.LocalPvP);
+
+        private void SelectMatchMode(MatchMode mode)
+        {
+            _selectedMode = mode;
+            _btnModeAI?.EnableInClassList("prepare-mode-button--active", mode == MatchMode.VersusAI);
+            _btnModeLocalPvP?.EnableInClassList("prepare-mode-button--active", mode == MatchMode.LocalPvP);
+            SetLabel(_modeDescription, mode == MatchMode.LocalPvP
+                ? "Hai người điều khiển luân phiên trên cùng thiết bị."
+                : "Đối đầu với máy.");
+        }
+
         private void OnSearchChanged(ChangeEvent<string> _) => RefreshCollectionList();
 
         private void OnClearClicked(ClickEvent _)
@@ -480,7 +510,8 @@ namespace TurnBasedGame.UI
                 "Xác Nhận Chiến Đấu",
                 $"Vào trận với {_playerData.SelectedDeck.Count} binh lính" +
                 $" và {_playerData.SelectedSpells.Count} phép thuật" +
-                (_selectedMap != null ? $" trên map {_selectedMap.DisplayName}?" : "?"),
+                (_selectedMap != null ? $" trên map {_selectedMap.DisplayName}" : string.Empty) +
+                $" ở chế độ {(_selectedMode == MatchMode.LocalPvP ? "PvP cùng máy" : "Đấu với AI")}?",
                 onConfirm: StartBattle,
                 onCancel: null,
                 confirmText: "Chiến!",
@@ -489,9 +520,21 @@ namespace TurnBasedGame.UI
 
         private void StartBattle()
         {
+            if (TurnBasedGame.Multiplayer.MatchSessionController.Instance != null) return;
+            if (_selectedMode == MatchMode.LocalPvP)
+                MatchContext.ConfigureLocalPvP();
+            else
+                MatchContext.ConfigureVersusAI(PlayerID.Player1);
+
             BattleLaunchContext.SelectMap(_selectedMap);
-            Debug.Log($"[PrepareBattle] Loading battle scene: {_battleSceneName}");
+            Debug.Log($"[PrepareBattle] Loading {_selectedMode} battle scene: {_battleSceneName}");
             SceneLoader.Instance?.LoadSceneAsync(_battleSceneName);
+        }
+
+        private void OnMultiplayerClicked(ClickEvent _)
+        {
+            TurnBasedGame.Multiplayer.MatchSessionController.Open(_playerData, _selectedMap,
+                _battleSceneName, _uiDocument);
         }
 
         // ─── Helpers ───

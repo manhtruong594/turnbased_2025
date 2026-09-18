@@ -6,8 +6,8 @@ Cập nhật: `2026-09-10`.
 
 Protocol hiện bao phủ 9 gameplay command và acknowledgement có state, version 2. Registry content/runtime
 và RNG kế thừa giai đoạn 2. Chi tiết executor, transaction, NGO adapter và giới hạn kiểm chứng ở
-[Gameplay commands](Multiplayer_Gameplay_Commands.md). Scene production vẫn chạy local; session/bootstrap
-và apply state lên client chưa hoàn tất.
+[Gameplay commands](Multiplayer_Gameplay_Commands.md). Giai đoạn 4–5 đã nối snapshot/replica và
+[session/bootstrap](Multiplayer_Session_Lobby.md); chưa nghiệm thu Unity/hai thiết bị. Luồng local được giữ.
 
 ## ID
 

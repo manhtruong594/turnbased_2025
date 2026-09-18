@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 56a7464fb5a87c146b1c91793d9f6b44, type: 3}
   m_Name: MatchContentCatalog
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Multiplayer.MatchContentCatalog
-  ContentCatalogHash: f8a529e418239b50f99d30992d9d010f2aa8c94c190d957960ee9650522dc1c3
+  ContentCatalogHash: 37dfa8d9866092c5c70943123bfe876705cc0fe82c43726099c64cd3b35f7731
   Entries:
   - Id: 05c17095b200410b9466fe345b145015
     Content: {fileID: 11400000, guid: 05c17095b200410b9466fe345b145015, type: 2}

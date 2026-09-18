@@ -1,25 +1,15 @@
 using System.Collections;
 using UnityEngine;
-using TMPro;
-using UnityEngine.UI;
 using TurnBasedGame.Core;
 using TurnBasedGame.Resources;
 using TurnBasedGame.UI;
 using System;
 
 /// <summary>
-/// Quản lý UI và logic tung xúc xắc
+/// Điều phối thao tác tung xúc xắc cho BattleHUDToolkit.
 /// </summary>
 public class DiceUI : MonoBehaviour
 {
-    [Header("UI References")]
-    [SerializeField] private TextMeshProUGUI dice1Text;
-    [SerializeField] private TextMeshProUGUI dice2Text;
-
-    [Header("Action Buttons")]
-    [SerializeField] private Button rollDiceButton2;
-    [SerializeField] private Button rollDiceButton1;
-
     [Header("Animation Settings")]
     [SerializeField] private float rollDuration = 0.8f;
     [SerializeField] private float rollInterval = 0.06f;
@@ -27,24 +17,30 @@ public class DiceUI : MonoBehaviour
    
     private bool isRolling = false;
     private int usedButtons;
-    private PlayerID _toolkitPlayer;
 
     public void BindToolkit(PlayerID player)
     {
-        _toolkitPlayer = player;
-        BattleHUDToolkit.Instance?.BindDice(player, () => TriggerRoll(1), () => TriggerRoll(2));
-        ResetDiceDisplay();
+        BattleHUDToolkit.Instance?.BindDice(player, () => TriggerRoll(player, 1), () => TriggerRoll(player, 2));
+        ResetDiceDisplay(player);
     }
 
     public void TriggerRoll(int index)
     {
-        if (!isRolling) StartCoroutine(RollDiceCoroutine(index));
+        if (TurnManager.Instance != null)
+            TriggerRoll(TurnManager.Instance.CurrentPlayer, index);
+    }
+
+    private void TriggerRoll(PlayerID player, int index)
+    {
+        if (!isRolling && TurnBasedGame.Multiplayer.MatchGameplayBootstrap.CanControl(player))
+            StartCoroutine(RollDiceCoroutine(player, index));
     }
     internal void ApplyReplica(bool active, int used)
     {
         usedButtons = used;
         _actionsLeft.Value = 2 - ((used & 2) != 0 ? 1 : 0) - ((used & 4) != 0 ? 1 : 0);
-        if (active && !isRolling) EnableButtons(); else DisableAllButtons();
+        if (active && !isRolling) EnableButtons(MatchContext.LocalPlayer);
+        else DisableAllButtons(MatchContext.LocalPlayer);
     }
 
     private void OnDestroy()
@@ -54,13 +50,6 @@ public class DiceUI : MonoBehaviour
 
     private void Awake()
     {
-        SetupButtons();
-    }
-
-    private void SetupButtons()
-    {
-        if (rollDiceButton2) rollDiceButton2.onClick.AddListener(() => StartCoroutine(RollDiceCoroutine(2)));
-        if (rollDiceButton1) rollDiceButton1.onClick.AddListener(() => StartCoroutine(RollDiceCoroutine(1)));
         _actionsLeft.AddListener(UpdateActionsLeft);
     }
 
@@ -68,39 +57,42 @@ public class DiceUI : MonoBehaviour
     {
         if (obj <= 0)
         {
-            DisableAllButtons();
+            PlayerID player = TurnManager.Instance != null
+                ? TurnManager.Instance.CurrentPlayer
+                : MatchContext.LocalPlayer;
+            DisableAllButtons(player);
         }
     }
 
     /// <summary>
     /// Hiển thị panel tung xúc xắc khi bắt đầu lượt
     /// </summary>
-    public void ActiveDicePanel(bool isActive)
+    public void ActiveDicePanel(PlayerID player, bool isActive)
     {
         if (isActive)
         {
             usedButtons = 0;
-            EnableButtons();
-            ResetDiceDisplay();
+            EnableButtons(player);
+            ResetDiceDisplay(player);
         }
         else
         {
-            DisableAllButtons();
+            DisableAllButtons(player);
         }
     }
 
     /// <summary>
     /// Tung xúc xắc với animation
     /// </summary>
-    private IEnumerator RollDiceCoroutine(int indexOfDice)
+    private IEnumerator RollDiceCoroutine(PlayerID actor, int indexOfDice)
     {
         if (isRolling || _actionsLeft.Value <= 0) yield break;
         
         if (TurnManager.Instance == null) yield break;
-        var actor = TurnManager.Instance.CurrentPlayer;
+        if (TurnManager.Instance.CurrentPlayer != actor) yield break;
         int expectedTurn = TurnManager.Instance.TurnCount;
         isRolling = true;
-        DisableAllButtons();
+        DisableAllButtons(actor);
 
         int diceValue = 0;
 
@@ -112,13 +104,11 @@ public class DiceUI : MonoBehaviour
             
             if (indexOfDice == 1)
             {
-                if (dice1Text) dice1Text.text = diceValue.ToString();
-                BattleHUDToolkit.Instance?.SetDice(_toolkitPlayer, 1, diceValue.ToString());
+                BattleHUDToolkit.Instance?.SetDice(actor, 1, diceValue.ToString());
             }
             else if (indexOfDice == 2)
             {
-                if (dice2Text) dice2Text.text = diceValue.ToString();
-                BattleHUDToolkit.Instance?.SetDice(_toolkitPlayer, 2, diceValue.ToString());
+                BattleHUDToolkit.Instance?.SetDice(actor, 2, diceValue.ToString());
             }
 
             elapsed += rollInterval;
@@ -134,7 +124,7 @@ public class DiceUI : MonoBehaviour
         if (!received.Value.Succeeded)
         {
             isRolling = false;
-            EnableButtons();
+            EnableButtons(actor);
             yield break;
         }
         diceValue = received.Value.Acknowledgement.DiceValue;
@@ -144,21 +134,19 @@ public class DiceUI : MonoBehaviour
         
         if (indexOfDice == 1)
         {
-            if (dice1Text) dice1Text.text = diceValue.ToString();
-            BattleHUDToolkit.Instance?.SetDice(_toolkitPlayer, 1, diceValue.ToString());
+            BattleHUDToolkit.Instance?.SetDice(actor, 1, diceValue.ToString());
         }
         else if (indexOfDice == 2)
         {
-            if (dice2Text) dice2Text.text = diceValue.ToString();
-            BattleHUDToolkit.Instance?.SetDice(_toolkitPlayer, 2, diceValue.ToString());
+            BattleHUDToolkit.Instance?.SetDice(actor, 2, diceValue.ToString());
         }
 
         Debug.Log($"Rolled dice {indexOfDice}: {diceValue}");
 
         // Thêm MP cho người chơi hiện tại
 
-        EnableButtons();
-        HideUsedButton(indexOfDice);
+        EnableButtons(actor);
+        HideUsedButton(actor, indexOfDice);
         if (TurnBasedGame.Multiplayer.MatchGameplayBootstrap.Active)
             _actionsLeft.Value = 2 - ((usedButtons & 2) != 0 ? 1 : 0) - ((usedButtons & 4) != 0 ? 1 : 0);
         else _actionsLeft.Value--;
@@ -169,52 +157,44 @@ public class DiceUI : MonoBehaviour
     /// <summary>
     /// Ẩn button đã được sử dụng
     /// </summary>
-    private void HideUsedButton(int indexOfDice)
+    private void HideUsedButton(PlayerID player, int indexOfDice)
     {
-        if (indexOfDice == 1 && rollDiceButton1)
+        if (indexOfDice == 1)
         {
-            rollDiceButton1.interactable = false;
-            BattleHUDToolkit.Instance?.SetDiceEnabled(_toolkitPlayer, 1, false);
+            BattleHUDToolkit.Instance?.SetDiceEnabled(player, 1, false);
         }
-        else if (indexOfDice == 2 && rollDiceButton2)
+        else if (indexOfDice == 2)
         {
-            rollDiceButton2.interactable = false;
-            BattleHUDToolkit.Instance?.SetDiceEnabled(_toolkitPlayer, 2, false);
+            BattleHUDToolkit.Instance?.SetDiceEnabled(player, 2, false);
         }
     }
 
     /// <summary>
     /// Reset hiển thị xúc xắc
     /// </summary>
-    private void ResetDiceDisplay()
+    private void ResetDiceDisplay(PlayerID player)
     {
-        if (dice1Text) dice1Text.text = "?";
-        if (dice2Text) dice2Text.text = "?";
-        BattleHUDToolkit.Instance?.SetDice(_toolkitPlayer, 1, "?");
-        BattleHUDToolkit.Instance?.SetDice(_toolkitPlayer, 2, "?");
+        BattleHUDToolkit.Instance?.SetDice(player, 1, "?");
+        BattleHUDToolkit.Instance?.SetDice(player, 2, "?");
     }
 
     /// <summary>
     /// Vô hiệu hóa tất cả nút khi đang tung
     /// </summary>
-    private void DisableAllButtons()
+    private void DisableAllButtons(PlayerID player)
     {
-        if (rollDiceButton2) rollDiceButton2.interactable = false;
-        if (rollDiceButton1) rollDiceButton1.interactable = false;
-        BattleHUDToolkit.Instance?.SetDiceEnabled(_toolkitPlayer, 1, false);
-        BattleHUDToolkit.Instance?.SetDiceEnabled(_toolkitPlayer, 2, false);
+        BattleHUDToolkit.Instance?.SetDiceEnabled(player, 1, false);
+        BattleHUDToolkit.Instance?.SetDiceEnabled(player, 2, false);
     }
 
     /// <summary>
     /// Kích hoạt lại các nút
     /// </summary>
-    private void EnableButtons()
+    private void EnableButtons(PlayerID player)
     {
         if (TurnManager.Instance != null && !TurnBasedGame.Multiplayer.MatchGameplayBootstrap.CanControl(TurnManager.Instance.CurrentPlayer))
-        { DisableAllButtons(); return; }
-        if (rollDiceButton2) rollDiceButton2.interactable = (usedButtons & (1 << 2)) == 0;
-        if (rollDiceButton1) rollDiceButton1.interactable = (usedButtons & (1 << 1)) == 0;
-        BattleHUDToolkit.Instance?.SetDiceEnabled(_toolkitPlayer, 1, (usedButtons & (1 << 1)) == 0);
-        BattleHUDToolkit.Instance?.SetDiceEnabled(_toolkitPlayer, 2, (usedButtons & (1 << 2)) == 0);
+        { DisableAllButtons(player); return; }
+        BattleHUDToolkit.Instance?.SetDiceEnabled(player, 1, (usedButtons & (1 << 1)) == 0);
+        BattleHUDToolkit.Instance?.SetDiceEnabled(player, 2, (usedButtons & (1 << 2)) == 0);
     }
 }

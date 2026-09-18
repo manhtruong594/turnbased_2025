@@ -2,8 +2,6 @@ using UnityEngine;
 using System;
 using System.Collections.Generic;
 using RedBjorn.ProtoTiles;
-using UnityEngine.UI;
-using UnityEngine.EventSystems;
 using TurnBasedGame.Unit;
 using TurnBasedGame.Skills;
 using RedBjorn.ProtoTiles.Example;
@@ -18,18 +16,8 @@ namespace TurnBasedGame.Unit
     public class UnitAttack : MonoBehaviour
     {
         UnitRuntimeStats runtimeStats;
-        UnitSkillsBridge _skillsBridge = new UnitSkillsBridge();
-
         [Header("Attack Settings")]
         [SerializeField] private bool canAttackThroughObstacles = false;
-
-        [Header("Attack State Button")]
-        [SerializeField] Button FinishAttackButton;
-        [SerializeField] CanvasGroup _actionCanvasGroup;
-
-        [Header("Skill System")]
-        [SerializeField] private GameObject skillButtonPrefab;
-        [SerializeField] private Transform skillButtonContainer;
 
         private List<ISkill> activeSkills = new List<ISkill>();
         internal IReadOnlyList<ISkill> ActiveSkills => activeSkills;
@@ -45,8 +33,6 @@ namespace TurnBasedGame.Unit
             this.runtimeStats = runtimeStats;
             _cachedMap = runtimeStats.MapEntity;
             _cachedUnitMove = unitMove;
-            FinishAttackButton.onClick.AddListener(FinishAttack);
-
             {
                 activeSkills.Clear();
                 foreach (var skill in _cachedUnitMove.UnitData.StartingSkills)
@@ -54,7 +40,6 @@ namespace TurnBasedGame.Unit
                     var iSkill = skill.Clone();
                     iSkill.ResetCooldown();
                     activeSkills.Add(iSkill);
-                    _skillsBridge.CreateSkillButton(skillButtonPrefab, skillButtonContainer, iSkill, OnSkillButtonClicked);
                 }
                 _normalSkill = activeSkills[0];
                 _selectedSkill = _normalSkill;
@@ -67,12 +52,6 @@ namespace TurnBasedGame.Unit
             EnterAttackMode();
         }
 
-        void OnDisable()
-        {
-            FinishAttackButton.onClick.RemoveListener(FinishAttack);
-            _skillsBridge.DisposeSkillButtons();
-        }
-
         void Update()
         {
             if (runtimeStats == null || !TurnBasedGame.Multiplayer.MatchGameplayBootstrap.CanControl(runtimeStats.Owner)) return;
@@ -81,7 +60,6 @@ namespace TurnBasedGame.Unit
 
             var mousePos = MyInput.GroundPosition(_cachedMap.Settings.Plane());
             if (MyInput.GetOnWorldUp(_cachedMap.Settings.Plane()) &&
-                !EventSystem.current.IsPointerOverGameObject() &&
                 !TurnBasedGame.UI.BattleHUDToolkit.IsPointerOverHUD(Input.mousePosition))
             {
                 var tileClicked = _cachedMap.Tile(mousePos);
@@ -150,9 +128,6 @@ namespace TurnBasedGame.Unit
             if (runtimeStats.IsInAttackMode || !_cachedUnitMove.CanAct()) return;
             runtimeStats.IsInAttackMode = true;
             TurnBasedGame.UI.BattleHUDToolkit.Instance?.HideUnitActions();
-            _actionCanvasGroup.alpha = 0;
-            _actionCanvasGroup.interactable = false;
-            _actionCanvasGroup.blocksRaycasts = false;
             AreaPathManager.Instance.ShowAttackArea(
                 _cachedMap.WalkableBorder(
                     _cachedMap.Tile(transform.position).Position,
@@ -184,9 +159,6 @@ namespace TurnBasedGame.Unit
         {
             if (!runtimeStats.IsInAttackMode) return;
             runtimeStats.IsInAttackMode = false;
-            _actionCanvasGroup.alpha = 1;
-            _actionCanvasGroup.interactable = true;
-            _actionCanvasGroup.blocksRaycasts = true;
             AreaPathManager.Instance.HideAttackArea();
             if (_cachedUnitMove != null && _cachedUnitMove.IsSelected) ShowToolkitActions(true);
         }
@@ -200,13 +172,11 @@ namespace TurnBasedGame.Unit
             {
                 skill.ReduceCooldown();
             }
-            _skillsBridge.UpdateSkillButtonsCooldowns();
             if (_cachedUnitMove != null && _cachedUnitMove.IsSelected) ShowToolkitActions(true);
         }
 
         internal void RefreshReplica()
         {
-            _skillsBridge.UpdateSkillButtonsCooldowns();
             if (_cachedUnitMove != null && _cachedUnitMove.IsSelected) ShowToolkitActions(true);
         }
 

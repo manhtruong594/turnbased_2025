@@ -98,9 +98,15 @@ nhiều lần trong cùng một turn.
 
 ## 6. Lượt AI
 
-`MatchContext` phân biệt rõ `VersusAI` và `NetworkPvP`. Trận local mặc định có human `Player1`, bot
-`Player2`; trận network lấy `LocalPlayer` từ role host/client và không có `BotPlayer`. Input UI chỉ gửi
-qua các entry point `SubmitHuman*`, vì vậy không thể dùng owner của unit đối thủ làm actor.
+`MatchContext` phân biệt rõ `VersusAI`, `LocalPvP` và `NetworkPvP`. `LocalPvP` cho một process điều
+khiển luân phiên cả hai phe; trận network lấy
+`LocalPlayer` từ role host/client và không có `BotPlayer`. Input UI chỉ gửi qua các entry point
+`SubmitHuman*`; các entry point này dùng player đang tới lượt làm actor riêng trong `LocalPvP`.
+
+`PrepareBattleScreen` cho chọn `Đấu với AI` hoặc `PvP cùng máy` và cấu hình `MatchContext` ngay trước
+khi load `HUDScene`. Nếu mở thẳng `HUDScene`, mode mặc định là `LocalPvP`. Trong mode này, hai
+phe dùng cùng `PlayerDataSO` hiện được gán cho controller để khởi tạo deck và spell hand;
+`AIController` tự vô hiệu hóa.
 
 `AIController` tự đăng ký `OnPlayerTurnStarted`, chỉ hoạt động khi `MatchContext.IsVersusAI`, có
 `BotPlayer` và process hiện tại là authority. `PlayerController` không khởi chạy lượt AI.

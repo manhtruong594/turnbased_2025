@@ -6,18 +6,18 @@ using TurnBasedGame.Resources;
 using TurnBasedGame.SpellCard;
 using TurnBasedGame.Unit;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
 namespace TurnBasedGame.UI
 {
     /// <summary>
-    /// Runtime UI Toolkit view for HUDScene. The old Canvas stays serialized as a rollback path,
-    /// while its renderers and raycasters are disabled when this view is available.
+    /// Runtime UI Toolkit view for HUDScene.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class BattleHUDToolkit : MonoBehaviour
     {
+        [SerializeField, Min(0f)] private float _skillDescriptionHoldSeconds = 0.5f;
+
         private sealed class PlayerBinding
         {
             public Action EndTurn;
@@ -25,21 +25,33 @@ namespace TurnBasedGame.UI
             public Action RollDice2;
         }
 
+        private sealed class PlayerFrameView
+        {
+            public Label Name;
+            public Label Turn;
+            public ProgressBar MP;
+        }
+
         public static BattleHUDToolkit Instance { get; private set; }
         public static bool IsAvailable => Instance != null && Instance._root != null;
 
         private readonly Dictionary<PlayerID, PlayerBinding> _bindings = new();
+        private readonly Dictionary<PlayerID, PlayerFrameView> _playerFrames = new();
         private readonly Dictionary<PlayerID, IReadOnlyList<UnitController>> _spawnUnits = new();
         private readonly Dictionary<PlayerID, IReadOnlyList<SpellCardData>> _spellHands = new();
 
         private UIDocument _document;
-        private PanelSettings _runtimePanelSettings;
         private VisualElement _root;
+        private VisualElement _localFrameSlot;
+        private VisualElement _opponentFrameSlot;
         private VisualElement _sidePanel;
         private Label _sideTitle;
         private ScrollView _sideList;
         private VisualElement _skillPanel;
         private VisualElement _skillList;
+        private VisualElement _skillDescriptionPanel;
+        private Label _skillDescriptionName;
+        private Label _skillDescriptionText;
         private Label _selectedUnitName;
         private Button _finishActionButton;
         private Button _undoActionButton;
@@ -55,46 +67,6 @@ namespace TurnBasedGame.UI
         private bool _showingSpells;
         private int _displayedTurnSeconds = -1;
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void RegisterSceneHook()
-        {
-            SceneManager.sceneLoaded -= OnSceneLoaded;
-            SceneManager.sceneLoaded += OnSceneLoaded;
-        }
-
-        private static void OnSceneLoaded(Scene scene, LoadSceneMode _)
-        {
-            if (!string.Equals(scene.name, "HUDScene", StringComparison.Ordinal)) return;
-            if (PlayerPrefs.GetInt("BattleHUD.UseUIToolkit", 1) == 0) return;
-            if (FindFirstObjectByType<BattleHUDToolkit>() != null) return;
-
-            var source = UnityEngine.Resources.Load<VisualTreeAsset>("UI/BattleHUD");
-            if (source == null)
-            {
-                Debug.LogError("[BattleHUDToolkit] Missing Resources/UI/BattleHUD.uxml.");
-                return;
-            }
-
-            var panelTemplate = UnityEngine.Resources.Load<PanelSettings>("UI/BattleHUDPanelSettings");
-            if (panelTemplate == null)
-            {
-                Debug.LogError("[BattleHUDToolkit] Missing Resources/UI/BattleHUDPanelSettings.asset.");
-                return;
-            }
-
-            var host = new GameObject("BattleHUD_UI Toolkit");
-            SceneManager.MoveGameObjectToScene(host, scene);
-            var document = host.AddComponent<UIDocument>();
-            document.enabled = false;
-            var settings = Instantiate(panelTemplate);
-            settings.name = "BattleHUD Runtime Panel Settings";
-            document.panelSettings = settings;
-            document.visualTreeAsset = source;
-            document.sortingOrder = 100;
-            document.enabled = true;
-            host.AddComponent<BattleHUDToolkit>();
-        }
-
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -105,7 +77,6 @@ namespace TurnBasedGame.UI
 
             Instance = this;
             _document = GetComponent<UIDocument>();
-            _runtimePanelSettings = _document != null ? _document.panelSettings : null;
             _root = _document != null ? _document.rootVisualElement : null;
             if (_root == null)
             {
@@ -116,14 +87,20 @@ namespace TurnBasedGame.UI
 
             QueryElements();
             BindStaticButtons();
-            DisableLegacyScreenCanvases();
+        }
+
+        private void Start()
+        {
+            BuildPlayerFrames();
+            SubscribeToPresentationEvents();
+            RefreshFrameState();
         }
 
         private void OnDestroy()
         {
             if (Instance == this) Instance = null;
+            UnsubscribeFromPresentationEvents();
             UnbindStaticButtons();
-            if (_runtimePanelSettings != null) Destroy(_runtimePanelSettings);
         }
 
         private void Update()
@@ -139,11 +116,16 @@ namespace TurnBasedGame.UI
 
         private void QueryElements()
         {
+            _localFrameSlot = _root.Q("local-frame-slot");
+            _opponentFrameSlot = _root.Q("opponent-frame-slot");
             _sidePanel = _root.Q("side-panel");
             _sideTitle = _root.Q<Label>("side-title");
             _sideList = _root.Q<ScrollView>("side-list");
             _skillPanel = _root.Q("skill-panel");
             _skillList = _root.Q("skill-list");
+            _skillDescriptionPanel = _root.Q("skill-description-panel");
+            _skillDescriptionName = _root.Q<Label>("skill-description-name");
+            _skillDescriptionText = _root.Q<Label>("skill-description-text");
             _selectedUnitName = _root.Q<Label>("unit-name");
             _finishActionButton = _root.Q<Button>("finish-action");
             _undoActionButton = _root.Q<Button>("undo-action");
@@ -155,6 +137,118 @@ namespace TurnBasedGame.UI
             _turnTimerLabel = _root.Q<Label>("turn-timer");
             _confirmOverlay = _root.Q("confirm-overlay");
             _endgameOverlay = _root.Q("endgame-overlay");
+        }
+
+        private void BuildPlayerFrames()
+        {
+            if (_localFrameSlot == null || _opponentFrameSlot == null)
+            {
+                Debug.LogError("[BattleHUDToolkit] Missing player frame slots in BattleHUD.uxml.");
+                return;
+            }
+
+            _playerFrames.Clear();
+            _localFrameSlot.Clear();
+            _opponentFrameSlot.Clear();
+
+            PlayerID localPlayer = MatchContext.LocalPlayer;
+            PlayerID opponent = MatchContext.OpponentOf(localPlayer);
+            CreatePlayerFrame(_localFrameSlot, localPlayer, localPlayer.ToString(), false, false);
+            CreatePlayerFrame(_opponentFrameSlot, opponent,
+                MatchContext.IsVersusAI ? "AI Opponent" : opponent.ToString(), true, MatchContext.IsVersusAI);
+        }
+
+        private void CreatePlayerFrame(VisualElement slot, PlayerID player, string displayName,
+            bool alignRight, bool isAI)
+        {
+            var frame = new VisualElement { name = alignRight ? "opponent-frame" : "local-player-frame" };
+            frame.AddToClassList("player-frame");
+            if (alignRight) frame.AddToClassList("player-frame--right");
+            if (isAI) frame.AddToClassList("player-frame--ai");
+
+            var header = new VisualElement();
+            header.AddToClassList("player-header");
+            if (alignRight) header.AddToClassList("player-header--right");
+
+            var name = new Label(displayName);
+            name.AddToClassList("player-name");
+            var turn = new Label("ĐẾN LƯỢT");
+            turn.AddToClassList("turn-label");
+            turn.AddToClassList("hidden");
+
+            if (alignRight)
+            {
+                header.Add(turn);
+                header.Add(name);
+            }
+            else
+            {
+                header.Add(name);
+                header.Add(turn);
+            }
+
+            var mp = new ProgressBar
+            {
+                lowValue = 0,
+                highValue = 1,
+                value = 0,
+                title = "0/0 MP"
+            };
+            mp.AddToClassList("mp-bar");
+
+            frame.Add(header);
+            frame.Add(mp);
+            slot.Add(frame);
+            _playerFrames[player] = new PlayerFrameView { Name = name, Turn = turn, MP = mp };
+        }
+
+        private void SubscribeToPresentationEvents()
+        {
+            if (GameMediator.Instance == null) return;
+            GameMediator.Instance.OnPlayerTurnStarted += HandlePlayerTurnStarted;
+            GameMediator.Instance.OnPlayerTurnEnded += HandlePlayerTurnEnded;
+            GameMediator.Instance.OnMPChanged += SetMP;
+            GameMediator.Instance.OnReplicaApplied += RefreshFrameState;
+        }
+
+        private void UnsubscribeFromPresentationEvents()
+        {
+            if (GameMediator.Instance == null) return;
+            GameMediator.Instance.OnPlayerTurnStarted -= HandlePlayerTurnStarted;
+            GameMediator.Instance.OnPlayerTurnEnded -= HandlePlayerTurnEnded;
+            GameMediator.Instance.OnMPChanged -= SetMP;
+            GameMediator.Instance.OnReplicaApplied -= RefreshFrameState;
+        }
+
+        private void HandlePlayerTurnStarted(PlayerID player)
+        {
+            foreach (var entry in _playerFrames)
+                entry.Value.Turn.EnableInClassList("hidden", entry.Key != player);
+        }
+
+        private void HandlePlayerTurnEnded(PlayerID player)
+        {
+            if (_playerFrames.TryGetValue(player, out var frame))
+                frame.Turn.AddToClassList("hidden");
+        }
+
+        private void RefreshFrameState()
+        {
+            if (MPManager.Instance != null)
+            {
+                foreach (var player in _playerFrames.Keys)
+                    SetMP(player, MPManager.Instance.GetCurrentMP(player), MPManager.Instance.MaxMP);
+            }
+
+            var turn = TurnManager.Instance;
+            if (turn == null || turn.CurrentState == TurnState.Initialization || turn.CurrentState == TurnState.GameEnd)
+            {
+                foreach (var frame in _playerFrames.Values)
+                    frame.Turn.AddToClassList("hidden");
+                return;
+            }
+
+            HandlePlayerTurnStarted(turn.CurrentPlayer);
         }
 
         private void BindStaticButtons()
@@ -175,18 +269,6 @@ namespace TurnBasedGame.UI
             if (_endTurnButton != null) _endTurnButton.clicked -= EndTurn;
         }
 
-        private void DisableLegacyScreenCanvases()
-        {
-            foreach (var canvas in FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-            {
-                if (canvas == null || canvas.gameObject.scene != gameObject.scene ||
-                    canvas.renderMode == RenderMode.WorldSpace) continue;
-                canvas.enabled = false;
-                var raycaster = canvas.GetComponent<UnityEngine.UI.GraphicRaycaster>();
-                if (raycaster != null) raycaster.enabled = false;
-            }
-        }
-
         public void BindPlayer(PlayerID player, Action endTurn)
         {
             var binding = GetBinding(player);
@@ -202,14 +284,13 @@ namespace TurnBasedGame.UI
 
         public void SetPlayerName(PlayerID player, string playerName)
         {
-            var label = _root.Q<Label>($"player-{PlayerNumber(player)}-name");
-            if (label != null) label.text = playerName;
+            if (_playerFrames.TryGetValue(player, out var frame)) frame.Name.text = playerName;
         }
 
         public void SetTurnActive(PlayerID player, bool active)
         {
-            var turn = _root.Q<Label>($"player-{PlayerNumber(player)}-turn");
-            turn?.EnableInClassList("hidden", !active);
+            if (_playerFrames.TryGetValue(player, out var frame))
+                frame.Turn.EnableInClassList("hidden", !active);
             if (active) _activePlayer = player;
             else if (_activePlayer == player) _activePlayer = null;
 
@@ -223,8 +304,8 @@ namespace TurnBasedGame.UI
 
         public void SetMP(PlayerID player, int current, int maximum)
         {
-            var bar = _root.Q<ProgressBar>($"player-{PlayerNumber(player)}-mp");
-            if (bar == null) return;
+            if (!_playerFrames.TryGetValue(player, out var frame)) return;
+            var bar = frame.MP;
             bar.lowValue = 0;
             bar.highValue = Mathf.Max(1, maximum);
             bar.value = current;
@@ -265,8 +346,18 @@ namespace TurnBasedGame.UI
             _selectedUnitName.text = unit.UnitData != null ? unit.UnitData.unitName : unit.name;
             foreach (var skill in skills)
             {
+                bool suppressClick = false;
+                bool canUse = skill.CurrentCooldown <= 0;
                 var captured = skill;
-                var button = new Button(() => onSkill?.Invoke(captured))
+                var button = new Button(() =>
+                {
+                    if (!suppressClick)
+                    {
+                        HideSkillDescription();
+                        if (canUse) onSkill?.Invoke(captured);
+                    }
+                    suppressClick = false;
+                })
                 {
                     text = skill.CurrentCooldown > 0
                         ? $"{skill.SkillName} — hồi {skill.CurrentCooldown}/{skill.Cooldown}"
@@ -274,7 +365,42 @@ namespace TurnBasedGame.UI
                 };
                 button.AddToClassList("hud-button");
                 button.AddToClassList("skill-button");
-                button.SetEnabled(skill.CurrentCooldown <= 0);
+                button.text = string.Empty;
+                button.EnableInClassList("skill-button--disabled", !canUse);
+                if (skill.Icon != null)
+                {
+                    var icon = new UnityEngine.UIElements.Image
+                    {
+                        sprite = skill.Icon,
+                        scaleMode = ScaleMode.ScaleToFit,
+                        pickingMode = PickingMode.Ignore
+                    };
+                    icon.style.width = 72;
+                    icon.style.height = 72;
+                    button.Insert(0, icon);
+                }
+
+                IVisualElementScheduledItem longPress = null;
+                button.RegisterCallback<PointerDownEvent>(_ =>
+                {
+                    suppressClick = false;
+                    longPress?.Pause();
+                    longPress = button.schedule.Execute(() =>
+                    {
+                        suppressClick = true;
+                        ShowSkillDescription(captured);
+                    }).StartingIn(Mathf.RoundToInt(_skillDescriptionHoldSeconds * 1000f));
+                }, TrickleDown.TrickleDown);
+                button.RegisterCallback<PointerUpEvent>(_ =>
+                {
+                    longPress?.Pause();
+                    HideSkillDescription();
+                }, TrickleDown.TrickleDown);
+                button.RegisterCallback<PointerLeaveEvent>(_ =>
+                {
+                    longPress?.Pause();
+                    HideSkillDescription();
+                });
                 _skillList.Add(button);
             }
 
@@ -300,6 +426,22 @@ namespace TurnBasedGame.UI
             _finishAction = null;
             _undoAction = null;
             _skillList?.Clear();
+            HideSkillDescription();
+        }
+
+        private void ShowSkillDescription(TurnBasedGame.Skills.ISkill skill)
+        {
+            if (_skillDescriptionPanel == null || skill == null) return;
+            _skillDescriptionName.text = skill.SkillName;
+            _skillDescriptionText.text = skill.Description;
+            _skillPanel.BringToFront();
+            _skillDescriptionPanel.BringToFront();
+            _skillDescriptionPanel.RemoveFromClassList("hidden");
+        }
+
+        private void HideSkillDescription()
+        {
+            _skillDescriptionPanel?.AddToClassList("hidden");
         }
 
         public void ShowSpellConfirmation(SpellCardData card, Action confirm, Action cancel)
@@ -490,6 +632,5 @@ namespace TurnBasedGame.UI
             return binding;
         }
 
-        private static int PlayerNumber(PlayerID player) => player == PlayerID.Player1 ? 1 : 2;
     }
 }

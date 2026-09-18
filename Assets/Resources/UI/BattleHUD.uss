@@ -21,9 +21,7 @@
 }
 
 .player-frame {
-    width: 31%;
-    min-width: 260px;
-    max-width: 390px;
+    width: 100%;
     padding: 13px 16px 14px 16px;
     background-color: rgba(16, 22, 32, 0.96);
     border-width: 2px;
@@ -31,7 +29,14 @@
     border-radius: 10px;
 }
 
+.player-frame-slot {
+    width: 31%;
+    min-width: 260px;
+    max-width: 390px;
+}
+
 .player-frame--right { align-items: stretch; }
+.player-frame--ai { border-color: rgb(166, 76, 65); }
 .player-header { flex-direction: row; align-items: center; justify-content: space-between; }
 .player-header--right { justify-content: space-between; }
 .player-name { font-size: 21px; -unity-font-style: bold; color: rgb(247, 241, 224); }
@@ -168,8 +173,12 @@
 .card-name { font-size: 15px; -unity-font-style: bold; color: rgb(244, 238, 220); }
 .card-description { margin-top: 3px; white-space: normal; font-size: 11px; color: rgb(185, 191, 202); }
 .card-cost { min-width: 50px; margin-left: 6px; color: rgb(103, 198, 255); -unity-font-style: bold; -unity-text-align: middle-center; }
-.skill-list { margin-bottom: 8px; }
-.skill-button { width: 100%; height: 46px; margin-left: 0; margin-right: 0; margin-bottom: 7px; }
+.skill-list { margin-bottom: 8px; flex-direction: row; flex-wrap: wrap; }
+.skill-button { width: 88px; height: 88px; margin-left: 0; margin-right: 8px; margin-bottom: 8px; padding: 7px; }
+.skill-button--disabled { opacity: 0.48; }
+.skill-description-panel { position: absolute; right: 100%; top: 0; width: 400px; min-height: 160px; margin-right: 16px; padding: 18px; background-color: rgba(27, 36, 49, 0.98); border-width: 2px; border-color: rgb(125, 101, 58); border-radius: 10px; }
+.skill-description-name { margin-bottom: 8px; font-size: 21px; -unity-font-style: bold; color: rgb(240, 198, 91); }
+.skill-description-text { white-space: normal; font-size: 15px; color: rgb(210, 214, 221); }
 
 .overlay {
     position: absolute;

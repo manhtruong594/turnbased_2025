@@ -147,6 +147,42 @@ public sealed class MatchGameplayAuthorityTests
     }
 
     [Test]
+    public void LocalPvPAllowsBothPlayersWithoutBot()
+    {
+        MatchContext.ConfigureLocalPvP();
+
+        Assert.That(MatchContext.IsLocalPvP, Is.True);
+        Assert.That(MatchContext.BotPlayer, Is.Null);
+        Assert.That(MatchContext.CanHumanControl(PlayerID.Player1), Is.True);
+        Assert.That(MatchContext.CanHumanControl(PlayerID.Player2), Is.True);
+    }
+
+    [Test]
+    public void DefaultMatchContextUsesLocalPvP()
+    {
+        typeof(MatchContext).GetMethod("Reset", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, null);
+
+        Assert.That(MatchContext.Mode, Is.EqualTo(MatchMode.LocalPvP));
+        Assert.That(MatchContext.BotPlayer, Is.Null);
+    }
+
+    [Test]
+    public void LocalPvPHumanCommandUsesPlayerWhoseTurnIsActive()
+    {
+        MatchContext.ConfigureLocalPvP();
+        Field(TurnManager.Instance, "currentPlayer", PlayerID.Player2);
+        Field(TurnManager.Instance, "currentState", TurnState.Player2Turn);
+        int player1Mana = mp.GetCurrentMP(PlayerID.Player1);
+        int player2Mana = mp.GetCurrentMP(PlayerID.Player2);
+
+        var result = LocalMatchAuthority.SubmitHumanRoll(3, 1);
+
+        Assert.That(result.Succeeded, Is.True);
+        Assert.That(mp.GetCurrentMP(PlayerID.Player1), Is.EqualTo(player1Mana));
+        Assert.That(mp.GetCurrentMP(PlayerID.Player2), Is.EqualTo(player2Mana + result.Acknowledgement.DiceValue));
+    }
+
+    [Test]
     public void WrongTurnDoesNotConsumeSpellOrMana()
     {
         var command = Command(MatchCommandKind.CastSpell);

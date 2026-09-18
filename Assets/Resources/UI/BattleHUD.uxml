@@ -2,13 +2,7 @@
     <Style src="BattleHUD.uss" />
     <ui:VisualElement name="battle-hud" class="battle-hud" picking-mode="Ignore">
         <ui:VisualElement name="top-bar" class="top-bar">
-            <ui:VisualElement name="player-1" class="player-frame">
-                <ui:VisualElement class="player-header">
-                    <ui:Label name="player-1-name" text="Player 1" class="player-name" />
-                    <ui:Label name="player-1-turn" text="ĐẾN LƯỢT" class="turn-label" />
-                </ui:VisualElement>
-                <ui:ProgressBar name="player-1-mp" title="0/0 MP" class="mp-bar" />
-            </ui:VisualElement>
+            <ui:VisualElement name="local-frame-slot" class="player-frame-slot" />
             <ui:VisualElement class="battle-heading">
                 <ui:Label text="TRẬN ĐẤU" class="battle-kicker" />
                 <ui:Label name="turn-label" text="CHIẾN ĐẤU" class="battle-title" />
@@ -17,13 +11,7 @@
                     <ui:Label name="turn-timer" text="00" class="turn-timer" />
                 </ui:VisualElement>
             </ui:VisualElement>
-            <ui:VisualElement name="player-2" class="player-frame player-frame--right">
-                <ui:VisualElement class="player-header player-header--right">
-                    <ui:Label name="player-2-turn" text="ĐẾN LƯỢT" class="turn-label" />
-                    <ui:Label name="player-2-name" text="Player 2" class="player-name" />
-                </ui:VisualElement>
-                <ui:ProgressBar name="player-2-mp" title="0/0 MP" class="mp-bar" />
-            </ui:VisualElement>
+            <ui:VisualElement name="opponent-frame-slot" class="player-frame-slot" />
         </ui:VisualElement>
 
         <ui:VisualElement name="side-panel" class="side-panel hidden">
@@ -40,6 +28,10 @@
                 <ui:Label text="HÀNH ĐỘNG" class="panel-caption" />
             </ui:VisualElement>
             <ui:VisualElement name="skill-list" class="skill-list" />
+            <ui:VisualElement name="skill-description-panel" class="skill-description-panel hidden">
+                <ui:Label name="skill-description-name" class="skill-description-name" />
+                <ui:Label name="skill-description-text" class="skill-description-text" />
+            </ui:VisualElement>
             <ui:Button name="undo-action" text="Hoàn tác di chuyển" class="hud-button hud-button--wide" />
             <ui:Button name="finish-action" text="Kết thúc hành động" class="hud-button hud-button--wide hud-button--danger" />
         </ui:VisualElement>

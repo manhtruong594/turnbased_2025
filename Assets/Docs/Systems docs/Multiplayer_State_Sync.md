@@ -4,6 +4,10 @@ Cập nhật: `2026-09-15`.
 
 ## Phạm vi và trạng thái
 
+Cập nhật giai đoạn 5 (`2026-09-18`): đã nối session/Relay và rematch vào bootstrap này;
+xem [Session, phòng chờ và UX](Multiplayer_Session_Lobby.md). Các giới hạn LAN/loadout bên dưới
+mô tả entry point development `-mp-gameplay-role`, không phải luồng phòng dịch vụ mới.
+
 Đã thêm implementation snapshot, replica applier, scene handshake, ordered replacement state, hash và resync.
 Chưa nghiệm thu milestone: chưa chạy Unity EditMode/Play Mode và hai process gameplay.
 Dùng lại collector/manager hiện có; không thêm lobby, Relay, sparse delta hoặc cơ chế rút bài mới.

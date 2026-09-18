@@ -1,6 +1,6 @@
 # Kế hoạch hoàn thiện multiplayer
 
-Cập nhật: `2026-09-15`
+Cập nhật: `2026-09-18`
 
 ## 1. Mục tiêu và phạm vi MVP
 
@@ -19,16 +19,16 @@ host migration và anti-cheat cấp competitive. Các mục này chỉ bắt đ�
 
 | Hạng mục | Trạng thái | Bằng chứng/giới hạn |
 |---|---|---|
-| Command authority | Đã triển khai coverage giai đoạn 3, chờ nghiệm thu Unity | 9 command, adapter NGO, transaction/result; chưa nối session/bootstrap |
+| Command authority | Đã triển khai coverage giai đoạn 3, chờ nghiệm thu Unity | 9 command, adapter NGO, transaction/result; đã nối bootstrap và session ở giai đoạn 4–5 |
 | Validation lượt | Hiện có, cần Play Mode test | Kiểm tra `CommandId`, `Actor`, `ExpectedTurn` và command trùng |
 | Network-safe command DTO | Đã mở rộng giai đoạn 3 | Protocol/rules version 2, 9 command và result có state; callback nằm ngoài payload |
 | Runtime/content ID ổn định | Đã triển khai, chờ kiểm chứng Unity | Registry, catalog GUID, host unit ID, spawn ID theo owner/grid |
 | State snapshot/delta | Đã thêm implementation Phase 4, chờ nghiệm thu | Snapshot, replica, ordered replacement state, hash/resync; chưa kiểm chứng hai process gameplay |
-| Transport/session/relay | Đã chốt, prototype đạt | NGO `2.13.2`, UTP `2.7.4`, Multiplayer Services `2.3.1`; chưa kiểm chứng Relay Internet |
-| Lobby/reconnect | Chưa có | Chưa có lifecycle phiên mạng |
+| Transport/session/relay | Đã thêm implementation giai đoạn 5 | Authentication, Sessions, Relay `dtls`, create/join bằng mã; chưa kiểm chứng Relay Internet |
+| Lobby/reconnect | Đã thêm lobby/ready/rematch; reconnect chưa có | Loadout theo service player, host chốt trận, cleanup; reconnect thuộc giai đoạn 6 |
 | Multiplayer test | Prototype transport đạt | Hai process loopback trao đổi message và disconnect sạch; chưa đồng bộ gameplay |
 
-`LocalMatchAuthority` đã nhận DTO không chứa reference local qua executor. Scene production vẫn chạy local; adapter NGO cần session/replica bootstrap. Nó chưa phải
+`LocalMatchAuthority` đã nhận DTO không chứa reference local qua executor. Luồng local được giữ; nút Multiplayer trong Prepare Battle mở session/replica bootstrap. Nó chưa phải
 server hoặc ranh giới bảo mật; xem phạm vi đã triển khai và giới hạn tại [Gameplay commands](../Systems%20docs/Multiplayer_Gameplay_Commands.md).
 
 ## 3. Kiến trúc mục tiêu
@@ -175,6 +175,17 @@ Tiêu chí hoàn thành:
 - State hash khớp sau mỗi lượt trong test tự động.
 
 ### Giai đoạn 5 — Session, phòng chờ và UX
+
+Trạng thái `2026-09-18`: đã triển khai code; **chưa nghiệm thu milestone** vì chưa chạy Unity Play Mode,
+hai process session hoặc hai thiết bị ở hai mạng khác nhau. Chi tiết và ma trận nghiệm thu:
+[Session, phòng chờ và UX](../Systems%20docs/Multiplayer_Session_Lobby.md).
+
+- UI Toolkit: tạo/join bằng mã, copy mã, loadout và ready hai người, host bắt đầu, tái đấu và rời phòng.
+- Authentication → service player ID → NGO connection approval → Player1/Player2; Relay `dtls`.
+- Host chốt loadout/map/round; spawn chỉ nhận unit trong deck, hand riêng từng phe.
+- Handshake/snapshot Phase 4 được tái sử dụng; mỗi trận tạo authority/replica mới, đổi người đi trước.
+- `77/77` test protocol/snapshot/lobby đạt trên Mono ngoài Unity, gồm `16` case lobby mới.
+  Compile sơ bộ runtime/Editor/protocol/test bằng Roslyn đạt; chưa có bằng chứng Unity Console/Play Mode.
 
 Thực hiện:
 
