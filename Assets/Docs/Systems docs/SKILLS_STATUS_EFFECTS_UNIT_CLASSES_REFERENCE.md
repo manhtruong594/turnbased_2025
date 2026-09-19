@@ -18,6 +18,11 @@ Trong project không có `UnitClass` enum và cũng không có subclass `ArcherU
 Mỗi class unit là một `UnitData` asset dùng chung runtime `UnitController`, `UnitAttack`,
 `UnitAnimator`, `SkillEffectRunner` và `BuffDebuffHandler`.
 
+Ba class chính thức Dân Binh, Dược Sư và Phán Quan nằm ở mục 9 của
+[Characters Overview](Characters_Overview.md). Bốn implementation riêng và chín skill asset đã có.
+Ba class chưa có `UnitData`/prefab nên chưa thuộc roster có thể spawn; bảng roster vẫn tách riêng
+bảy unit đã tích hợp và ba unit đang chờ tích hợp.
+
 ## 2. Quy ước chung của Skill System
 
 ### 2.1. Contract
@@ -52,17 +57,19 @@ trên bản clone runtime, không ghi ngược vào asset dùng chung.
 Validation mặc định của `SkillBase.CanUse` theo thứ tự: cooldown → MP → range → target mask → điều
 kiện riêng. `FireballSkill` và `MagicianFireSealSkill` có validation riêng.
 
-Khi `Execute`, MP được trừ trước, unit phát animation, skill bắt đầu cooldown, effect chờ animation/VFX
-gọi `ApplyEffect`, sau đó `FinishTurnActions`. Nếu effect không hoàn tất, base pipeline timeout sau 10 giây.
+`Execute` gửi command qua `LocalMatchAuthority`. Khi command được chấp nhận,
+`ExecuteAuthorized` trừ MP, resolve `ExecuteEffect`, bắt đầu cooldown và gọi
+`FinishTurnActionsAuthorized`. Animation/VFX chỉ được phát qua `PublishAfterCommit`; `ApplyEffect`
+được giữ cho caller presentation cũ và không resolve gameplay lần hai.
 
 ## 3. Tất cả skill implementation
 
-Project có 12 class skill cụ thể.
+Project có 16 class skill cụ thể.
 
 | Class | Mô tả hành vi hiện tại | Status liên quan | Asset hiện có |
 |---|---|---|---|
-| `NormalAttackSkill` | Gây `CurrentDamage × multipleDmg` lên một unit tại ô đích. | Không | 4 asset |
-| `HealSkill` | Hồi `CurrentDamage × multiple`; chỉ dùng khi mục tiêu chưa đầy HP. `HealBan` có thể chặn hồi máu tại `UnitController.Heal`. | Đọc `HealBan` gián tiếp | `Heal skill.asset` |
+| `NormalAttackSkill` | Gây `CurrentDamage × multipleDmg` lên một unit tại ô đích. | Không | 7 asset |
+| `HealSkill` | Hồi `CurrentDamage × multiple`; chỉ dùng khi mục tiêu chưa đầy HP. `HealBan` có thể chặn hồi máu tại `UnitController.Heal`. | Đọc `HealBan` gián tiếp | 3 asset |
 | `FireballSkill` | Gây sát thương diện rộng lên mọi enemy trong `aoeRadius`; có thể chọn ô trống. | Không | `Fireball.asset` |
 | `MultiArrowSkill` | Bắn nhiều hit. Hit đầu dùng multiplier cố định; hit sau dùng multiplier ngẫu nhiên và có cơ hội áp một `ISpellEffect`. | Phụ thuộc `CurrentArrowEffect`; asset hiện tại dùng `FreezeEffect` | `Multi strike arrow.asset` |
 | `FlameThrowerSkill` | Gây damage theo chu kỳ lên một enemy tại ô đích trong một khoảng thời gian. | Không | Chưa có asset trong `SkillData` |
@@ -73,6 +80,10 @@ Project có 12 class skill cụ thể.
 | `MagicianFireSealSkill` | Damage diện rộng, tăng damage lên target đang `Burn`, có xác suất gây `Burn` và tạo `BurningGround` trên các ô ảnh hưởng. | Đọc/tạo `Burn` | `Magician Fire Seal.asset` |
 | `SmasherEarthquakeSkill` | Gây damage và đẩy target. Nếu bị chặn thì gây collision damage và `Stun`; target miễn displacement không nhận collision effect. | Tạo `Stun`, đọc `StanceGuard` qua displacement utility | `Smasher Earthquake.asset` |
 | `HalberdierCrescentSlashSkill` | Đánh enemy theo đường thẳng. Target đầu nhận damage chính; các target sau nhận damage phụ. Có thể gây `HealBan` và luôn tạo `Shield` cho caster. | Tạo `HealBan`, `Shield` | `Halberdier Crescent Slash.asset` |
+| `MilitiaPowerStrikeSkill` | Gây 175% damage; nếu target có `Shield` trước hit thì nhân thêm 1,3 trước khi qua pipeline nhận damage. | Đọc `Shield` | `Militia Power Strike.asset` |
+| `HerbalistCleanseSkill` | Chỉ nhận target có debuff; xóa toàn bộ debuff và cấp `Shield = 30% CurrentDamage` trong 2 lượt nếu số debuff thực sự giảm. | Xóa debuff, tạo `Shield` | `Herbalist Purification.asset` |
+| `AdjudicatorAccusationSkill` | Gây 100% damage; target còn sống nhận `GuardBreak(20)` trong 2 lượt. | Tạo `GuardBreak` | `Adjudicator Accusation.asset` |
+| `AdjudicatorForbiddenSealSkill` | Gây 160% damage lên enemy trong radius 1; enemy còn sống nhận `Weaken(25)` và có 50% nhận `HealBan`, đều trong 2 lượt. | Tạo `Weaken`, `HealBan` | `Adjudicator Forbidden Seal.asset` |
 
 ## 4. Skill asset đang cấu hình
 
@@ -95,6 +106,15 @@ implementation ghi khác.
 | `smasher skill/Heavy slash attack.asset` | `NormalAttackSkill` | `NormalAttack` | `Normal` | 0 / 0 / 5 | Enemy | 125% damage | Smasher |
 | `smasher skill/Smasher Earthquake.asset` | `SmasherEarthquakeSkill` | `Dia Chan Toai Son` | `Ultimate` | 1 / 4 / 1 | Enemy + EmptyTile | 180% damage; đẩy 1 ô; nếu bị chặn: thêm 50% damage và `Stun` 1 lượt | Smasher |
 | `Heal skill.asset` | `HealSkill` | `Unnamed Skill` | `BuffAndDebuff` | 1 / 2 / 2 | Ally + Self + EmptyTile | Hồi 150% `CurrentDamage` | Cả 7 class unit |
+| `militia skill/Militia Quick Slash.asset` | `NormalAttackSkill` | `Chém Nhanh` | `Normal` | 0 / 0 / 1 | Enemy | 100% damage | Dân Binh — chờ `UnitData` |
+| `militia skill/Militia Power Strike.asset` | `MilitiaPowerStrikeSkill` | `Dồn Sức` | `Active` | 1 / 2 / 1 | Enemy | 175% damage; nhân thêm 1,3 nếu target có `Shield` | Dân Binh — chờ `UnitData` |
+| `militia skill/Militia Bandage.asset` | `HealSkill` | `Băng Bó` | `BuffAndDebuff` | 1 / 3 / 0 | Self | Hồi 150% `CurrentDamage` | Dân Binh — chờ `UnitData` |
+| `herbalist skill/Herbalist Staff Tap.asset` | `NormalAttackSkill` | `Gõ Gậy` | `Normal` | 0 / 0 / 1 | Enemy | 80% damage | Dược Sư — chờ `UnitData` |
+| `herbalist skill/Herbalist Field Remedy.asset` | `HealSkill` | `Đắp Thuốc` | `BuffAndDebuff` | 1 / 2 / 2 | Ally + Self | Hồi 200% `CurrentDamage` | Dược Sư — chờ `UnitData` |
+| `herbalist skill/Herbalist Purification.asset` | `HerbalistCleanseSkill` | `Giải Uế` | `BuffAndDebuff` | 1 / 3 / 2 | Ally + Self | Xóa debuff; nếu xóa thành công, tạo `Shield = 30% CurrentDamage` trong 2 lượt | Dược Sư — chờ `UnitData` |
+| `adjudicator skill/Adjudicator Verdict Stroke.asset` | `NormalAttackSkill` | `Bút Phán` | `Normal` | 0 / 0 / 2 | Enemy | 100% damage | Phán Quan — chờ `UnitData` |
+| `adjudicator skill/Adjudicator Accusation.asset` | `AdjudicatorAccusationSkill` | `Cáo Trạng` | `Active` | 1 / 3 / 3 | Enemy | 100% damage; `GuardBreak(20)` trong 2 lượt nếu target còn sống | Phán Quan — chờ `UnitData` |
+| `adjudicator skill/Adjudicator Forbidden Seal.asset` | `AdjudicatorForbiddenSealSkill` | `Đại Ấn Cấm Sinh` | `Ultimate` | 3 / 5 / 3 | Enemy + EmptyTile | Radius 1, 160% damage; `Weaken(25)` và 50% `HealBan`, 2 lượt | Phán Quan — chờ `UnitData` |
 
 Đường dẫn gốc của các asset trong bảng: `Assets/Scripts/Data/SkillData`.
 
@@ -117,7 +137,7 @@ khi unit hoàn tất action; nhờ vậy effect có duration 1 vẫn tác độn
 |---:|---|---|---|---|---|
 | 0 | `None` | Không có | Sentinel; không spawn VFX. | Không | Hoàn chỉnh |
 | 1 | `HealOverTime` | Buff | Hồi `Value` HP ở đầu mỗi lượt; vẫn bị `HealBan` chặn. | `HealOverTimeEffect` | Có hành vi; chưa có spell asset |
-| 2 | `Shield` | Buff | Trừ `Value` khỏi mỗi lần nhận damage, sau khi áp modifier phần trăm. Không phải pool giáp bị tiêu hao. | `ShieldEffect`, `HalberdierCrescentSlashSkill` | Có hành vi |
+| 2 | `Shield` | Buff | Trừ `Value` khỏi mỗi lần nhận damage, sau khi áp modifier phần trăm. Không phải pool giáp bị tiêu hao. | `ShieldEffect`, `HalberdierCrescentSlashSkill`, `HerbalistCleanseSkill` | Có hành vi |
 | 3 | `DamageBuff` | Buff | Cộng phẳng `Value` vào base damage trước bonus phần trăm. | `DamageBuffEffect`, `GameplayTestTool` | Có hành vi |
 | 4 | `CleanseOverTime` | Buff | Xóa mọi debuff ở đầu lượt trước khi damage-over-time tick. Không xóa buff. | `CleanseOverTimeEffect` | Có hành vi; chưa có spell asset |
 | 5 | `BloodRage` | Buff | Cộng `Value`% outgoing damage và cộng 1 move range. | `BerserkerBloodHammerSkill` | Có hành vi |
@@ -126,13 +146,13 @@ khi unit hoàn tất action; nhờ vậy effect có duration 1 vẫn tác độn
 | 100 | `Burn` | Debuff | Nhận `Value` damage ở đầu lượt. Có thể được tạo khi trúng/đứng trên `BurningGround`. | `MagicianFireSealSkill`, `TileHazardManager`, test tool | Có hành vi |
 | 101 | `Poison` | Debuff | Damage đầu lượt tăng tuyến tính: `Value × số tick đã chịu` (1×, 2×, 3×...). | `GameplayTestTool` | Có hành vi |
 | 102 | `Slow` | Debuff | Giảm move range theo `Value`%, chặn ở mức 100%. `Freeze` bị phá sớm tạo `Slow(20)` trong số lượt còn lại. | `SlowEffect`, cơ chế phá `Freeze` | Có hành vi; chưa có spell asset |
-| 103 | `Weaken` | Debuff | Giảm outgoing damage theo `Value`%; được tính cùng bonus phần trăm của `BloodRage`. | `WeakenEffect` | Có hành vi; chưa có spell asset |
+| 103 | `Weaken` | Debuff | Giảm outgoing damage theo `Value`%; được tính cùng bonus phần trăm của `BloodRage`. | `WeakenEffect`, `AdjudicatorForbiddenSealSkill` | Có hành vi |
 | 104 | `Root` | Debuff | `UnitController.CanMove()` trả `false`; không trực tiếp chặn attack/action. | `RootEffect`, `Root Spell.asset`, test tool | Có hành vi giới hạn di chuyển |
 | 105 | `Stun` | Debuff | Chặn chọn unit, di chuyển, attack và skill trong lượt; cleanse có thể gỡ stun trước khi lượt kết thúc. | `StunEffect`, `Stun Spell.asset`, `SmasherEarthquakeSkill`, test tool | Có hành vi |
 | 106 | `Freeze` | Debuff | Chặn toàn bộ hành động trong 2 lượt. Hit damage trực tiếp đầu tiên nhận thêm 20% damage và phá `Freeze`; số lượt còn lại chuyển thành `Slow(20)`. Damage-over-time không phá `Freeze`. | `FreezeEffect`; `Multi strike arrow.asset` | Có hành vi |
 | 107 | `Bleed` | Debuff | Nhận `Value` damage ở đầu lượt. | `BleedEffect`, `AssassinBleedSkill` | Có hành vi |
-| 108 | `GuardBreak` | Debuff | Tăng incoming damage theo `Value`%. | `KnightHolySwordStanceSkill` | Có hành vi |
-| 109 | `HealBan` | Debuff | `UnitController.Heal()` từ chối mọi hồi máu. | `HalberdierCrescentSlashSkill` | Có hành vi |
+| 108 | `GuardBreak` | Debuff | Tăng incoming damage theo `Value`%. | `KnightHolySwordStanceSkill`, `AdjudicatorAccusationSkill` | Có hành vi |
+| 109 | `HealBan` | Debuff | `UnitController.Heal()` từ chối mọi hồi máu. | `HalberdierCrescentSlashSkill`, `AdjudicatorForbiddenSealSkill` | Có hành vi |
 
 ### 5.3. Spell effect có thể tạo status
 
@@ -148,11 +168,14 @@ Các implementation `ISpellEffect` nằm trong `Assets/Scripts/SpellCard/SpellEf
 `Stun`, `Freeze`, `Bleed`, `GuardBreak`, `HealBan`. Các type còn lại dùng fallback icon/color của
 `BuffIconData` nếu UI yêu cầu hiển thị.
 
-## 6. Tất cả class unit trong roster
+## 6. Class unit và trạng thái roster
 
-Thông số chung của cả 7 asset hiện tại: `Health = 100`, `BaseDamage = 10`, `spawnCost = 3`,
-`moveSpeed = 5`. Danh sách skill giữ đúng thứ tự serialized; `UnitAttack` chọn skill đầu tiên làm
-`_normalSkill`/skill mặc định dù asset đó có thể không mang type `Normal`.
+### 6.1. Roster đã tích hợp
+
+Thông số chung của cả 7 `UnitData` hiện tại: `Health = 100`, `BaseDamage = 10`, `spawnCost = 3`.
+YAML cũ còn `moveSpeed = 5`, nhưng `UnitData`/`UnitRuntimeStats` hiện không khai báo hoặc đọc field
+này nên nó không tham gia gameplay. Danh sách skill giữ đúng thứ tự serialized; `UnitAttack` chọn
+skill đầu tiên làm `_normalSkill`/skill mặc định dù asset đó có thể không mang type `Normal`.
 
 | UnitData asset | Tên unit | Move range | Starting skills theo thứ tự | Vai trò suy ra từ implementation |
 |---|---|---:|---|---|
@@ -163,6 +186,17 @@ Thông số chung của cả 7 asset hiện tại: `Health = 100`, `BaseDamage =
 | `Knight Data.asset` | Knight | 10 | `Slash attack` → `Knight Holy Sword Stance` → `Heal skill` | Line damage, guard và giữ capture point |
 | `Magician data.asset` | Magician | 5 | `Fireball` → `Magician Fire Seal` → `Heal skill` | AoE, burn và tile hazard |
 | `Smasher data.asset` | Smasher | 6 | `Heavy slash attack` → `Smasher Earthquake` → `Heal skill` | Damage tầm xa theo asset hiện tại, knockback và collision stun |
+
+### 6.2. Class chính thức đang chờ tích hợp unit
+
+Ba class dưới đây đã có implementation skill và skill asset, nhưng chưa có `UnitData`/prefab nên
+chưa thể chọn trong deck hoặc spawn. Các chỉ số là cấu hình chính thức cần dùng khi tạo `UnitData`.
+
+| Class | HP | Base damage | Spawn cost | Move range | `StartingSkills` bắt buộc theo thứ tự |
+|---|---:|---:|---:|---:|---|
+| Dân Binh — Militia | 70 | 8 | 2 | 5 | `Militia Quick Slash` → `Militia Power Strike` → `Militia Bandage` |
+| Dược Sư — Herbalist | 55 | 8 | 2 | 5 | `Herbalist Staff Tap` → `Herbalist Field Remedy` → `Herbalist Purification` |
+| Phán Quan — Adjudicator | 140 | 14 | 6 | 4 | `Adjudicator Verdict Stroke` → `Adjudicator Accusation` → `Adjudicator Forbidden Seal` |
 
 ## 7. Runtime class dùng chung cho unit
 

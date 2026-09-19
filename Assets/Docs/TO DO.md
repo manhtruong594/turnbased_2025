@@ -48,3 +48,7 @@ Cập nhật: `2026-09-04`
 
 Một mục chỉ được coi là hoàn thành khi có implementation/asset, tiêu chí nghiệm thu và kết quả kiểm
 chứng phù hợp. Compile thành công không thay thế Play Mode test cho gameplay hoặc serialization.
+
+- thêm logic xem buff và debuff của unit trong trận.
+- sửa lại logic khi 1 unit đến capture point thì sang đầu turn sau nếu unit đó ko chết mới được tính là đã cướp được capture point 
+- thêm class: gây DOT, biến DOT thành debuff ko thể giải

@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f076e9c1177c5f14ba29804f6973f42e, type: 3}
+  m_Name: Militia Bandage
+  m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Skills.HealSkill
+  skillName: "B\u0103ng B\xF3"
+  description: "H\u1ED3i m\xE1u cho b\u1EA3n th\xE2n b\u1EB1ng 150% s\xE1t th\u01B0\u01A1ng
+    hi\u1EC7n t\u1EA1i."
+  skillType: 4
+  icon: {fileID: 1069596017, guid: 247fb8c0e365794479602c6a4dd89184, type: 3}
+  cooldown: 3
+  mpCost: 1
+  range: 0
+  vfxConfig:
+    castVfxPrefab: {fileID: 0}
+    releaseVfxPrefab: {fileID: 0}
+    projectilePrefab: {fileID: 0}
+    impactVfxPrefab: {fileID: 0}
+    effectApplyTiming: 0
+    castSpawnPoint: 1
+    releaseSpawnPoint: 1
+    impactSpawnPoint: 2
+  targetTypes: 4
+  multiple: 1.5

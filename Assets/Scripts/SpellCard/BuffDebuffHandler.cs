@@ -267,7 +267,7 @@ namespace TurnBasedGame.SpellCard
             return Mathf.Clamp(total, 0, 100);
         }
 
-        public bool CanReceiveHealing() => HasEffect(StatusEffectType.HealBan) ;
+        public bool CanReceiveHealing() => !HasEffect(StatusEffectType.HealBan) ;
 
         public bool IsUntargetableDirectly() => HasEffect(StatusEffectType.ShadowStep);
 

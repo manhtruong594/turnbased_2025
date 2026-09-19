@@ -2,15 +2,16 @@
 
 ## 1. Phạm vi
 
-Roster hiện có bảy hướng unit. Tài liệu mô tả vai trò, skill implementation và mục tiêu cân bằng; số
-liệu cụ thể phải lấy từ `UnitData`/skill asset tại thời điểm build.
+Roster chính thức gồm mười class. Bảy class đã có `UnitData`/prefab; Dân Binh, Dược Sư và Phán Quan
+đã có implementation cùng skill asset nhưng chưa hoàn tất tích hợp unit. Tài liệu mô tả vai trò,
+cấu hình skill và mục tiêu cân bằng; số liệu runtime phải lấy từ asset tại thời điểm build.
 
 ## 2. Cấu trúc chung
 
 Mỗi unit prefab kết hợp:
 
 - `UnitController`: state runtime, movement, damage/heal và turn action.
-- `UnitData`: HP, base damage, spawn cost, move range/speed và icon.
+- `UnitData`: HP, base damage, spawn cost, move range và icon.
 - `UnitAttack`: danh sách skill runtime, attack validation và cooldown tick.
 - `UnitAnimator`: animation state và skill cue.
 - `SkillEffectRunner`: VFX/projectile theo cue.
@@ -121,15 +122,85 @@ Mục tiêu gameplay:
 - Mạnh nhờ khoảng cách và chọn mục tiêu, yếu khi bị áp sát.
 - Multi-hit phải chốt cách xử lý target chết giữa chuỗi và projectile cleanup.
 
+### Dân Binh — Militia
+
+**Vai trò:** bộ binh giá thấp, triển khai sớm để lấp tuyến và tranh capture point phụ.
+
+**Chỉ số chính thức:** `Health = 70`, `BaseDamage = 8`, `spawnCost = 2`, `moveRange = 5`.
+
+| Thứ tự | Skill asset | Type | MP / CD / Range | Target | Hiệu ứng |
+|---:|---|---|---|---|---|
+| 1 | `Militia Quick Slash` | `Normal` | 0 / 0 / 1 | Enemy | Chém Nhanh gây 100% damage. |
+| 2 | `Militia Power Strike` | `Active` | 1 / 2 / 1 | Enemy | Dồn Sức gây 175% damage; target có `Shield` thì damage nhân thêm 1,3 trước khi khiên giảm damage. |
+| 3 | `Militia Bandage` | `BuffAndDebuff` | 1 / 3 / 0 | Self | Băng Bó hồi 150% damage hiện tại. |
+
+Implementation liên quan:
+
+- `NormalAttackSkill`, `HealSkill`.
+- `MilitiaPowerStrikeSkill` đọc `Shield` ngay trước hit.
+
+Mục tiêu gameplay:
+
+- Tạo lợi thế số lượng và vị trí với chi phí thấp, nhưng không có AoE hoặc khống chế.
+- HP thấp và tầm ngắn khiến việc đứng cụm hoặc tách khỏi hỗ trợ dễ bị trừng phạt.
+
+### Dược Sư — Herbalist
+
+**Vai trò:** hỗ trợ giá thấp, hồi phục và giải debuff cho một mục tiêu quan trọng.
+
+**Chỉ số chính thức:** `Health = 55`, `BaseDamage = 8`, `spawnCost = 2`, `moveRange = 5`.
+
+| Thứ tự | Skill asset | Type | MP / CD / Range | Target | Hiệu ứng |
+|---:|---|---|---|---|---|
+| 1 | `Herbalist Staff Tap` | `Normal` | 0 / 0 / 1 | Enemy | Gõ Gậy gây 80% damage. |
+| 2 | `Herbalist Field Remedy` | `BuffAndDebuff` | 1 / 2 / 2 | Ally + Self | Đắp Thuốc hồi 200% damage hiện tại. |
+| 3 | `Herbalist Purification` | `BuffAndDebuff` | 1 / 3 / 2 | Ally + Self | Giải Uế xóa toàn bộ debuff; nếu xóa thành công, tạo `Shield = 30% CurrentDamage` trong 2 lượt. |
+
+Implementation liên quan:
+
+- `NormalAttackSkill`, `HealSkill`.
+- `HerbalistCleanseSkill`, `BuffDebuffHandler.RemoveDebuffs()` và status `Shield`.
+
+Mục tiêu gameplay:
+
+- Buộc người chơi chọn giữa hồi HP và thanh tẩy; mỗi action chỉ hỗ trợ một target.
+- 55 HP và damage thấp khiến Dược Sư cần tuyến trước bảo vệ.
+
+### Phán Quan — Adjudicator
+
+**Vai trò:** unit cao cấp phá phòng thủ, giảm damage địch và gây áp lực lên đội hình hồi phục.
+
+**Chỉ số chính thức:** `Health = 140`, `BaseDamage = 14`, `spawnCost = 6`, `moveRange = 4`.
+
+| Thứ tự | Skill asset | Type | MP / CD / Range | Target | Hiệu ứng |
+|---:|---|---|---|---|---|
+| 1 | `Adjudicator Verdict Stroke` | `Normal` | 0 / 0 / 2 | Enemy | Bút Phán gây 100% damage. |
+| 2 | `Adjudicator Accusation` | `Active` | 1 / 3 / 3 | Enemy | Cáo Trạng gây 100% damage; target còn sống nhận `GuardBreak(20)` trong 2 lượt. |
+| 3 | `Adjudicator Forbidden Seal` | `Ultimate` | 3 / 5 / 3 | Enemy + EmptyTile | Đại Ấn gây 160% damage trong radius 1; enemy còn sống nhận `Weaken(25)` và có 50% nhận `HealBan`, đều trong 2 lượt. |
+
+Implementation liên quan:
+
+- `NormalAttackSkill`, `AdjudicatorAccusationSkill`, `AdjudicatorForbiddenSealSkill`.
+- `SkillAreaUtility`, `ActiveStatusEffect` và RNG của `LocalMatchAuthority`.
+
+Mục tiêu gameplay:
+
+- Giá trị cao khi đối phương tụ cụm hoặc dựa vào hồi phục, nhưng chỉ có một action và move range 4.
+- Chi phí triệu hồi 6 và ultimate tốn thêm 3 MP tạo cửa sổ để đối thủ gây áp lực ở nhiều điểm.
+
 ## 4. Quan hệ chiến thuật mục tiêu
 
 | Tình huống | Unit có lợi thế dự kiến | Đối sách dự kiến |
 |---|---|---|
-| Giữ choke/capture | Knight, Halberdier | Magician/Smasher phá vị trí |
-| Đội hình đứng gần | Magician, Smasher, Halberdier | Tách đội hình, Assassin áp sát |
-| Mục tiêu ít HP | Assassin, Archer | Shield, guard, deny target |
-| Giao tranh kéo dài | Berserker | Burst, control hoặc disengage |
-| Tuyến sau không được bảo vệ | Assassin | Root/stun, body block, focus fire |
+| Triển khai sớm, tranh nhiều điểm | Dân Binh | AoE, displacement, buộc giao tranh tập trung |
+| Giữ choke/capture | Knight, Halberdier, Dân Binh | Magician/Smasher phá vị trí; Phán Quan mở burst |
+| Đội hình đứng gần | Magician, Smasher, Halberdier, Phán Quan | Tách đội hình, đánh ở nhiều capture point |
+| Mục tiêu có `Shield` hoặc guard | Dân Binh, Phán Quan | Giữ khoảng cách, bỏ khiên trước Dồn Sức, cleanse `GuardBreak` |
+| Mục tiêu ít HP | Assassin, Archer | Shield, guard, Dược Sư hồi hoặc giải debuff |
+| Giao tranh kéo dài | Berserker, Dược Sư | Burst tuyến sau, `HealBan`, control hoặc disengage |
+| Đội hình phụ thuộc hồi phục | Phán Quan | Dược Sư giải `HealBan`, tản đội hình, ép Phán Quan dùng MP sớm |
+| Tuyến sau không được bảo vệ | Assassin | Root/stun, body block, Dân Binh che vị trí |
+| Đầu tư 6 MP vào một unit | Phán Quan | Dàn áp lực ở nhiều điểm bằng unit giá thấp |
 
 Đây là mục tiêu cân bằng, không phải kết quả đã chứng minh. Cần playtest matrix để xác nhận.
 
@@ -162,7 +233,8 @@ contribution, MP efficiency và tỷ lệ skill thành công.
 |---|---|
 | P0 | Test từng skill trong scene với hai phe |
 | P0 | Test target chết giữa multi-hit/projectile/composite sequence |
-| P1 | Chuẩn hóa tooltip, icon, cooldown và status feedback cho 7 unit |
+| P0 | Tạo `UnitData`/prefab và đăng ký roster/catalog cho Dân Binh, Dược Sư, Phán Quan |
+| P1 | Chuẩn hóa tooltip, icon, cooldown và status feedback cho 10 class |
 | P1 | Kiểm tra prefab/animator/VFX reference của roster dùng trong build |
 | P1 | Thu thập playtest data và điều chỉnh `UnitData`/skill asset |
 | P2 | Chốt tên hiển thị theo bối cảnh Việt huyền dị |

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 56a7464fb5a87c146b1c91793d9f6b44, type: 3}
   m_Name: MatchContentCatalog
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Multiplayer.MatchContentCatalog
-  ContentCatalogHash: 37dfa8d9866092c5c70943123bfe876705cc0fe82c43726099c64cd3b35f7731
+  ContentCatalogHash: 0ad1c5d2fb59a2e5ad73139f50bd2f6b5ab43f20564b0e5db5d0c7198e67b6cd
   Entries:
   - Id: 05c17095b200410b9466fe345b145015
     Content: {fileID: 11400000, guid: 05c17095b200410b9466fe345b145015, type: 2}
@@ -20,11 +20,20 @@ MonoBehaviour:
   - Id: 082162c60ebd4a7985b5f252e8376d26
     Content: {fileID: 11400000, guid: 082162c60ebd4a7985b5f252e8376d26, type: 2}
     UnitPrefab: {fileID: 0}
+  - Id: 09c4aa02d8a4dd945bbbfa7ef185e7c7
+    Content: {fileID: 11400000, guid: 09c4aa02d8a4dd945bbbfa7ef185e7c7, type: 2}
+    UnitPrefab: {fileID: 0}
+  - Id: 13cd37830e302144fb8afb1ecd763a14
+    Content: {fileID: 11400000, guid: 13cd37830e302144fb8afb1ecd763a14, type: 2}
+    UnitPrefab: {fileID: 0}
   - Id: 17cbaea1db222d24db000283a3f68aab
     Content: {fileID: 11400000, guid: 17cbaea1db222d24db000283a3f68aab, type: 2}
     UnitPrefab: {fileID: 0}
   - Id: 264d50d6fa6498c459c5e1b5ba81b661
     Content: {fileID: 11400000, guid: 264d50d6fa6498c459c5e1b5ba81b661, type: 2}
+    UnitPrefab: {fileID: 0}
+  - Id: 3775ed46eaf9fa14aa49afaf2737ccaa
+    Content: {fileID: 11400000, guid: 3775ed46eaf9fa14aa49afaf2737ccaa, type: 2}
     UnitPrefab: {fileID: 0}
   - Id: 3bdac095735eadd4eb3b093605319980
     Content: {fileID: 11400000, guid: 3bdac095735eadd4eb3b093605319980, type: 2}
@@ -41,14 +50,23 @@ MonoBehaviour:
   - Id: 5b267e267f77829499bfde3f3f1fea17
     Content: {fileID: 11400000, guid: 5b267e267f77829499bfde3f3f1fea17, type: 2}
     UnitPrefab: {fileID: 0}
+  - Id: 64bfd3f4c65b4364099d94b37bc06815
+    Content: {fileID: 11400000, guid: 64bfd3f4c65b4364099d94b37bc06815, type: 2}
+    UnitPrefab: {fileID: 0}
   - Id: 6bb3bb848a5b9834ebc1daf7a5e8a74d
     Content: {fileID: 11400000, guid: 6bb3bb848a5b9834ebc1daf7a5e8a74d, type: 2}
     UnitPrefab: {fileID: 3320414852625481752, guid: 2aaba951b40a3614a9aa388092e1b961, type: 3}
   - Id: 705fcc605289b944192c93d9d79b7282
     Content: {fileID: 11400000, guid: 705fcc605289b944192c93d9d79b7282, type: 2}
     UnitPrefab: {fileID: 3120644439800569440, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}
+  - Id: 706c7b4dbd31c704aa3c257ef1c5b215
+    Content: {fileID: 11400000, guid: 706c7b4dbd31c704aa3c257ef1c5b215, type: 2}
+    UnitPrefab: {fileID: 0}
   - Id: 777bb8ad49142b74f90d2412e1939e40
     Content: {fileID: 11400000, guid: 777bb8ad49142b74f90d2412e1939e40, type: 2}
+    UnitPrefab: {fileID: 0}
+  - Id: 99561fc9eb670c7459fb8136271ce055
+    Content: {fileID: 11400000, guid: 99561fc9eb670c7459fb8136271ce055, type: 2}
     UnitPrefab: {fileID: 0}
   - Id: a0869a1ee8f94b2a9564c37ba3060370
     Content: {fileID: 11400000, guid: a0869a1ee8f94b2a9564c37ba3060370, type: 2}
@@ -62,6 +80,9 @@ MonoBehaviour:
   - Id: a5e2871c338541841aedca1a4fae0271
     Content: {fileID: 11400000, guid: a5e2871c338541841aedca1a4fae0271, type: 2}
     UnitPrefab: {fileID: 0}
+  - Id: a7f4aee9f1a4f924888efe724d3f3b9f
+    Content: {fileID: 11400000, guid: a7f4aee9f1a4f924888efe724d3f3b9f, type: 2}
+    UnitPrefab: {fileID: 0}
   - Id: aa5500e83c41c95408ca36f6305f5adb
     Content: {fileID: 11400000, guid: aa5500e83c41c95408ca36f6305f5adb, type: 2}
     UnitPrefab: {fileID: 4601153354674969337, guid: f7e5700fc8c987a489d12f4466079822, type: 3}
@@ -74,6 +95,9 @@ MonoBehaviour:
   - Id: c23b5fc0f13ad354aa337310e48e1178
     Content: {fileID: 11400000, guid: c23b5fc0f13ad354aa337310e48e1178, type: 2}
     UnitPrefab: {fileID: 2308730758283776138, guid: cdd9b3085a90c7d499a792828106d980, type: 3}
+  - Id: c41396a31e788de498a740ae6480eb3a
+    Content: {fileID: 11400000, guid: c41396a31e788de498a740ae6480eb3a, type: 2}
+    UnitPrefab: {fileID: 0}
   - Id: c8301b7a126a8b247a11efd55082b802
     Content: {fileID: 11400000, guid: c8301b7a126a8b247a11efd55082b802, type: 2}
     UnitPrefab: {fileID: 0}
@@ -88,4 +112,7 @@ MonoBehaviour:
     UnitPrefab: {fileID: 0}
   - Id: e81ddaa49dad491987c7b987e9e7d40e
     Content: {fileID: 11400000, guid: e81ddaa49dad491987c7b987e9e7d40e, type: 2}
+    UnitPrefab: {fileID: 0}
+  - Id: f2d0396e530d7fc40984f2dc4333541f
+    Content: {fileID: 11400000, guid: f2d0396e530d7fc40984f2dc4333541f, type: 2}
     UnitPrefab: {fileID: 0}
