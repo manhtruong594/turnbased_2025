@@ -82,7 +82,11 @@ namespace TurnBasedGame.Multiplayer.Protocol
         public MatchStateChange[] StateChanges = Array.Empty<MatchStateChange>();
     }
 
-    public enum StateChangeKind : byte { MP, Unit, RemovedUnit, Cooldown, Status, HandCard, Capture, Turn, Random, Hazard, SpawnPoint, Dice }
+    public enum StateChangeKind : byte
+    {
+        MP, Unit, RemovedUnit, Cooldown, Status, HandCard, Capture, Turn, Random, Hazard, SpawnPoint, Dice,
+        AshenMark, TemporaryBlocker
+    }
 
     // Unit: Value=HP, Value2=move done, Value3=action done, Value4=undo available.
     // Status: Value=type, Value2=value, Value3=remaining, Value4=initial duration.
@@ -103,7 +107,7 @@ namespace TurnBasedGame.Multiplayer.Protocol
     public static class MatchProtocol
     {
         public const ushort ProtocolVersion = 2;
-        public const int GameplayRulesVersion = 2;
+        public const int GameplayRulesVersion = 3;
         public const int MaxCommandBytes = 1024;
 
         public static bool IsHex(string value, int length)

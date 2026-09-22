@@ -328,6 +328,7 @@ namespace TurnBasedGame.Unit
             return Mathf.Max(0, Mathf.FloorToInt(moveRange * (1f - penalty / 100f)));
         }
         public int GetCurrentHealth() => runtimeStats.Health;
+        public int GetMaxHealth() => runtimeStats.MaxHealth;
         public float GetHealthPercent() => (float)runtimeStats.Health / runtimeStats.MaxHealth;
         public PlayerID GetOwner() => runtimeStats.Owner;
         public bool IsMoveDone() => runtimeStats.IsMoveCompleted;
@@ -366,18 +367,34 @@ namespace TurnBasedGame.Unit
             _healthBar.UpdateHealthBar((float)runtimeStats.Health / runtimeStats.MaxHealth);
             if (runtimeStats.Health <= 0)
             {
-                runtimeStats.IsDead = true;
-                _unitAnimator.PlayDeath();
-                MapManager.Instance.UnregisterUnit(currentGridPosition);
-                LocalMatchAuthority.Runtime.RemoveUnit(this);
-                UnitSpawner.Instance?.RemoveDeadUnit(this);
-                _deathCoroutine = StartCoroutine(DelayDead());
+                Die();
             }
             else if (damage > 0)
             {
                 _unitAnimator.PlayHit();
             }
             FloatingTextSpawner.Instance?.SpawnDamage(transform.position, (int)damage);
+        }
+
+        public bool TrySacrifice()
+        {
+            if (!LocalMatchAuthority.IsAuthoritative || IsDead()) return false;
+
+            runtimeStats.Health = 0;
+            _healthBar.UpdateHealthBar(0f);
+            Die();
+            return true;
+        }
+
+        private void Die()
+        {
+            if (runtimeStats.IsDead) return;
+            runtimeStats.IsDead = true;
+            _unitAnimator.PlayDeath();
+            MapManager.Instance.UnregisterUnit(currentGridPosition);
+            LocalMatchAuthority.Runtime.RemoveUnit(this);
+            UnitSpawner.Instance?.RemoveDeadUnit(this);
+            _deathCoroutine = StartCoroutine(DelayDead());
         }
 
         public void TakeNonLethalDamage(float damage)

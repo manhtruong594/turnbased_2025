@@ -19,7 +19,7 @@ namespace TurnBasedGame.SpellCard
         public Sprite icon;
 
         [Header("Cost & Restrictions")]
-        [Range(1, 10)] public int mpCost = 2;
+        [Range(0, 10)] public int mpCost = 2;
         [Tooltip("Spell bị hủy sau khi dùng (true = 1 lần duy nhất)")]
         public bool consumeOnUse = true;
 
@@ -54,7 +54,9 @@ namespace TurnBasedGame.SpellCard
         Self,
         AllAllies,
         AllEnemies,
-        AnyUnit
+        AnyUnit,
+        EmptyTile,
+        AutomaticEnemies
     }
 
     public enum StatusEffectType
@@ -78,6 +80,7 @@ namespace TurnBasedGame.SpellCard
         Bleed = 107,
         GuardBreak = 108,
         HealBan = 109,
+        AshenUltimatum = 110,
     }
 
     public static class StatusEffectTypeExtensions
@@ -94,6 +97,7 @@ namespace TurnBasedGame.SpellCard
             StatusEffectType.Bleed   => true,
             StatusEffectType.GuardBreak => true,
             StatusEffectType.HealBan => true,
+            StatusEffectType.AshenUltimatum => true,
             _                        => false,
         };
 

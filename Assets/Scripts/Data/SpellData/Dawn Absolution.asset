@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e0c76128c4113b94ead3f348ac466dc1, type: 3}
+  m_Name: Dawn Absolution
+  m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.SpellCard.SpellCardData
+  spellName: Dawn Absolution
+  description: "X\xF3a Stun v\xE0 Freeze kh\u1ECFi m\u1ED9t \u0111\u1ED3ng minh,
+    sau \u0111\xF3 h\u1ED3i 20% HP t\u1ED1i \u0111a."
+  icon: {fileID: 0}
+  mpCost: 2
+  consumeOnUse: 1
+  targetType: 0
+  range: 0
+  spellEffect:
+    rid: 9168879620293132375
+  castVfxPrefab: {fileID: 0}
+  impactVfxPrefab: {fileID: 0}
+  references:
+    version: 2
+    RefIds:
+    - rid: 9168879620293132375
+      type: {class: CompositeEffect, ns: TurnBasedGame.SpellCard, asm: Assembly-CSharp}
+      data:
+        effects:
+        - rid: 9168879620293132376
+        - rid: 9168879620293132377
+    - rid: 9168879620293132376
+      type: {class: HardCrowdControlCleanseEffect, ns: TurnBasedGame.SpellCard, asm: Assembly-CSharp}
+      data: 
+    - rid: 9168879620293132377
+      type: {class: PercentMaxHealthHealEffect, ns: TurnBasedGame.SpellCard, asm: Assembly-CSharp}
+      data:
+        percent: 20

@@ -157,6 +157,21 @@ namespace TurnBasedGame.SpellCard
             SelectedCard = card;
             SelectedCardInstanceId = GetCardInstanceId(caster, card);
             CurrentCaster = caster;
+            if (card.targetType == SpellTargetType.AutomaticEnemies)
+            {
+                foreach (var unit in GetAllUnitsOnMap())
+                {
+                    if (unit == null || unit.IsDead() || unit.GetOwner() == caster) continue;
+                    CachedTile = CachedMap?.Tile(unit.currentGridPosition);
+                    break;
+                }
+                if (CachedTile != null)
+                {
+                    NotifyCardSelected();
+                    SetState(new SpellConfirmingState());
+                    return;
+                }
+            }
             SetState(new SpellTargetingState());
         }
 
@@ -177,6 +192,8 @@ namespace TurnBasedGame.SpellCard
                 TurnManager.Instance.IsTurnTransitionPending || TurnManager.Instance.CurrentState == TurnState.GameEnd) return false;
             if (GetCardInstanceId(player, card) == 0 || MPManager.Instance == null ||
                 !MPManager.Instance.HasEnoughMP(player, card.mpCost)) return false;
+            if (card.targetType == SpellTargetType.AutomaticEnemies &&
+                (card.spellEffect is not IAutomaticSpellEffect automatic || !automatic.CanApply(player))) return false;
             return true;
         }
 
@@ -205,14 +222,23 @@ namespace TurnBasedGame.SpellCard
                 return (CommandReason.InvalidCard, "Card không có effect hợp lệ.");
             var tile = CachedMap?.Tile(targetPosition);
             if (tile == null) return (CommandReason.InvalidTarget, "Target tile không tồn tại.");
+            bool automatic = card.targetType == SpellTargetType.AutomaticEnemies;
+            bool tileTarget = card.targetType == SpellTargetType.EmptyTile;
+            if (automatic && (card.spellEffect is not IAutomaticSpellEffect automaticEffect || !automaticEffect.CanApply(actor)))
+                return (CommandReason.InvalidTarget, "Không có enemy hợp lệ cho spell tự động.");
+            if (tileTarget && (card.spellEffect is not ITileSpellEffect tileEffect || !tileEffect.CanApplyToTile(actor, targetPosition)))
+                return (CommandReason.InvalidTarget, "Tile không hợp lệ cho spell.");
             bool area = card.targetType == SpellTargetType.AllAllies || card.targetType == SpellTargetType.AllEnemies;
-            var candidates = area
+            var candidates = automatic || tileTarget
+                ? new List<UnitController>()
+                : area
                 ? (card.range == 0 ? GetAllUnitsOnMap() : MapManager.Instance.GetUnitsInRange(tile, card.range))
                 : new List<UnitController> { MapManager.Instance.GetUnitAtTile(targetPosition) };
             var targets = new List<UnitController>();
             foreach (var unit in candidates)
                 if (ValidateTarget(card, actor, unit)) targets.Add(unit);
-            if (targets.Count == 0) return (CommandReason.InvalidTarget, "Không có target hợp lệ.");
+            if (!automatic && !tileTarget && targets.Count == 0)
+                return (CommandReason.InvalidTarget, "Không có target hợp lệ.");
             if (MPManager.Instance == null || !MPManager.Instance.HasEnoughMP(actor, card.mpCost))
                 return (CommandReason.InsufficientMP, "Không đủ MP để cast spell.");
 
@@ -223,13 +249,16 @@ namespace TurnBasedGame.SpellCard
                 _playerHands[actor].RemoveAt(index);
                 ids.RemoveAt(index);
             }
-            foreach (var unit in targets) card.Cast(actor, unit);
+            if (automatic) card.Cast(actor, null);
+            else if (tileTarget) ((ITileSpellEffect)card.spellEffect).ApplyToTile(actor, targetPosition);
+            else foreach (var unit in targets) card.Cast(actor, unit);
             LocalMatchAuthority.PublishAfterCommit(() =>
             {
                 if (card.consumeOnUse) GameMediator.Instance?.NotifyHandChanged(actor);
                 GameMediator.Instance?.NotifySpellCardUsed(card, actor);
-                foreach (var unit in targets)
-                    if (unit != null) SpawnSpellVfx(card, unit);
+                if (tileTarget) SpawnSpellVfxAt(card, CachedMap.WorldPosition(targetPosition));
+                else foreach (var unit in targets)
+                        if (unit != null) SpawnSpellVfx(card, unit);
             });
             return (CommandReason.None, null);
         }
@@ -248,6 +277,8 @@ namespace TurnBasedGame.SpellCard
                 SpellTargetType.AllAllies => isFriendly,
                 SpellTargetType.AllEnemies => !isFriendly,
                 SpellTargetType.AnyUnit => true,
+                SpellTargetType.EmptyTile => false,
+                SpellTargetType.AutomaticEnemies => false,
                 _ => false
             };
         }
@@ -286,8 +317,13 @@ namespace TurnBasedGame.SpellCard
 
         public void SpawnSpellVfx(SpellCardData card, UnitController target)
         {
-            SpawnVfx(card.castVfxPrefab, target.transform.position);
-            SpawnVfx(card.impactVfxPrefab, target.transform.position);
+            SpawnSpellVfxAt(card, target.transform.position);
+        }
+
+        private void SpawnSpellVfxAt(SpellCardData card, Vector3 position)
+        {
+            SpawnVfx(card.castVfxPrefab, position);
+            SpawnVfx(card.impactVfxPrefab, position);
         }
 
         private void SpawnVfx(GameObject vfxPrefab, Vector3 position)

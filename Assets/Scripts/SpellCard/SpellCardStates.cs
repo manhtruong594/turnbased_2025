@@ -23,6 +23,7 @@ namespace TurnBasedGame.SpellCard
         public override void Enter(SpellCardManager ctx)
         {
             ctx.SelectedCard = null;
+            ctx.CachedTile = null;
             AreaPathManager.Instance?.HideSpellArea();
             ctx.NotifyCardDeselected();
         }

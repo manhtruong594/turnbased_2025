@@ -97,9 +97,12 @@ namespace RedBjorn.ProtoTiles.Example
             if (_path && _path.IsEnabled)
             {
                 var tile = _cachedMap.Tile(mousePos);
-                if (tile != null && tile.Vacant)
+                if (tile != null && MapManager.Instance.IsTileAvailable(tile.Position))
                 {
-                    var path = _cachedMap.PathPoints(selectedUnit.transform.position, _cachedMap.WorldPosition(tile.Position), selectedUnit.GetMoveRange());
+                    var pathTiles = MapManager.Instance.FindMovementPath(
+                        selectedUnit.currentGridPosition, tile.Position, selectedUnit.GetMoveRange());
+                    var path = new List<Vector3>(pathTiles.Count);
+                    foreach (var pathTile in pathTiles) path.Add(_cachedMap.WorldPosition(pathTile.Position));
                     _path.Show(path, _cachedMap);
                     _path.ActiveState();
                     _area.ActiveState();
@@ -154,7 +157,7 @@ namespace RedBjorn.ProtoTiles.Example
             if (selectedUnit == null || !selectedUnit.CanMove())
                 return;
 
-            if (_tileClicked.Vacant)
+            if (MapManager.Instance.IsTileAvailable(_tileClicked.Position))
             {
                 // handle move
                 HideMoveArea();

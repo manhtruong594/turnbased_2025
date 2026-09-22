@@ -43,6 +43,8 @@ migration; nếu type không resolve, dữ liệu effect trong asset có thể m
 | `AnyUnit` | Một unit bất kỳ | Hiện có |
 | `AllAllies` | Toàn bộ unit cùng phe | Chưa hoàn chỉnh |
 | `AllEnemies` | Toàn bộ unit đối địch | Chưa hoàn chỉnh |
+| `EmptyTile` | Một ô trống, base-walkable, không có blocker runtime | Hiện có |
+| `AutomaticEnemies` | Authority tự chọn enemy theo logic của effect, không click target | Hiện có |
 
 Area target phải quy định rõ range áp theo target trung tâm hay toàn map và card bị consume một lần cho
 toàn bộ tập mục tiêu.
@@ -65,6 +67,11 @@ toàn bộ tập mục tiêu.
 | `FreezeEffect` | Khóa hành động 2 lượt; hit trực tiếp đầu tiên phá Freeze và nhận thêm 20% damage |
 | `BleedEffect` | Damage theo turn |
 | `CompositeEffect` | Chạy danh sách effect theo thứ tự |
+| `PercentMaxHealthHealEffect` | Hồi máu theo phần trăm max HP |
+| `HardCrowdControlCleanseEffect` | Chỉ xóa `Stun` và `Freeze` |
+| `AshenUltimatumEffect` | Đánh dấu tối đa hai enemy theo ưu tiên; phân giải cuối lượt phe mục tiêu |
+| `EmberSacrificeEffect` | Hiến tế đồng minh, hoàn MP và áp Burn quanh tile tử trận |
+| `StonewallRiseEffect` | Tạo temporary blocker trên tile trống |
 
 Data assets hiện có: Damage Spell, Root Spell, Shield Spell và Stun Spell trong
 `Assets/Scripts/Data/SpellData`.
@@ -75,8 +82,9 @@ Data assets hiện có: Damage Spell, Root Spell, Shield Spell và Stun Spell tr
 move, heal ban, untargetable, displacement immunity và rooted. `StatusEffectType` có thêm các giá trị
 phục vụ skill như `BloodRage`, `StanceGuard`, `ShadowStep`, `GuardBreak`, `HealBan`.
 
-`Slow` giảm move range theo `Value`%, `Weaken` giảm outgoing damage theo `Value`%. `Freeze` khóa toàn
-bộ hành động trong 2 lượt. Hit damage trực tiếp đầu tiên nhận thêm 20% damage, phá `Freeze` và chuyển
+`Slow` giảm move range theo `Value`%, `Weaken` giảm outgoing damage theo `Value`%. `AshenUltimatum`
+là marker có thể bị Cleanse; state phạt và cờ di chuyển nằm trong `SpellRuntimeEffectManager`. `Freeze`
+khóa toàn bộ hành động trong 2 lượt. Hit damage trực tiếp đầu tiên nhận thêm 20% damage, phá `Freeze` và chuyển
 số lượt còn lại thành `Slow(20)`; damage-over-time không phá `Freeze`. Status tick ở đầu lượt nhưng
 chỉ bị xóa khi unit hoàn tất action để duration 1 vẫn có hiệu lực trong lượt cuối.
 
@@ -92,6 +100,10 @@ chỉ bị xóa khi unit hoàn tất action để duration 1 vẫn có hiệu l�
 8. Manager phát spell-used/hand-changed và trở về Idle.
 
 Cancel hoặc validation fail phải trở về state an toàn mà không trừ MP/consume card.
+
+`AutomaticEnemies` chuyển thẳng sang xác nhận khi còn enemy hợp lệ. `EmptyTile` vẫn chọn tile trên map;
+authority kiểm tra lại tile trước commit. Temporary blocker được tính trong move path, spawn, displacement và
+teleport, giảm duration ở mỗi `OnPlayerTurnEnded`, đồng thời được lưu trong rollback/snapshot multiplayer.
 
 ## 8. Quy tắc transaction
 

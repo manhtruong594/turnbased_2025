@@ -248,6 +248,7 @@ namespace TurnBasedGame.Command
             if (MPManager.Instance != null) restore.Add(MPManager.Instance.CaptureRollback());
             if (SpellCardManager.Instance != null) restore.Add(SpellCardManager.Instance.CaptureRollback());
             if (TileHazardManager.Instance != null) restore.Add(TileHazardManager.Instance.CaptureRollback());
+            if (SpellRuntimeEffectManager.Instance != null) restore.Add(SpellRuntimeEffectManager.Instance.CaptureRollback());
             if (TurnBasedGame.Capture.CapturePointManager.Instance != null)
                 foreach (var point in TurnBasedGame.Capture.CapturePointManager.Instance.CapturePoints)
                     restore.Add(point.CaptureRollback());
@@ -296,6 +297,7 @@ namespace TurnBasedGame.Command
                         Position = new GridCoordinate(hazard.Position.x, hazard.Position.y, hazard.Position.z),
                         Value = (int)hazard.Type, Value2 = hazard.Value, Value3 = hazard.RemainingTurns,
                         Value4 = hazard.StatusDuration, Scalar = hazard.ApplyChance });
+            SpellRuntimeEffectManager.Instance?.AppendState(changes);
             if (UnitSpawner.Instance != null)
                 foreach (var point in UnitSpawner.Instance.SpawnPoints)
                     changes.Add(new MatchStateChange { Kind = StateChangeKind.SpawnPoint, Player = (PlayerId)point.Owner,
@@ -446,7 +448,7 @@ namespace TurnBasedGame.Command
                     var map = manager != null ? manager.MapEntity : null;
                     if (map == null || !manager.IsTileAvailable(destination))
                         return (CommandReason.InvalidTarget, "Tile đích không hợp lệ hoặc đã bị chiếm.");
-                    var path = map.PathTiles(unit.transform.position, map.WorldPosition(destination), unit.GetMoveRange());
+                    var path = manager.FindMovementPath(unit.currentGridPosition, destination, unit.GetMoveRange());
                     if (path == null || path.Count == 0 || path[path.Count - 1].Position != destination)
                         return (CommandReason.OutOfRange, "Không có đường đi hợp lệ tới tile đích.");
                     success = unit.TryMoveAuthorized(path, onComplete, out reason);

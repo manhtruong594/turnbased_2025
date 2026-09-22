@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86ab2ddd49f3b30409500291ade8d6b0, type: 3}
+  m_Name: Adjudicator Data
+  m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Unit.UnitData
+  unitName: Adjudicator
+  description: "Unit cao c\u1EA5p ph\xE1 ph\xF2ng th\u1EE7, gi\u1EA3m s\xE1t th\u01B0\u01A1ng
+    \u0111\u1ECBch v\xE0 g\xE2y \xE1p l\u1EF1c l\xEAn \u0111\u1ED9i h\xECnh h\u1ED3i
+    ph\u1EE5c."
+  Health: 140
+  BaseDamage: 14
+  spawnCost: 6
+  moveRange: 4
+  icon: {fileID: 0}
+  startingSkills:
+  - {fileID: 11400000, guid: 64bfd3f4c65b4364099d94b37bc06815, type: 2}
+  - {fileID: 11400000, guid: 99561fc9eb670c7459fb8136271ce055, type: 2}
+  - {fileID: 11400000, guid: a7f4aee9f1a4f924888efe724d3f3b9f, type: 2}

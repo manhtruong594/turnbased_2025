@@ -344,6 +344,14 @@ namespace TurnBasedGame.SpellCard
             }
         }
 
+        public void RemoveHardCrowdControl()
+        {
+            if (!TurnBasedGame.Command.LocalMatchAuthority.IsAuthoritative) return;
+            RemoveByType(StatusEffectType.Stun);
+            RemoveByType(StatusEffectType.Freeze);
+            RemoveByType(StatusEffectType.Root);
+        }
+
         public float ModifyIncomingDamage(float rawDamage, bool canBreakFreeze)
         {
             float modifiedDamage = rawDamage;

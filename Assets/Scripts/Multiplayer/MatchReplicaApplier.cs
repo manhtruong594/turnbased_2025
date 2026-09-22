@@ -73,6 +73,12 @@ namespace TurnBasedGame.Multiplayer
                 }
             }
             if (hazards.Count > 0 || TileHazardManager.Instance != null) TileHazardManager.InstanceOrCreate.ApplyReplica(hazards);
+            bool hasRuntimeSpellState = false;
+            foreach (var entry in state)
+                if (entry.Kind == StateChangeKind.AshenMark || entry.Kind == StateChangeKind.TemporaryBlocker)
+                    hasRuntimeSpellState = true;
+            if (hasRuntimeSpellState || SpellRuntimeEffectManager.Instance != null)
+                SpellRuntimeEffectManager.InstanceOrCreate.ApplyReplica(state);
             SpellCardManager.Instance.ApplyReplicaHand(state);
             var actual = MatchSnapshotProtocol.Visible(LocalMatchAuthority.CaptureState().ToArray(), viewer);
             if (MatchSnapshotProtocol.Hash(actual, TurnManager.Instance.Deadline) != snapshot.Hash)
@@ -153,6 +159,19 @@ namespace TurnBasedGame.Multiplayer
                             MapManager.Instance.MapEntity.Tile(Grid(entry)) == null || entry.Value3 < 1 || entry.Value4 < 1 ||
                             float.IsNaN(entry.Scalar) || entry.Scalar < 0 || entry.Scalar > 1) throw new ArgumentException("Invalid hazard.");
                         key = "hazard:" + Grid(entry) + ":" + entry.Value; break;
+                    case StateChangeKind.AshenMark:
+                        if (!units.TryGetValue(entry.Entity, out var markedUnit) || !MatchProtocol.IsPlayer(entry.Player) ||
+                            !MatchProtocol.IsPlayer((PlayerId)entry.Value4) || markedUnit.Player != (PlayerId)entry.Value4 ||
+                            entry.Value < 0 || entry.Value2 < 0 || entry.Value2 > 100 ||
+                            entry.Value3 < 0 || entry.Value3 > 100 || entry.Position.X < 1 || entry.Position.Y < 1 ||
+                            entry.Position.Z < 0 || entry.Position.Z > 1)
+                            throw new ArgumentException("Invalid Ashen Ultimatum mark.");
+                        key = "ashen:" + entry.Entity; break;
+                    case StateChangeKind.TemporaryBlocker:
+                        if (!MatchProtocol.IsPlayer(entry.Player) || MapManager.Instance.MapEntity.Tile(Grid(entry)) == null ||
+                            entry.Value < 1 || positions.Contains(Grid(entry)))
+                            throw new ArgumentException("Invalid temporary blocker.");
+                        key = "blocker:" + Grid(entry); break;
                     default: throw new ArgumentException("Unexpected/private state entry.");
                 }
                 if (key != null && !keys.Add(key)) throw new ArgumentException("Duplicate state entry.");

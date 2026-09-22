@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!221 &22100000
+AnimatorOverrideController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Militia_Override
+  m_Controller: {fileID: 9100000, guid: 8b5059b509214724d9243baa6d4d378f, type: 2}
+  m_Clips:
+  - m_OriginalClip: {fileID: 6610900707301026058, guid: 98485ee2b5773854cabb4f08e4b6cd24, type: 3}
+    m_OverrideClip: {fileID: 7400000, guid: a4f7fde0b86a9bd419535ee2de9c4d96, type: 3}
+  - m_OriginalClip: {fileID: -8272989719973183622, guid: b1b56d6df4d5caa4bb78debc83bcba16, type: 3}
+    m_OverrideClip: {fileID: 7400000, guid: 9757788373ec8734cb4f7a3db84aef2f, type: 3}
+  - m_OriginalClip: {fileID: -4032023344828129715, guid: e3f01a225e6c5f149967d578159ce8bb, type: 3}
+    m_OverrideClip: {fileID: 7400000, guid: 0000872662c8fb241bf2ab6cc00dd461, type: 3}
+  - m_OriginalClip: {fileID: -3428009262318858302, guid: 57c1fd5c87084354c9bb0a22e379d733, type: 3}
+    m_OverrideClip: {fileID: 7400000, guid: 4488e5d7d2200444cbed837910c4fe72, type: 3}
+  - m_OriginalClip: {fileID: 2421917721167035956, guid: bb33f2b4546252b409c84ab757fb23b3, type: 3}
+    m_OverrideClip: {fileID: 7400000, guid: 475796453e56ae447b098689c94bcfb5, type: 3}
+  - m_OriginalClip: {fileID: -4831928198833850390, guid: d4ff51898384e9649a9465aed2c66578, type: 3}
+    m_OverrideClip: {fileID: 7400000, guid: 8370b4128ccb08c4a8944d3f0d66cebc, type: 3}
+  - m_OriginalClip: {fileID: 672387216474695850, guid: 7f955e95b45dfef43bec3b8dee2ac89f, type: 3}
+    m_OverrideClip: {fileID: 7400000, guid: 861c5aaef9829104d9122fa96811dfb9, type: 3}
+  - m_OriginalClip: {fileID: -271066710833461980, guid: 946cce0a581dadb4695fd2185dc436c1, type: 3}
+    m_OverrideClip: {fileID: 7400000, guid: 58f2909dff975b54c8395d479180996e, type: 3}

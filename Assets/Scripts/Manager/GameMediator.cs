@@ -90,6 +90,7 @@ public class GameMediator : MonoBehaviour
 
         if (capturePointManager != null)
             capturePointManager.Initialize(this);
+        _ = SpellRuntimeEffectManager.InstanceOrCreate;
         IsInitialized = true;
     }
 

@@ -223,7 +223,10 @@ namespace TurnBasedGame.Core
 
             foreach (var tile in walkableTiles)
             {
-                if (!tile.Vacant || MapManager.Instance.HasUnitAtTile(tile.Position))
+                if (!MapManager.Instance.IsTileAvailable(tile.Position))
+                    continue;
+                if (MapManager.Instance.FindMovementPath(
+                        unit.currentGridPosition, tile.Position, unit.GetMoveRange()).Count == 0)
                     continue;
 
                 float score = ScoreMoveTile(unit, tile.Position, opponents);

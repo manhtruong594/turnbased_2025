@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e0c76128c4113b94ead3f348ac466dc1, type: 3}
+  m_Name: Merciful Prison
+  m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.SpellCard.SpellCardData
+  spellName: Merciful Prison
+  description: "H\u1ED3i 25 HP cho m\u1ED9t unit, sau \u0111\xF3 Root unit \u0111\xF3
+    trong 2 l\u01B0\u1EE3t."
+  icon: {fileID: 0}
+  mpCost: 2
+  consumeOnUse: 1
+  targetType: 5
+  range: 0
+  spellEffect:
+    rid: 9168879620293132379
+  castVfxPrefab: {fileID: 0}
+  impactVfxPrefab: {fileID: 0}
+  references:
+    version: 2
+    RefIds:
+    - rid: 9168879620293132379
+      type: {class: CompositeEffect, ns: TurnBasedGame.SpellCard, asm: Assembly-CSharp}
+      data:
+        effects:
+        - rid: 9168879620293132380
+        - rid: 9168879620293132381
+    - rid: 9168879620293132380
+      type: {class: HealEffect, ns: TurnBasedGame.SpellCard, asm: Assembly-CSharp}
+      data:
+        healAmount: 25
+    - rid: 9168879620293132381
+      type: {class: RootEffect, ns: TurnBasedGame.SpellCard, asm: Assembly-CSharp}
+      data:
+        duration: 2

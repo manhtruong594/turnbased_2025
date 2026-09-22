@@ -38,4 +38,4 @@ MonoBehaviour:
   burnChanceFromGround: 0.5
   burnDuration: 2
   burnDamageMultiplier: 0.4
-  burningGroundDuration: 2
+  burningGroundDuration: 4

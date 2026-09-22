@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!221 &22100000
+AnimatorOverrideController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Halberdier_Override
+  m_Controller: {fileID: 9100000, guid: b3f8b6df3c05ff742a5faacdd1a17bde, type: 2}
+  m_Clips:
+  - m_OriginalClip: {fileID: 7400000, guid: f7d404696aab6a44f814961d95b1230f, type: 3}
+    m_OverrideClip: {fileID: 7400000, guid: fcd5d479f75a6b44595e56fa981bdda4, type: 3}
+  - m_OriginalClip: {fileID: 7400000, guid: 6a6f4cb0213844e488b0ba2a4dbdb242, type: 3}
+    m_OverrideClip: {fileID: 7400002, guid: 8157d83ccd1e1204183e4c4152e94e0f, type: 3}
+  - m_OriginalClip: {fileID: 7400002, guid: 6a6f4cb0213844e488b0ba2a4dbdb242, type: 3}
+    m_OverrideClip: {fileID: 7400000, guid: 8157d83ccd1e1204183e4c4152e94e0f, type: 3}
+  - m_OriginalClip: {fileID: 7400004, guid: 6a6f4cb0213844e488b0ba2a4dbdb242, type: 3}
+    m_OverrideClip: {fileID: 7400004, guid: 8157d83ccd1e1204183e4c4152e94e0f, type: 3}
+  - m_OriginalClip: {fileID: 7400000, guid: cc649f12dee812447884cf66d8479cbe, type: 3}
+    m_OverrideClip: {fileID: 7400000, guid: 5b360080cac046f4ca2eaeab24ff36b4, type: 3}
+  - m_OriginalClip: {fileID: 7400000, guid: 27679c46763b7fa458737bc6777ebb23, type: 3}
+    m_OverrideClip: {fileID: 7400000, guid: 166bd7a93bd81444ca9cbe6c866e47bf, type: 3}
+  - m_OriginalClip: {fileID: 7400000, guid: 46b1e7d1c5750314daf5c3c87774237a, type: 3}
+    m_OverrideClip: {fileID: 7400000, guid: 3dcedaf8729025e43b00abb66582950b, type: 3}
+  - m_OriginalClip: {fileID: 7400000, guid: 686f85424da73f445b7e2c6deb279fa4, type: 3}
+    m_OverrideClip: {fileID: 7400000, guid: f0ae791c1ab57cf468fa2e34af5f254a, type: 3}
+  - m_OriginalClip: {fileID: 7400000, guid: 0c0816d3a5d80264993ea28c916c854b, type: 3}
+    m_OverrideClip: {fileID: 7400000, guid: 5e2c83d7c29bbd64cb4e8431239e7313, type: 3}
+  - m_OriginalClip: {fileID: 7400000, guid: befc9d3be5b7d2745b28c5ffb1a90e6a, type: 3}
+    m_OverrideClip: {fileID: 0}

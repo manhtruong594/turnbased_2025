@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using TurnBasedGame.Core;
+using TurnBasedGame.Resources;
 using TurnBasedGame.Unit;
 using UnityEngine;
 
@@ -14,6 +15,17 @@ namespace TurnBasedGame.SpellCard
     public interface ISpellEffect
     {
         void Apply(PlayerID caster, UnitController target);
+    }
+
+    public interface IAutomaticSpellEffect : ISpellEffect
+    {
+        bool CanApply(PlayerID caster);
+    }
+
+    public interface ITileSpellEffect : ISpellEffect
+    {
+        bool CanApplyToTile(PlayerID caster, Vector3Int position);
+        void ApplyToTile(PlayerID caster, Vector3Int position);
     }
     
     /// <summary>Hồi HP cho target.</summary>
@@ -29,6 +41,18 @@ namespace TurnBasedGame.SpellCard
 
             target.Heal(healAmount);
             Debug.Log($"[Spell] Heal: Hồi {healAmount} HP cho {target.name}");
+        }
+    }
+
+    [Serializable]
+    public class PercentMaxHealthHealEffect : ISpellEffect
+    {
+        [Range(1, 100)] public int percent = 20;
+
+        public void Apply(PlayerID caster, UnitController target)
+        {
+            if (target == null || target.IsDead()) return;
+            target.Heal(Mathf.Max(1, Mathf.RoundToInt(target.GetMaxHealth() * percent / 100f)));
         }
     }
 
@@ -94,6 +118,16 @@ namespace TurnBasedGame.SpellCard
 
             handler.RemoveDebuffs();
             Debug.Log($"[Spell] Cleanse: Thanh tẩy debuff cho {target.name}");
+        }
+    }
+
+    [Serializable]
+    public class HardCrowdControlCleanseEffect : ISpellEffect
+    {
+        public void Apply(PlayerID caster, UnitController target)
+        {
+            if (target == null || target.IsDead()) return;
+            target.BuffHandler?.RemoveHardCrowdControl();
         }
     }
 
@@ -202,6 +236,70 @@ namespace TurnBasedGame.SpellCard
             handler.AddEffect(new ActiveStatusEffect(StatusEffectType.Bleed, bleedDamage, duration, caster));
             Debug.Log($"[Spell] Bleed: Gây chảy máu {bleedDamage} dmg/turn cho {target.name} trong {duration} lượt");
         }
+    }
+
+    [Serializable]
+    public class AshenUltimatumEffect : IAutomaticSpellEffect
+    {
+        [Range(1, 200)] public int damage = 20;
+        [Range(1, 100)] public int weakenPercent = 25;
+        [Range(1, 10)] public int weakenDuration = 2;
+        [Range(1, 100)] public int guardBreakPercent = 25;
+        [Range(1, 10)] public int guardBreakDuration = 2;
+        [Range(1, 2)] public int maxTargets = 2;
+
+        public bool CanApply(PlayerID caster) => SpellRuntimeEffectManager.HasLivingEnemy(caster);
+
+        public void Apply(PlayerID caster, UnitController target)
+        {
+            SpellRuntimeEffectManager.InstanceOrCreate.ApplyAshenUltimatum(
+                caster, damage, weakenPercent, weakenDuration,
+                guardBreakPercent, guardBreakDuration, maxTargets);
+        }
+    }
+
+    [Serializable]
+    public class EmberSacrificeEffect : ISpellEffect
+    {
+        [Range(1, 20)] public int mpGain = 3;
+        [Range(1, 100)] public int burnDamage = 10;
+        [Range(1, 10)] public int burnDuration = 2;
+        [Range(1, 3)] public int radius = 1;
+
+        public void Apply(PlayerID caster, UnitController target)
+        {
+            if (target == null || target.IsDead() || target.GetOwner() != caster) return;
+            var map = MapManager.Instance;
+            var center = map?.MapEntity?.Tile(target.currentGridPosition);
+            if (center == null) return;
+
+            var nearbyUnits = map.GetUnitsInRange(center, radius);
+            if (!target.TrySacrifice()) return;
+
+            MPManager.Instance?.AddMP(caster, mpGain);
+            foreach (var unit in nearbyUnits)
+            {
+                if (unit == null || unit.IsDead() || unit.GetOwner() == caster) continue;
+                unit.BuffHandler?.AddEffect(new ActiveStatusEffect(
+                    StatusEffectType.Burn, burnDamage, burnDuration, caster));
+            }
+        }
+    }
+
+    [Serializable]
+    public class StonewallRiseEffect : ITileSpellEffect
+    {
+        [Range(1, 10)] public int duration = 2;
+
+        public bool CanApplyToTile(PlayerID caster, Vector3Int position) =>
+            SpellRuntimeEffectManager.CanPlaceTemporaryBlocker(position);
+
+        public void ApplyToTile(PlayerID caster, Vector3Int position)
+        {
+            SpellRuntimeEffectManager.InstanceOrCreate.TryAddTemporaryBlocker(position, duration, caster);
+        }
+
+        public void Apply(PlayerID caster, UnitController target) { }
     }
 
     /// <summary>

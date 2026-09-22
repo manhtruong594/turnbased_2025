@@ -63,6 +63,8 @@ namespace TurnBasedGame.UI
             if (spell.targetType == SpellTargetType.SingleAlly) targets.Add("Đồng minh");
             if (spell.targetType == SpellTargetType.Self) targets.Add("Bản thân");
             if (spell.targetType == SpellTargetType.AnyUnit) targets.Add("Ô trống");
+            if (spell.targetType == SpellTargetType.EmptyTile) targets.Add("Ô trống");
+            if (spell.targetType == SpellTargetType.AutomaticEnemies) targets.Add("Tự chọn kẻ địch");
             return targets.Count > 0 ? string.Join(", ", targets) : "—";
         }
 

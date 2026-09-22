@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using TurnBasedGame.Core;
 using TurnBasedGame.Maps;
 using TurnBasedGame.Unit;
+using TurnBasedGame.SpellCard;
 
 public class MapManager : BaseManager
 {
@@ -157,7 +158,57 @@ public class MapManager : BaseManager
     public bool IsTileAvailable(Vector3Int gridPos)
     {
         var tile = MapEntity?.Tile(gridPos);
-        return tile != null && tile.Vacant && !HasUnitAtTile(gridPos);
+        return tile != null && tile.Vacant && !HasUnitAtTile(gridPos) && !HasTemporaryBlocker(gridPos);
+    }
+
+    public bool HasTemporaryBlocker(Vector3Int gridPos) =>
+        SpellRuntimeEffectManager.Instance != null && SpellRuntimeEffectManager.Instance.HasTemporaryBlocker(gridPos);
+
+    public List<TileEntity> FindMovementPath(Vector3Int origin, Vector3Int destination, float range)
+    {
+        var result = new List<TileEntity>();
+        var start = MapEntity?.Tile(origin);
+        var finish = MapEntity?.Tile(destination);
+        if (start == null || finish == null || start.MovableArea != finish.MovableArea ||
+            !finish.Vacant || HasTemporaryBlocker(destination)) return result;
+        if (SpellRuntimeEffectManager.Instance == null || !SpellRuntimeEffectManager.Instance.HasTemporaryBlockers)
+            return MapEntity.PathTiles(MapEntity.WorldPosition(origin), MapEntity.WorldPosition(destination), range);
+
+        var open = new List<TileEntity> { start };
+        var costs = new Dictionary<TileEntity, float> { [start] = 0f };
+        var cameFrom = new Dictionary<TileEntity, TileEntity>();
+        while (open.Count > 0)
+        {
+            int bestIndex = 0;
+            for (int i = 1; i < open.Count; i++)
+                if (costs[open[i]] < costs[open[bestIndex]]) bestIndex = i;
+            var current = open[bestIndex];
+            open.RemoveAt(bestIndex);
+            if (current == finish) break;
+
+            for (int i = 0; i < MapEntity.NeighboursDirection.Length; i++)
+            {
+                if (current.NeighbourMovable[i] > 0f) continue;
+                var next = MapEntity.Tile(current.Position + MapEntity.NeighboursDirection[i]);
+                if (next == null || !next.Vacant || HasTemporaryBlocker(next.Position)) continue;
+                float nextCost = costs[current] + MapEntity.Distance(current.Position, next.Position);
+                if (nextCost > range || costs.TryGetValue(next, out var oldCost) && oldCost <= nextCost) continue;
+                costs[next] = nextCost;
+                cameFrom[next] = current;
+                if (!open.Contains(next)) open.Add(next);
+            }
+        }
+
+        if (start != finish && !cameFrom.ContainsKey(finish)) return result;
+        var pathTile = finish;
+        while (pathTile != null)
+        {
+            result.Add(pathTile);
+            if (pathTile == start) break;
+            pathTile = cameFrom.TryGetValue(pathTile, out var previous) ? previous : null;
+        }
+        result.Reverse();
+        return result;
     }
     #endregion
 
