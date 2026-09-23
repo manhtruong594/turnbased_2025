@@ -19,7 +19,7 @@ namespace TurnBasedGame.SpellCard
             if (_turnText == null) _turnText = GetComponentInChildren<TextMeshProUGUI>();
         }
 
-        public void Setup(Sprite sprite, int remainingTurns, Color tint = default)
+        public void Setup(Sprite sprite, int remainingTurns)
         {
             if (_icon == null) _icon = GetComponent<Image>();
             if (_turnText == null) _turnText = GetComponentInChildren<TextMeshProUGUI>();
@@ -27,7 +27,7 @@ namespace TurnBasedGame.SpellCard
             if (_icon != null)
             {
                 _icon.sprite = sprite;
-                _icon.color = tint == default ? Color.white : tint;
+                _icon.color = Color.white;
             }
             UpdateTurns(remainingTurns);
         }

@@ -17,7 +17,7 @@ MonoBehaviour:
     m\u1EE5c ti\xEAu \u0111ang c\xF3 Shield, s\xE1t th\u01B0\u01A1ng t\u0103ng th\xEAm
     30%."
   skillType: 1
-  icon: {fileID: 617916888, guid: 247fb8c0e365794479602c6a4dd89184, type: 3}
+  icon: {fileID: 1186622386, guid: 5f1303ecbc3023f41ab52e57073ffa7f, type: 3}
   cooldown: 2
   mpCost: 1
   range: 1

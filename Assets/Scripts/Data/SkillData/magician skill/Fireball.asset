@@ -16,7 +16,7 @@ MonoBehaviour:
   description: "G\xE2y 125% s\xE1t th\u01B0\u01A1ng l\xEAn t\u1EA5t c\u1EA3 k\u1EBB
     \u0111\u1ECBch trong ph\u1EA1m vi 2 \xF4 quanh \xF4 m\u1EE5c ti\xEAu."
   skillType: 0
-  icon: {fileID: 869761117, guid: 247fb8c0e365794479602c6a4dd89184, type: 3}
+  icon: {fileID: 1163112973, guid: 5f1303ecbc3023f41ab52e57073ffa7f, type: 3}
   cooldown: 3
   mpCost: 1
   range: 2

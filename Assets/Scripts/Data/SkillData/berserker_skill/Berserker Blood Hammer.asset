@@ -19,7 +19,7 @@ MonoBehaviour:
     t\u1EED tr\u1EADn. Ti\xEAu di\u1EC7t m\u1EE5c ti\xEAu ch\xEDnh s\u1EBD nh\u1EADn
     Blood Rage."
   skillType: 3
-  icon: {fileID: -1158104754, guid: 247fb8c0e365794479602c6a4dd89184, type: 3}
+  icon: {fileID: 1221752472, guid: 5f1303ecbc3023f41ab52e57073ffa7f, type: 3}
   cooldown: 4
   mpCost: 1
   range: 1

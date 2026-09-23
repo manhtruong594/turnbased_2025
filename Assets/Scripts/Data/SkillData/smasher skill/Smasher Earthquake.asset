@@ -17,7 +17,7 @@ MonoBehaviour:
     l\xEAn m\u1ED9t k\u1EBB \u0111\u1ECBch, \u0111\u1EA9y l\xF9i v\xE0 \xE1p d\u1EE5ng
     Stun khi va ch\u1EA1m."
   skillType: 3
-  icon: {fileID: -960206093, guid: 247fb8c0e365794479602c6a4dd89184, type: 3}
+  icon: {fileID: -1804364613, guid: 5f1303ecbc3023f41ab52e57073ffa7f, type: 3}
   cooldown: 4
   mpCost: 1
   range: 1

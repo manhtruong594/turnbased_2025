@@ -16,7 +16,7 @@ MonoBehaviour:
   description: "H\u1ED3i m\xE1u cho b\u1EA3n th\xE2n, gia\u0301 tri\u0323 b\u0103\u0300ng
     150% \u0111i\xEA\u0309m t\xE2\u0301n c\xF4ng"
   skillType: 4
-  icon: {fileID: 1069596017, guid: 247fb8c0e365794479602c6a4dd89184, type: 3}
+  icon: {fileID: -734586188, guid: 5f1303ecbc3023f41ab52e57073ffa7f, type: 3}
   cooldown: 2
   mpCost: 1
   range: 2

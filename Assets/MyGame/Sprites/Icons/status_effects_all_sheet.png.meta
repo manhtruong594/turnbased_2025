@@ -1,0 +1,534 @@
+fileFormatVersion: 2
+guid: 6ed39750adfd97149ad74a7dc13f5503
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 0
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: HealOverTime
+      rect:
+        serializedVersion: 2
+        x: 69
+        y: 2583
+        width: 420
+        height: 420
+      alignment: 9
+      pivot: {x: 0.500000, y: 0.500000}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1773d89953e31b8cddeeaddfe72045f9
+      internalID: 1090122504
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shield
+      rect:
+        serializedVersion: 2
+        x: 558
+        y: 2606
+        width: 421
+        height: 421
+      alignment: 9
+      pivot: {x: 0.500000, y: 0.500000}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5133761621d1aa3c34e9876458e8643e
+      internalID: -371928596
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DamageBuff
+      rect:
+        serializedVersion: 2
+        x: 1024
+        y: 2560
+        width: 483
+        height: 483
+      alignment: 9
+      pivot: {x: 0.492754, y: 0.483437}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 29ddda87cc77c0ebabfa4b79cf62aa83
+      internalID: 1686249251
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BloodRage
+      rect:
+        serializedVersion: 2
+        x: 48
+        y: 2096
+        width: 464
+        height: 464
+      alignment: 9
+      pivot: {x: 0.502155, y: 0.508621}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3affd9082dff7a6a527996f58e00df7f
+      internalID: -847793289
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: StanceGuard
+      rect:
+        serializedVersion: 2
+        x: 550
+        y: 2119
+        width: 439
+        height: 439
+      alignment: 9
+      pivot: {x: 0.500000, y: 0.500000}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 779d971563fee5cdf2bbbb85222463b3
+      internalID: 1470002982
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ShadowStep
+      rect:
+        serializedVersion: 2
+        x: 1039
+        y: 2101
+        width: 448
+        height: 448
+      alignment: 9
+      pivot: {x: 0.500000, y: 0.500000}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 11a20ef53bf20501eb3a1f6d9c7b64d0
+      internalID: -561676808
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Burn
+      rect:
+        serializedVersion: 2
+        x: 44
+        y: 1554
+        width: 457
+        height: 457
+      alignment: 9
+      pivot: {x: 0.500000, y: 0.500000}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 12b4cde1431ebf5e2040fbd1efbad30a
+      internalID: 2124815954
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Poison
+      rect:
+        serializedVersion: 2
+        x: 590
+        y: 1566
+        width: 434
+        height: 434
+      alignment: 9
+      pivot: {x: 0.541475, y: 0.500000}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cdb7a1c8480f4c6247652fc8f442f903
+      internalID: 824431577
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Slow
+      rect:
+        serializedVersion: 2
+        x: 1024
+        y: 1536
+        width: 482
+        height: 482
+      alignment: 9
+      pivot: {x: 0.475104, y: 0.421162}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f8e53c88c633aed91dfd626b79c7e342
+      internalID: 791513245
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Weaken
+      rect:
+        serializedVersion: 2
+        x: 62
+        y: 1087
+        width: 430
+        height: 430
+      alignment: 9
+      pivot: {x: 0.501163, y: 0.500000}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7175a971e1d8e6be96b7978de60f688c
+      internalID: -83138707
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Root
+      rect:
+        serializedVersion: 2
+        x: 565
+        y: 1090
+        width: 411
+        height: 411
+      alignment: 9
+      pivot: {x: 0.500000, y: 0.500000}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 504508ae62c87e86fc8491e0c376cd15
+      internalID: -1387565730
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stun
+      rect:
+        serializedVersion: 2
+        x: 1050
+        y: 1091
+        width: 435
+        height: 435
+      alignment: 9
+      pivot: {x: 0.500000, y: 0.501149}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b363dcd56634fd6e1f423d1ef3d1f437
+      internalID: 1005966674
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Freeze
+      rect:
+        serializedVersion: 2
+        x: 37
+        y: 512
+        width: 475
+        height: 475
+      alignment: 9
+      pivot: {x: 0.531579, y: 0.491579}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3150307a3e7e725256d31a29d24a15ca
+      internalID: -791087657
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bleed
+      rect:
+        serializedVersion: 2
+        x: 544
+        y: 526
+        width: 448
+        height: 448
+      alignment: 9
+      pivot: {x: 0.500000, y: 0.500000}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: aa65af05617b029b23966d11a06ca825
+      internalID: -1281264149
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GuardBreak
+      rect:
+        serializedVersion: 2
+        x: 1052
+        y: 534
+        width: 423
+        height: 423
+      alignment: 9
+      pivot: {x: 0.501182, y: 0.500000}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 87bc332ade518c5a2c91c9cb50258173
+      internalID: -153174912
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HealBan
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 53
+        width: 433
+        height: 433
+      alignment: 9
+      pivot: {x: 0.500000, y: 0.501155}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c589f491b7d8ce9274d72e75794f5bd8
+      internalID: -1666670979
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: AshenUltimatum
+      rect:
+        serializedVersion: 2
+        x: 556
+        y: 52
+        width: 433
+        height: 433
+      alignment: 9
+      pivot: {x: 0.501155, y: 0.500000}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7d8a93a2226bef2b40d0d22d842986e5
+      internalID: 2089251251
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      HealOverTime: 1090122504
+      Shield: -371928596
+      DamageBuff: 1686249251
+      BloodRage: -847793289
+      StanceGuard: 1470002982
+      ShadowStep: -561676808
+      Burn: 2124815954
+      Poison: 824431577
+      Slow: 791513245
+      Weaken: -83138707
+      Root: -1387565730
+      Stun: 1005966674
+      Freeze: -791087657
+      Bleed: -1281264149
+      GuardBreak: -153174912
+      HealBan: -1666670979
+      AshenUltimatum: 2089251251
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

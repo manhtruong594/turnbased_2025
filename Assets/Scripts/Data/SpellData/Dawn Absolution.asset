@@ -15,7 +15,7 @@ MonoBehaviour:
   spellName: Dawn Absolution
   description: "X\xF3a Stun v\xE0 Freeze kh\u1ECFi m\u1ED9t \u0111\u1ED3ng minh,
     sau \u0111\xF3 h\u1ED3i 20% HP t\u1ED1i \u0111a."
-  icon: {fileID: 0}
+  icon: {fileID: 487273885, guid: 5f1303ecbc3023f41ab52e57073ffa7f, type: 3}
   mpCost: 2
   consumeOnUse: 1
   targetType: 0

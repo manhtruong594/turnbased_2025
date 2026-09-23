@@ -16,7 +16,7 @@ MonoBehaviour:
   description: "\u0110\xE1nh d\u1EA5u t\u1ED1i \u0111a 2 k\u1EBB \u0111\u1ECBch.
     Cu\u1ED1i l\u01B0\u1EE3t k\u1EBF ti\u1EBFp c\u1EE7a phe \u0111\xF3, m\u1EE5c
     ti\xEAu ch\u01B0a di chuy\u1EC3n ch\u1ECBu 20 damage, Weaken v\xE0 GuardBreak."
-  icon: {fileID: 0}
+  icon: {fileID: 1147068679, guid: 5f1303ecbc3023f41ab52e57073ffa7f, type: 3}
   mpCost: 3
   consumeOnUse: 1
   targetType: 7

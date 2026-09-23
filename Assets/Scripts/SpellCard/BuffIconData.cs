@@ -17,20 +17,12 @@ namespace TurnBasedGame.SpellCard
             return null;
         }
 
-        public Color GetColor(StatusEffectType type)
-        {
-            foreach (var e in _entries)
-                if (e.type == type) return e.color;
-            return Color.white;
-        }
-
         [Serializable]
         public struct Entry
         {
             public StatusEffectType type;
             [SpritePreview]
             public Sprite icon;
-            public Color color;
         }
     }
 }

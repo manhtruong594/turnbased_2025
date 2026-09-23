@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 247fb8c0e365794479602c6a4dd89184
+guid: 5f1303ecbc3023f41ab52e57073ffa7f
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -123,13 +123,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: sp_normal_slash
+      name: Damage Spell
       rect:
         serializedVersion: 2
-        x: 8
-        y: 393
-        width: 112
-        height: 111
+        x: 0
+        y: 666
+        width: 221
+        height: 221
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -138,20 +138,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: b4f594ce3e7d57d49aa66010949b1616
-      internalID: 617916888
+      spriteID: 99618c9ca5fce2d4ca0a3da8716e15b3
+      internalID: 733362724
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: sp_heal
+      name: Root Spell
       rect:
         serializedVersion: 2
-        x: 136
-        y: 393
-        width: 112
-        height: 111
+        x: 221
+        y: 666
+        width: 221
+        height: 221
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -160,20 +160,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 39e1bd6f9a0e1fe428708c1d50b41880
-      internalID: 1069596017
+      spriteID: 527f1e72f8e85c149a811c94ddc53336
+      internalID: 947063790
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: sp_fireball
+      name: Shield Spell
       rect:
         serializedVersion: 2
-        x: 263
-        y: 394
-        width: 112
-        height: 111
+        x: 442
+        y: 666
+        width: 221
+        height: 221
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -182,20 +182,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 54aae73a179449044b165689966cfd8b
-      internalID: 869761117
+      spriteID: b86c9dfbcf284fb4d834992c9850ff99
+      internalID: -74011237
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: sp_multi_arrow
+      name: Stun Spell
       rect:
         serializedVersion: 2
-        x: 393
-        y: 392
-        width: 110
-        height: 112
+        x: 663
+        y: 666
+        width: 221
+        height: 221
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -204,20 +204,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 462e55620798b1f4cb1932e6425ea84e
-      internalID: 305645484
+      spriteID: dab6fec11fe5ca64cbd3f41796905f52
+      internalID: -2043624963
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: sp_flame_thrower
+      name: Dawn Absolution
       rect:
         serializedVersion: 2
-        x: 520
-        y: 392
-        width: 110
-        height: 112
+        x: 884
+        y: 666
+        width: 221
+        height: 221
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -226,20 +226,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 76d3396a65b280849af09ac5c91095d3
-      internalID: -1769240772
+      spriteID: 80dea2ddb870c004ba86752c12170021
+      internalID: 487273885
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: sp_bleed_attack
+      name: Merciful Prison
       rect:
         serializedVersion: 2
-        x: 648
-        y: 392
-        width: 110
-        height: 112
+        x: 1105
+        y: 666
+        width: 221
+        height: 221
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -248,20 +248,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: e58f86a3061e0174b8ccf7030887c5ba
-      internalID: 748158113
+      spriteID: e023036fcd32e8240b8c9b0f04b69b7b
+      internalID: -1297959190
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: sp_shadow_dual
+      name: Ashen Ultimatum
       rect:
         serializedVersion: 2
-        x: 778
-        y: 392
-        width: 107
-        height: 112
+        x: 1326
+        y: 666
+        width: 221
+        height: 221
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -270,20 +270,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 3517686804be8824f9e80f3dc48c2f54
-      internalID: -718383928
+      spriteID: 3c55157af6bb4954b8ae6a0b0032f617
+      internalID: 1147068679
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: sp_blood_hammer
+      name: Ember Sacrifice
       rect:
         serializedVersion: 2
-        x: 906
-        y: 392
-        width: 107
-        height: 112
+        x: 1547
+        y: 666
+        width: 221
+        height: 221
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -292,20 +292,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 90b7531a5acdfa34c85e96152afbf8b4
-      internalID: -1158104754
+      spriteID: 7392b1cfb96147a4a8eb383f62a866d3
+      internalID: 1082167924
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: sp_holy_sword_stance
+      name: Stonewall Rise
       rect:
         serializedVersion: 2
-        x: 10
-        y: 264
-        width: 107
-        height: 112
+        x: 0
+        y: 445
+        width: 221
+        height: 221
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -314,20 +314,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: c05376ec33485cc449dddb9ac0e07e17
-      internalID: 1308427271
+      spriteID: 2cd3692b847f9cb4a873a7fb0e51ab31
+      internalID: -959680640
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: skill_status_atlas_1024x512_9
+      name: NormalAttack
       rect:
         serializedVersion: 2
-        x: 143
-        y: 264
-        width: 98
-        height: 112
+        x: 221
+        y: 445
+        width: 221
+        height: 221
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -336,20 +336,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 7efb1d1723788ff499a2285283876a00
-      internalID: -1461980092
+      spriteID: 330bf9fc7b36b1849b4de95ef1924e16
+      internalID: -1682000806
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: sp_earthquake
+      name: Heal Skill
       rect:
         serializedVersion: 2
-        x: 271
-        y: 264
-        width: 98
-        height: 112
+        x: 442
+        y: 445
+        width: 221
+        height: 221
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -358,20 +358,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: e7542c55acfdd284981724522c0689b3
-      internalID: -960206093
+      spriteID: acedb5588c4047b4cb7cc3bf21a4c087
+      internalID: -734586188
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: sp_crescent_slash
+      name: Normal Arrow
       rect:
         serializedVersion: 2
-        x: 399
-        y: 264
-        width: 98
-        height: 112
+        x: 663
+        y: 445
+        width: 221
+        height: 221
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -380,20 +380,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: e9afc018363d12a4cbf0026346f6d47c
-      internalID: -184057699
+      spriteID: bade20c1fed1ac0449a64d9acf7124d7
+      internalID: 1850755000
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: skill_status_atlas_1024x512_12
+      name: Multi strike arrow
       rect:
         serializedVersion: 2
-        x: 527
-        y: 264
-        width: 97
-        height: 112
+        x: 884
+        y: 445
+        width: 221
+        height: 221
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -402,20 +402,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: d436d84688b33a44bb53b0a8c0cd2c76
-      internalID: -1666281134
+      spriteID: 60b09b9ffd2bee24e84feb8b628d69a1
+      internalID: -2096388463
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: skill_status_atlas_1024x512_13
+      name: Assassin Bleed
       rect:
         serializedVersion: 2
-        x: 655
-        y: 264
-        width: 97
-        height: 112
+        x: 1105
+        y: 445
+        width: 221
+        height: 221
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -424,20 +424,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 04596f800d7930a45ad0110514dce648
-      internalID: -2089932880
+      spriteID: 5b2c59be135711e4db019b226fc922fa
+      internalID: -506804369
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: skill_status_atlas_1024x512_14
+      name: Assassin Shadow Dual Strike
       rect:
         serializedVersion: 2
-        x: 783
-        y: 264
-        width: 97
-        height: 112
+        x: 1326
+        y: 445
+        width: 221
+        height: 221
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -446,20 +446,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 4c45bcf2d7e91634595b0e6aa7615ec8
-      internalID: 146879770
+      spriteID: 96d946cff81810b40a3ff1d4b9c305ff
+      internalID: 1092427537
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: skill_status_atlas_1024x512_15
+      name: Mace Smash
       rect:
         serializedVersion: 2
-        x: 912
-        y: 264
-        width: 95
-        height: 112
+        x: 1547
+        y: 445
+        width: 221
+        height: 221
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -468,20 +468,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: f46df77051733204f936b8d85806cd56
-      internalID: 47655176
+      spriteID: 9a9ae7544bf3de74ab78435ba8453f96
+      internalID: 1132310817
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: skill_status_atlas_1024x512_16
+      name: Berserker Blood Hammer
       rect:
         serializedVersion: 2
-        x: 15
-        y: 136
-        width: 97
-        height: 112
+        x: 0
+        y: 224
+        width: 221
+        height: 221
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -490,20 +490,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 58daccd0f9d99e74598fc572f5b4170b
-      internalID: -109393304
+      spriteID: 74a265c5b401ebc42ac9f8d029283350
+      internalID: 1221752472
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: skill_status_atlas_1024x512_17
+      name: Halberdier Crescent Slash
       rect:
         serializedVersion: 2
-        x: 143
-        y: 136
-        width: 97
-        height: 112
+        x: 221
+        y: 224
+        width: 221
+        height: 221
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -512,20 +512,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: d438d002f6d47f7409cd7fb704eefffe
-      internalID: -850941434
+      spriteID: 3645f1f5d2747a247b7ee0d7c97418e2
+      internalID: 1214906637
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: sp_shadow_step
+      name: Knight Holy Sword Stance
       rect:
         serializedVersion: 2
-        x: 271
-        y: 136
-        width: 97
-        height: 112
+        x: 442
+        y: 224
+        width: 221
+        height: 221
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -534,20 +534,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 58ac8cce271b8274e8001e983bed9a50
-      internalID: -693082122
+      spriteID: 6de2ab8c2eee7934a904469cd11486f3
+      internalID: 370952579
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: skill_status_atlas_1024x512_19
+      name: Fire Ball
       rect:
         serializedVersion: 2
-        x: 400
-        y: 136
-        width: 95
-        height: 112
+        x: 663
+        y: 224
+        width: 221
+        height: 221
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -556,20 +556,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: eff50de0aba2e81438cd9e35d5a7b2eb
-      internalID: 2094834366
+      spriteID: 64af8531874791b4381e549045c1bdf8
+      internalID: 1163112973
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: skill_status_atlas_1024x512_20
+      name: Magician Fire Seal
       rect:
         serializedVersion: 2
-        x: 520
-        y: 140
-        width: 112
-        height: 104
+        x: 884
+        y: 224
+        width: 221
+        height: 221
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -578,20 +578,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: c3532af5eecae4742961ec30cf4a09ef
-      internalID: 2077079860
+      spriteID: 3ece9916969065d4c9570151d491f5a2
+      internalID: 1819598031
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: skill_status_atlas_1024x512_21
+      name: Herbalist Staff Tap
       rect:
         serializedVersion: 2
-        x: 648
-        y: 140
-        width: 112
-        height: 105
+        x: 1105
+        y: 224
+        width: 221
+        height: 221
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -600,20 +600,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 069c152a6fe69d3408d119ce4a9798b2
-      internalID: -1586164574
+      spriteID: eabfc0e96681013419a6ed0243e9b382
+      internalID: -1230232999
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: sp_weaken_eff
+      name: Herbalist Field Remedy
       rect:
         serializedVersion: 2
-        x: 776
-        y: 140
-        width: 111
-        height: 104
+        x: 1326
+        y: 224
+        width: 221
+        height: 221
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -622,20 +622,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: ce891d8832dcc0d4fbc98a0275291f3c
-      internalID: -1328983509
+      spriteID: 123ec1640eb6f9d41add82bbc560aa7d
+      internalID: -1347531532
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: sp_root_eff
+      name: Herbalist Purification
       rect:
         serializedVersion: 2
-        x: 904
-        y: 140
-        width: 112
-        height: 105
+        x: 1547
+        y: 224
+        width: 221
+        height: 221
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -644,20 +644,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: fc32af81e8d06c24d92a1a635db1764b
-      internalID: 586231409
+      spriteID: 1404ea1eeb5f8a342897124767796902
+      internalID: 101818151
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: skill_status_atlas_1024x512_24
+      name: Militia Quick Slash
       rect:
         serializedVersion: 2
-        x: 8
-        y: 11
-        width: 112
-        height: 106
+        x: 0
+        y: 3
+        width: 221
+        height: 221
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -666,20 +666,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 9596755e7e92fa54ba0489078bc734bd
-      internalID: -985215835
+      spriteID: 6ea59ff73b8b9c940a41f0d0a9a3b6f2
+      internalID: -349080929
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: skill_status_atlas_1024x512_25
+      name: Militia Power Strike
       rect:
         serializedVersion: 2
-        x: 136
-        y: 12
-        width: 111
-        height: 105
+        x: 221
+        y: 3
+        width: 221
+        height: 221
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -688,20 +688,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 9474e0ca12670ea4b90800a39aff819e
-      internalID: 420572218
+      spriteID: 291db8b3996472d459de49618ed3b5ef
+      internalID: 1186622386
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: skill_status_atlas_1024x512_26
+      name: Militia Bandage
       rect:
         serializedVersion: 2
-        x: 264
-        y: 12
-        width: 112
-        height: 104
+        x: 442
+        y: 3
+        width: 221
+        height: 221
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -710,20 +710,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 2f2e2da7d0d65744f93fcdd2a8d77967
-      internalID: -1676174274
+      spriteID: bdb6b73a712f6574286286a8ecc24d2b
+      internalID: -429714260
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: skill_status_atlas_1024x512_27
+      name: Adjudicator Verdict Stroke
       rect:
         serializedVersion: 2
-        x: 392
-        y: 12
-        width: 112
-        height: 105
+        x: 663
+        y: 3
+        width: 221
+        height: 221
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -732,20 +732,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 07f933441d5edbf4a981dd5014477d19
-      internalID: 45667914
+      spriteID: c7439ddb6771803498361e9e73e5e7ee
+      internalID: -244143224
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: skill_status_atlas_1024x512_28
+      name: Adjudicator Accusation
       rect:
         serializedVersion: 2
-        x: 520
-        y: 12
-        width: 111
-        height: 104
+        x: 884
+        y: 3
+        width: 221
+        height: 221
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -754,8 +754,74 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 86e6d84db336fed4b82552f3cb8400f3
-      internalID: -380378736
+      spriteID: 48b3c4ebc300619479312e59b78dedae
+      internalID: 37590664
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Adjudicator Forbidden Seal
+      rect:
+        serializedVersion: 2
+        x: 1105
+        y: 3
+        width: 221
+        height: 221
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ec92df03977106344996d9dd8492436b
+      internalID: 615436579
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Heavy smash attack
+      rect:
+        serializedVersion: 2
+        x: 1326
+        y: 3
+        width: 221
+        height: 221
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 69405751131eaf047a44db84167d1fbe
+      internalID: 2042281109
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Smasher Earthquake
+      rect:
+        serializedVersion: 2
+        x: 1547
+        y: 3
+        width: 221
+        height: 221
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d7b22d523373cd14aae058ca31a6f5d8
+      internalID: -1804364613
       vertices: []
       indices: 
       edges: []
@@ -764,7 +830,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: f0e9a23dd3b34d044abb9e34405b9bc3
+    spriteID: 34615649ed8a11b49844eeda5eac9bf9
     internalID: 0
     vertices: []
     indices: 
@@ -774,39 +840,74 @@ TextureImporter:
     spriteCustomMetadata:
       entries:
       - key: SpriteEditor.SliceSettings
-        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":8.0,"y":4.0},"gridSpriteSize":{"x":221.0,"y":221.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":2,"keepEmptyRects":false,"isAlternate":false}'
       - key: SpriteEditor.SliceOnImport
         value: False
     nameFileIdTable:
-      skill_status_atlas_1024x512_12: -1666281134
-      skill_status_atlas_1024x512_13: -2089932880
-      skill_status_atlas_1024x512_14: 146879770
-      skill_status_atlas_1024x512_15: 47655176
-      skill_status_atlas_1024x512_16: -109393304
-      skill_status_atlas_1024x512_17: -850941434
-      skill_status_atlas_1024x512_19: 2094834366
-      skill_status_atlas_1024x512_20: 2077079860
-      skill_status_atlas_1024x512_21: -1586164574
-      skill_status_atlas_1024x512_24: -985215835
-      skill_status_atlas_1024x512_25: 420572218
-      skill_status_atlas_1024x512_26: -1676174274
-      skill_status_atlas_1024x512_27: 45667914
-      skill_status_atlas_1024x512_28: -380378736
-      skill_status_atlas_1024x512_9: -1461980092
-      sp_bleed_attack: 748158113
-      sp_blood_hammer: -1158104754
-      sp_crescent_slash: -184057699
-      sp_earthquake: -960206093
-      sp_fireball: 869761117
-      sp_flame_thrower: -1769240772
-      sp_heal: 1069596017
-      sp_holy_sword_stance: 1308427271
-      sp_multi_arrow: 305645484
-      sp_normal_slash: 617916888
-      sp_root_eff: 586231409
-      sp_shadow_dual: -718383928
-      sp_shadow_step: -693082122
-      sp_weaken_eff: -1328983509
+      Adjudicator Accusation: 37590664
+      Adjudicator Forbidden Seal: 615436579
+      Adjudicator Verdict Stroke: -244143224
+      Ashen Ultimatum: 1147068679
+      Assassin Bleed: -506804369
+      Assassin Shadow Dual Strike: 1092427537
+      Berserker Blood Hammer: 1221752472
+      ChatGPT Image 14_49_00 23 thg 9, 2026_0: 733362724
+      ChatGPT Image 14_49_00 23 thg 9, 2026_1: 947063790
+      ChatGPT Image 14_49_00 23 thg 9, 2026_10: -734586188
+      ChatGPT Image 14_49_00 23 thg 9, 2026_11: 1850755000
+      ChatGPT Image 14_49_00 23 thg 9, 2026_12: -2096388463
+      ChatGPT Image 14_49_00 23 thg 9, 2026_13: -506804369
+      ChatGPT Image 14_49_00 23 thg 9, 2026_14: 1092427537
+      ChatGPT Image 14_49_00 23 thg 9, 2026_15: 1132310817
+      ChatGPT Image 14_49_00 23 thg 9, 2026_16: 1221752472
+      ChatGPT Image 14_49_00 23 thg 9, 2026_17: 1214906637
+      ChatGPT Image 14_49_00 23 thg 9, 2026_18: 370952579
+      ChatGPT Image 14_49_00 23 thg 9, 2026_19: 1163112973
+      ChatGPT Image 14_49_00 23 thg 9, 2026_2: -74011237
+      ChatGPT Image 14_49_00 23 thg 9, 2026_20: 1819598031
+      ChatGPT Image 14_49_00 23 thg 9, 2026_21: -1230232999
+      ChatGPT Image 14_49_00 23 thg 9, 2026_22: -1347531532
+      ChatGPT Image 14_49_00 23 thg 9, 2026_23: 101818151
+      ChatGPT Image 14_49_00 23 thg 9, 2026_24: -349080929
+      ChatGPT Image 14_49_00 23 thg 9, 2026_25: 1186622386
+      ChatGPT Image 14_49_00 23 thg 9, 2026_26: -429714260
+      ChatGPT Image 14_49_00 23 thg 9, 2026_27: -244143224
+      ChatGPT Image 14_49_00 23 thg 9, 2026_28: 37590664
+      ChatGPT Image 14_49_00 23 thg 9, 2026_29: 615436579
+      ChatGPT Image 14_49_00 23 thg 9, 2026_3: -2043624963
+      ChatGPT Image 14_49_00 23 thg 9, 2026_30: 2042281109
+      ChatGPT Image 14_49_00 23 thg 9, 2026_31: -1804364613
+      ChatGPT Image 14_49_00 23 thg 9, 2026_4: 487273885
+      ChatGPT Image 14_49_00 23 thg 9, 2026_5: -1297959190
+      ChatGPT Image 14_49_00 23 thg 9, 2026_6: 1147068679
+      ChatGPT Image 14_49_00 23 thg 9, 2026_7: 1082167924
+      ChatGPT Image 14_49_00 23 thg 9, 2026_8: -959680640
+      ChatGPT Image 14_49_00 23 thg 9, 2026_9: -1682000806
+      Damage Spell: 733362724
+      Dawn Absolution: 487273885
+      Ember Sacrifice: 1082167924
+      Fire Ball: 1163112973
+      Halberdier Crescent Slash: 1214906637
+      Heal Skill: -734586188
+      Heavy smash attack: 2042281109
+      Herbalist Field Remedy: -1347531532
+      Herbalist Purification: 101818151
+      Herbalist Staff Tap: -1230232999
+      Knight Holy Sword Stance: 370952579
+      Mace Smash: 1132310817
+      Magician Fire Seal: 1819598031
+      Merciful Prison: -1297959190
+      Militia Bandage: -429714260
+      Militia Power Strike: 1186622386
+      Militia Quick Slash: -349080929
+      Multi strike arrow: -2096388463
+      Normal Arrow: 1850755000
+      NormalAttack: -1682000806
+      Root Spell: 947063790
+      Shield Spell: -74011237
+      Smasher Earthquake: -1804364613
+      Stonewall Rise: -959680640
+      Stun Spell: -2043624963
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

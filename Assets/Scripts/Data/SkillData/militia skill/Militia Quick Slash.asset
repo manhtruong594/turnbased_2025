@@ -16,7 +16,7 @@ MonoBehaviour:
   description: "G\xE2y 100% s\xE1t th\u01B0\u01A1ng hi\u1EC7n t\u1EA1i l\xEAn m\u1ED9t
     k\u1EBB \u0111\u1ECBch."
   skillType: 0
-  icon: {fileID: 617916888, guid: 247fb8c0e365794479602c6a4dd89184, type: 3}
+  icon: {fileID: -349080929, guid: 5f1303ecbc3023f41ab52e57073ffa7f, type: 3}
   cooldown: 0
   mpCost: 0
   range: 1

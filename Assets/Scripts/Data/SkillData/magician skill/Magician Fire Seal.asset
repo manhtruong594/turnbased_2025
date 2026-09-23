@@ -17,7 +17,7 @@ MonoBehaviour:
     th\u1EC3 \xE1p d\u1EE5ng Burn l\xEAn m\u1EE5c ti\xEAu v\xE0 \u0111\u1EC3 l\u1EA1i
     Burning Ground c\xF3 th\u1EC3 g\xE2y Burn."
   skillType: 3
-  icon: {fileID: -1769240772, guid: 247fb8c0e365794479602c6a4dd89184, type: 3}
+  icon: {fileID: 1819598031, guid: 5f1303ecbc3023f41ab52e57073ffa7f, type: 3}
   cooldown: 5
   mpCost: 1
   range: 3

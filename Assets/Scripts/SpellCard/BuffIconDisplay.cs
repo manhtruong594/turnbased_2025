@@ -49,7 +49,7 @@ namespace TurnBasedGame.SpellCard
                 var entry = iconObj.GetComponent<BuffIconEntry>();
                 if (entry != null)
                 {
-                    entry.Setup(sprite, effect.RemainingTurns, _iconData.GetColor(effect.Type));
+                    entry.Setup(sprite, effect.RemainingTurns);
                     _activeIcons[effect.Type] = entry;
                 }
             }

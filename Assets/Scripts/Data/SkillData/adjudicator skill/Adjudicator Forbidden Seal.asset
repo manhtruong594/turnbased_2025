@@ -17,7 +17,7 @@ MonoBehaviour:
     d\u1EE5ng Weaken 25% v\xE0 c\xF3 50% x\xE1c su\u1EA5t \xE1p d\u1EE5ng HealBan
     trong 2 l\u01B0\u1EE3t l\xEAn m\u1ED7i k\u1EBB \u0111\u1ECBch c\xF2n s\u1ED1ng."
   skillType: 3
-  icon: {fileID: -1769240772, guid: 247fb8c0e365794479602c6a4dd89184, type: 3}
+  icon: {fileID: 615436579, guid: 5f1303ecbc3023f41ab52e57073ffa7f, type: 3}
   cooldown: 5
   mpCost: 3
   range: 3

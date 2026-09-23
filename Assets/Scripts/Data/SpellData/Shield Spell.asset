@@ -15,7 +15,7 @@ MonoBehaviour:
   spellName: Shield Spell
   description: "Ta\u0323o khi\xEAn t\xF4\u0300n ta\u0323i 2 turn cho m\xF4\u0323t
     \u0111\xF4\u0300ng minh"
-  icon: {fileID: 21300000, guid: fdf81e4514a3ee343842aa1421113184, type: 3}
+  icon: {fileID: -74011237, guid: 5f1303ecbc3023f41ab52e57073ffa7f, type: 3}
   mpCost: 1
   consumeOnUse: 1
   targetType: 0

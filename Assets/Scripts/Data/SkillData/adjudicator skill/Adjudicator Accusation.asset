@@ -16,7 +16,7 @@ MonoBehaviour:
   description: "G\xE2y 100% s\xE1t th\u01B0\u01A1ng hi\u1EC7n t\u1EA1i. N\u1EBFu
     m\u1EE5c ti\xEAu c\xF2n s\u1ED1ng, \xE1p d\u1EE5ng GuardBreak 20% trong 2 l\u01B0\u1EE3t."
   skillType: 1
-  icon: {fileID: 617916888, guid: 247fb8c0e365794479602c6a4dd89184, type: 3}
+  icon: {fileID: 37590664, guid: 5f1303ecbc3023f41ab52e57073ffa7f, type: 3}
   cooldown: 3
   mpCost: 1
   range: 3
