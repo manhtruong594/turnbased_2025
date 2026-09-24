@@ -13,11 +13,12 @@ MonoBehaviour:
   m_Name: Militia Power Strike
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Skills.MilitiaPowerStrikeSkill
   skillName: "D\u1ED3n S\u1EE9c"
-  description: "G\xE2y 175% s\xE1t th\u01B0\u01A1ng hi\u1EC7n t\u1EA1i. N\u1EBFu
+  description: "D\xF4\u0300n s\u01B0\u0301c va\u0300o nha\u0301t che\u0301m quy\xEA\u0301t
+    \u0111i\u0323nh, g\xE2y 175% s\xE1t th\u01B0\u01A1ng hi\u1EC7n t\u1EA1i. N\u1EBFu
     m\u1EE5c ti\xEAu \u0111ang c\xF3 Shield, s\xE1t th\u01B0\u01A1ng t\u0103ng th\xEAm
     30%."
   skillType: 1
-  icon: {fileID: 1186622386, guid: 5f1303ecbc3023f41ab52e57073ffa7f, type: 3}
+  icon: {fileID: -1972767447, guid: f68897359cc923e40bb35d6f5c5e3bc1, type: 3}
   cooldown: 2
   mpCost: 1
   range: 1

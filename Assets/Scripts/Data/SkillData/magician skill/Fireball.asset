@@ -13,10 +13,11 @@ MonoBehaviour:
   m_Name: Fireball
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Skills.FireballSkill
   skillName: Fire Ball
-  description: "G\xE2y 125% s\xE1t th\u01B0\u01A1ng l\xEAn t\u1EA5t c\u1EA3 k\u1EBB
-    \u0111\u1ECBch trong ph\u1EA1m vi 2 \xF4 quanh \xF4 m\u1EE5c ti\xEAu."
+  description: "Thi tri\xEA\u0309n ho\u0309a c\xF4ng, g\xE2y 125% s\xE1t th\u01B0\u01A1ng
+    l\xEAn t\u1EA5t c\u1EA3 k\u1EBB \u0111\u1ECBch trong ph\u1EA1m vi 2 \xF4 quanh
+    \xF4 m\u1EE5c ti\xEAu."
   skillType: 0
-  icon: {fileID: 1163112973, guid: 5f1303ecbc3023f41ab52e57073ffa7f, type: 3}
+  icon: {fileID: -999978674, guid: f68897359cc923e40bb35d6f5c5e3bc1, type: 3}
   cooldown: 3
   mpCost: 1
   range: 2

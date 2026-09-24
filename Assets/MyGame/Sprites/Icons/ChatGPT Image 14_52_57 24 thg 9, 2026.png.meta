@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 5f1303ecbc3023f41ab52e57073ffa7f
+guid: f68897359cc923e40bb35d6f5c5e3bc1
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -138,8 +138,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 99618c9ca5fce2d4ca0a3da8716e15b3
-      internalID: 733362724
+      spriteID: 96d5d33c013476e419b2805772bf71fc
+      internalID: -1088878089
       vertices: []
       indices: 
       edges: []
@@ -160,8 +160,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 527f1e72f8e85c149a811c94ddc53336
-      internalID: 947063790
+      spriteID: 9ba48267a9fdaf844a0a1c292366ce41
+      internalID: 567252953
       vertices: []
       indices: 
       edges: []
@@ -182,8 +182,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: b86c9dfbcf284fb4d834992c9850ff99
-      internalID: -74011237
+      spriteID: e338916c8cd8afc4cac1a5aa7ab4ccb3
+      internalID: 2109180117
       vertices: []
       indices: 
       edges: []
@@ -204,8 +204,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: dab6fec11fe5ca64cbd3f41796905f52
-      internalID: -2043624963
+      spriteID: 2e8372ba6dc9bf24c9b835ac3005746b
+      internalID: 1483013283
       vertices: []
       indices: 
       edges: []
@@ -226,8 +226,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 80dea2ddb870c004ba86752c12170021
-      internalID: 487273885
+      spriteID: b8d86a68544e4e34ab1925c4d2a04fc9
+      internalID: 1020634805
       vertices: []
       indices: 
       edges: []
@@ -248,8 +248,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: e023036fcd32e8240b8c9b0f04b69b7b
-      internalID: -1297959190
+      spriteID: 0027b9902a22bb741a18817e4ea263c7
+      internalID: -472031045
       vertices: []
       indices: 
       edges: []
@@ -270,8 +270,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 3c55157af6bb4954b8ae6a0b0032f617
-      internalID: 1147068679
+      spriteID: 1cf01abc7e9147d4481b7e9f139d0459
+      internalID: 403921119
       vertices: []
       indices: 
       edges: []
@@ -292,8 +292,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 7392b1cfb96147a4a8eb383f62a866d3
-      internalID: 1082167924
+      spriteID: 47f20e0ade389bd429bea3dcd576d3c1
+      internalID: 80050150
       vertices: []
       indices: 
       edges: []
@@ -314,8 +314,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 2cd3692b847f9cb4a873a7fb0e51ab31
-      internalID: -959680640
+      spriteID: 8407c3db4c816cf4390215e18aff6a03
+      internalID: -1175694581
       vertices: []
       indices: 
       edges: []
@@ -336,8 +336,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 330bf9fc7b36b1849b4de95ef1924e16
-      internalID: -1682000806
+      spriteID: 8de13036824971d44b397eb31e836dab
+      internalID: 632204341
       vertices: []
       indices: 
       edges: []
@@ -358,8 +358,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: acedb5588c4047b4cb7cc3bf21a4c087
-      internalID: -734586188
+      spriteID: fd43d719520c0ee409d8ef3515eda513
+      internalID: 1640435271
       vertices: []
       indices: 
       edges: []
@@ -380,8 +380,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: bade20c1fed1ac0449a64d9acf7124d7
-      internalID: 1850755000
+      spriteID: 167254f1d1301224babfcb274d51181e
+      internalID: 991932427
       vertices: []
       indices: 
       edges: []
@@ -402,8 +402,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 60b09b9ffd2bee24e84feb8b628d69a1
-      internalID: -2096388463
+      spriteID: eef2349244da7634da909df273a280e4
+      internalID: 1316630636
       vertices: []
       indices: 
       edges: []
@@ -424,8 +424,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 5b2c59be135711e4db019b226fc922fa
-      internalID: -506804369
+      spriteID: 482b71ef276c57646a274adc225658c6
+      internalID: 365765802
       vertices: []
       indices: 
       edges: []
@@ -446,8 +446,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 96d946cff81810b40a3ff1d4b9c305ff
-      internalID: 1092427537
+      spriteID: d7f039f96c174c846a24da05b56d7ef1
+      internalID: -116274710
       vertices: []
       indices: 
       edges: []
@@ -468,8 +468,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 9a9ae7544bf3de74ab78435ba8453f96
-      internalID: 1132310817
+      spriteID: e30d58c4ffac8cc48913b4cb76e95df4
+      internalID: -1689641570
       vertices: []
       indices: 
       edges: []
@@ -490,8 +490,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 74a265c5b401ebc42ac9f8d029283350
-      internalID: 1221752472
+      spriteID: a72b25f29f32b79488dcffe85eb8f39a
+      internalID: 1489936126
       vertices: []
       indices: 
       edges: []
@@ -512,8 +512,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 3645f1f5d2747a247b7ee0d7c97418e2
-      internalID: 1214906637
+      spriteID: 7bab8ab7774b8f94590911be4be53d34
+      internalID: 213057649
       vertices: []
       indices: 
       edges: []
@@ -534,8 +534,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 6de2ab8c2eee7934a904469cd11486f3
-      internalID: 370952579
+      spriteID: fc206d417b540b44aa56405e0ef8b7be
+      internalID: 1807875030
       vertices: []
       indices: 
       edges: []
@@ -556,8 +556,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 64af8531874791b4381e549045c1bdf8
-      internalID: 1163112973
+      spriteID: 0a204f2812a2e6a4e83a1c8c9efbb3cb
+      internalID: -999978674
       vertices: []
       indices: 
       edges: []
@@ -578,8 +578,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 3ece9916969065d4c9570151d491f5a2
-      internalID: 1819598031
+      spriteID: 756b4b9b4c4a4fa49b0f7408b59b84e0
+      internalID: -1697170743
       vertices: []
       indices: 
       edges: []
@@ -600,8 +600,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: eabfc0e96681013419a6ed0243e9b382
-      internalID: -1230232999
+      spriteID: 69fa3ec7406f2f44ca4f69d5105a06a6
+      internalID: -1275707545
       vertices: []
       indices: 
       edges: []
@@ -622,8 +622,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 123ec1640eb6f9d41add82bbc560aa7d
-      internalID: -1347531532
+      spriteID: 999ba65c529eded4d85f01ed02346477
+      internalID: -1463086039
       vertices: []
       indices: 
       edges: []
@@ -644,8 +644,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 1404ea1eeb5f8a342897124767796902
-      internalID: 101818151
+      spriteID: 6a2f71a600688234bbc0882c2f957658
+      internalID: -1559199429
       vertices: []
       indices: 
       edges: []
@@ -666,8 +666,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 6ea59ff73b8b9c940a41f0d0a9a3b6f2
-      internalID: -349080929
+      spriteID: 110bd061193f58f4fae8b792f20951b4
+      internalID: -1605858312
       vertices: []
       indices: 
       edges: []
@@ -688,8 +688,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 291db8b3996472d459de49618ed3b5ef
-      internalID: 1186622386
+      spriteID: a5e8c3358e7b8a74488bbc9b714387ea
+      internalID: -1972767447
       vertices: []
       indices: 
       edges: []
@@ -710,8 +710,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: bdb6b73a712f6574286286a8ecc24d2b
-      internalID: -429714260
+      spriteID: 57d3f36e61b84d84ca5d9efb8963ce81
+      internalID: 1719476787
       vertices: []
       indices: 
       edges: []
@@ -732,8 +732,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: c7439ddb6771803498361e9e73e5e7ee
-      internalID: -244143224
+      spriteID: a42c27ae9fbb2ee4cb8473bd8ccf06ac
+      internalID: -157058897
       vertices: []
       indices: 
       edges: []
@@ -754,8 +754,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 48b3c4ebc300619479312e59b78dedae
-      internalID: 37590664
+      spriteID: 614465075729d78429501d2ecba4f33f
+      internalID: 357934949
       vertices: []
       indices: 
       edges: []
@@ -776,8 +776,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: ec92df03977106344996d9dd8492436b
-      internalID: 615436579
+      spriteID: 851af00a8bc465441b61183571bcae10
+      internalID: -291804118
       vertices: []
       indices: 
       edges: []
@@ -798,8 +798,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 69405751131eaf047a44db84167d1fbe
-      internalID: 2042281109
+      spriteID: 141831b25bc1f514db24b5679bb927f3
+      internalID: -570321064
       vertices: []
       indices: 
       edges: []
@@ -820,8 +820,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: d7b22d523373cd14aae058ca31a6f5d8
-      internalID: -1804364613
+      spriteID: cff6baed2aa41fb47b110d26c9622ea2
+      internalID: 1660908977
       vertices: []
       indices: 
       edges: []
@@ -830,7 +830,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 34615649ed8a11b49844eeda5eac9bf9
+    spriteID: 00fcce10384714c438a82f29d695f749
     internalID: 0
     vertices: []
     indices: 
@@ -841,73 +841,39 @@ TextureImporter:
       entries:
       - key: SpriteEditor.SliceSettings
         value: '{"sliceOnImport":false,"gridCellCount":{"x":8.0,"y":4.0},"gridSpriteSize":{"x":221.0,"y":221.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":2,"keepEmptyRects":false,"isAlternate":false}'
-      - key: SpriteEditor.SliceOnImport
-        value: False
     nameFileIdTable:
-      Adjudicator Accusation: 37590664
-      Adjudicator Forbidden Seal: 615436579
-      Adjudicator Verdict Stroke: -244143224
-      Ashen Ultimatum: 1147068679
-      Assassin Bleed: -506804369
-      Assassin Shadow Dual Strike: 1092427537
-      Berserker Blood Hammer: 1221752472
-      ChatGPT Image 14_49_00 23 thg 9, 2026_0: 733362724
-      ChatGPT Image 14_49_00 23 thg 9, 2026_1: 947063790
-      ChatGPT Image 14_49_00 23 thg 9, 2026_10: -734586188
-      ChatGPT Image 14_49_00 23 thg 9, 2026_11: 1850755000
-      ChatGPT Image 14_49_00 23 thg 9, 2026_12: -2096388463
-      ChatGPT Image 14_49_00 23 thg 9, 2026_13: -506804369
-      ChatGPT Image 14_49_00 23 thg 9, 2026_14: 1092427537
-      ChatGPT Image 14_49_00 23 thg 9, 2026_15: 1132310817
-      ChatGPT Image 14_49_00 23 thg 9, 2026_16: 1221752472
-      ChatGPT Image 14_49_00 23 thg 9, 2026_17: 1214906637
-      ChatGPT Image 14_49_00 23 thg 9, 2026_18: 370952579
-      ChatGPT Image 14_49_00 23 thg 9, 2026_19: 1163112973
-      ChatGPT Image 14_49_00 23 thg 9, 2026_2: -74011237
-      ChatGPT Image 14_49_00 23 thg 9, 2026_20: 1819598031
-      ChatGPT Image 14_49_00 23 thg 9, 2026_21: -1230232999
-      ChatGPT Image 14_49_00 23 thg 9, 2026_22: -1347531532
-      ChatGPT Image 14_49_00 23 thg 9, 2026_23: 101818151
-      ChatGPT Image 14_49_00 23 thg 9, 2026_24: -349080929
-      ChatGPT Image 14_49_00 23 thg 9, 2026_25: 1186622386
-      ChatGPT Image 14_49_00 23 thg 9, 2026_26: -429714260
-      ChatGPT Image 14_49_00 23 thg 9, 2026_27: -244143224
-      ChatGPT Image 14_49_00 23 thg 9, 2026_28: 37590664
-      ChatGPT Image 14_49_00 23 thg 9, 2026_29: 615436579
-      ChatGPT Image 14_49_00 23 thg 9, 2026_3: -2043624963
-      ChatGPT Image 14_49_00 23 thg 9, 2026_30: 2042281109
-      ChatGPT Image 14_49_00 23 thg 9, 2026_31: -1804364613
-      ChatGPT Image 14_49_00 23 thg 9, 2026_4: 487273885
-      ChatGPT Image 14_49_00 23 thg 9, 2026_5: -1297959190
-      ChatGPT Image 14_49_00 23 thg 9, 2026_6: 1147068679
-      ChatGPT Image 14_49_00 23 thg 9, 2026_7: 1082167924
-      ChatGPT Image 14_49_00 23 thg 9, 2026_8: -959680640
-      ChatGPT Image 14_49_00 23 thg 9, 2026_9: -1682000806
-      Damage Spell: 733362724
-      Dawn Absolution: 487273885
-      Ember Sacrifice: 1082167924
-      Fire Ball: 1163112973
-      Halberdier Crescent Slash: 1214906637
-      Heal Skill: -734586188
-      Heavy smash attack: 2042281109
-      Herbalist Field Remedy: -1347531532
-      Herbalist Purification: 101818151
-      Herbalist Staff Tap: -1230232999
-      Knight Holy Sword Stance: 370952579
-      Mace Smash: 1132310817
-      Magician Fire Seal: 1819598031
-      Merciful Prison: -1297959190
-      Militia Bandage: -429714260
-      Militia Power Strike: 1186622386
-      Militia Quick Slash: -349080929
-      Multi strike arrow: -2096388463
-      Normal Arrow: 1850755000
-      NormalAttack: -1682000806
-      Root Spell: 947063790
-      Shield Spell: -74011237
-      Smasher Earthquake: -1804364613
-      Stonewall Rise: -959680640
-      Stun Spell: -2043624963
+      Adjudicator Accusation: 357934949
+      Adjudicator Forbidden Seal: -291804118
+      Adjudicator Verdict Stroke: -157058897
+      Ashen Ultimatum: 403921119
+      Assassin Bleed: 365765802
+      Assassin Shadow Dual Strike: -116274710
+      Berserker Blood Hammer: 1489936126
+      Damage Spell: -1088878089
+      Dawn Absolution: 1020634805
+      Ember Sacrifice: 80050150
+      Fire Ball: -999978674
+      Halberdier Crescent Slash: 213057649
+      Heal Skill: 1640435271
+      Heavy smash attack: -570321064
+      Herbalist Field Remedy: -1463086039
+      Herbalist Purification: -1559199429
+      Herbalist Staff Tap: -1275707545
+      Knight Holy Sword Stance: 1807875030
+      Mace Smash: -1689641570
+      Magician Fire Seal: -1697170743
+      Merciful Prison: -472031045
+      Militia Bandage: 1719476787
+      Militia Power Strike: -1972767447
+      Militia Quick Slash: -1605858312
+      Multi strike arrow: 1316630636
+      Normal Arrow: 991932427
+      NormalAttack: 632204341
+      Root Spell: 567252953
+      Shield Spell: 2109180117
+      Smasher Earthquake: 1660908977
+      Stonewall Rise: -1175694581
+      Stun Spell: 1483013283
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

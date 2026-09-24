@@ -13,11 +13,12 @@ MonoBehaviour:
   m_Name: Smasher Earthquake
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Skills.SmasherEarthquakeSkill
   skillName: Dia Chan Toai Son
-  description: "\u0110\xE1nh v\xE0o m\u1ED9t \xF4, g\xE2y s\xE1t th\u01B0\u01A1ng
+  description: "D\xF4\u0300n xung l\u01B0\u0323c va\u0300o c\xE2y bu\u0301a gia\u0301ng
+    ma\u0323nh xu\xF4\u0301ng \u0111\xE2\u0301t,  g\xE2y s\xE1t th\u01B0\u01A1ng
     l\xEAn m\u1ED9t k\u1EBB \u0111\u1ECBch, \u0111\u1EA9y l\xF9i v\xE0 \xE1p d\u1EE5ng
-    Stun khi va ch\u1EA1m."
+    Stun khi va ch\u1EA1m v\u01A1\u0301i \u0111i\u0323a hi\u0300nh"
   skillType: 3
-  icon: {fileID: -1804364613, guid: 5f1303ecbc3023f41ab52e57073ffa7f, type: 3}
+  icon: {fileID: 1660908977, guid: f68897359cc923e40bb35d6f5c5e3bc1, type: 3}
   cooldown: 4
   mpCost: 1
   range: 1

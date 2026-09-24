@@ -13,11 +13,15 @@ MonoBehaviour:
   m_Name: Halberdier Crescent Slash
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Skills.HalberdierCrescentSlashSkill
   skillName: Nguyet Nha Tram Tran
-  description: "Ch\xE9m theo \u0111\u01B0\u1EDDng th\u1EB3ng d\xE0i 2 \xF4, \xE1p
-    d\u1EE5ng HealBan khi t\u1EADp trung v\xE0 t\u1EA1o Shield cho ng\u01B0\u1EDDi
-    thi tri\u1EC3n."
+  description: "Xoay ri\u0300u l\u01B0\u01A1\u0301t \u0111i theo \u0111\u01B0\u01A1\u0300ng
+    th\u0103\u0309ng v\u01A1\u0301i khoa\u0309ng ca\u0301ch 2 \xF4, g\xE2y damage
+    cho mu\u0323c ti\xEAu tr\xEAn \u0111\u01B0\u01A1\u0300ng l\u01B0\u01A1\u0301t,
+    \xE1p d\u1EE5ng HealBan l\xEAn mu\u0323c ti\xEAu \u0111\xE2\u0300u ti\xEAn v\xE0
+    t\u1EA1o Shield cho ng\u01B0\u1EDDi thi tri\u1EC3n, n\xEA\u0301u mu\u0323c ti\xEAu
+    \u0111ang \u01A1\u0309 tr\xEAn capture point, ch\u0103\u0301c ch\u0103\u0301n
+    a\u0301p du\u0323ng HealBan"
   skillType: 3
-  icon: {fileID: 1214906637, guid: 5f1303ecbc3023f41ab52e57073ffa7f, type: 3}
+  icon: {fileID: 213057649, guid: f68897359cc923e40bb35d6f5c5e3bc1, type: 3}
   cooldown: 4
   mpCost: 1
   range: 2

@@ -17,7 +17,7 @@ MonoBehaviour:
     b\u1EB1ng 125% s\xE1t th\u01B0\u01A1ng hi\u1EC7n t\u1EA1i c\u1EE7a ng\u01B0\u1EDDi
     thi tri\u1EC3n l\xEAn m\u1ED9t k\u1EBB \u0111\u1ECBch."
   skillType: 0
-  icon: {fileID: 1850755000, guid: 5f1303ecbc3023f41ab52e57073ffa7f, type: 3}
+  icon: {fileID: 991932427, guid: f68897359cc923e40bb35d6f5c5e3bc1, type: 3}
   cooldown: 0
   mpCost: 0
   range: 1

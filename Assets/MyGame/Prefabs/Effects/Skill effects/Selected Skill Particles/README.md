@@ -1,7 +1,7 @@
 # Particle được chọn cho Skills
 
 Nguồn đối chiếu: `Assets/Docs/Systems docs/SKILLS_STATUS_EFFECTS_UNIT_CLASSES_REFERENCE.md`, phần `Skills`.
-Tên thư mục theo dạng Class_Skill; skill dùng chung nối các class bằng dấu +. Mỗi thư mục con chứa bản sao prefab cho một skill. Prefab gốc giữ nguyên trong `Assets/EffectsPack`; bản sao vẫn tham chiếu đến các material/texture gốc. Các prefab này chưa được gán vào skill runtime.
+Tên thư mục theo dạng Class_Skill; skill dùng chung nối các class bằng dấu +. Mỗi thư mục con chứa bản sao prefab cho một skill. Prefab gốc giữ nguyên trong `Assets/EffectsPack`; bản sao vẫn tham chiếu đến các material/texture gốc. Năm prefab của Adjudicator đã được gán vào ba skill asset; các prefab còn lại chưa được gán vào skill runtime.
 
 | Skill | Bản sao | Vai trò | Prefab nguồn |
 |---|---|---|---|
@@ -40,7 +40,19 @@ Tên thư mục theo dạng Class_Skill; skill dùng chung nối các class bằ
 | Purification | `Herbalist_Purification/Shield_gold.prefab` | Chỉ dùng khi xóa được debuff | `Assets/EffectsPack/Lana Studio/Casual RPG VFX/Prefabs/Shields/Shield_gold.prefab` |
 | Verdict Stroke | `Adjudicator_Verdict Stroke/VFX_Piercing_Generic.prefab` | Đòn đánh tầm 2 ô | `Assets/EffectsPack/Vefects/Stylized VFX/Stylized VFX Shuriken/Skills/Slashes Piercing/Generic/VFX_Piercing_Generic.prefab` |
 | Accusation | `Adjudicator_Accusation/VFX_Piercing_Dark.prefab` | Đòn đánh đơn | `Assets/EffectsPack/Vefects/Stylized VFX/Stylized VFX Shuriken/Skills/Slashes Piercing/Dark/VFX_Piercing_Dark.prefab` |
-| Accusation | `Adjudicator_Accusation/VFX_Debuff_Cast.prefab` | Chỉ dùng khi gây GuardBreak | `Assets/EffectsPack/Vefects/Anime Stylized VFX/Shared/Particles/VFX_Debuff_Cast.prefab` |
+| Accusation | `Adjudicator_Accusation/VFX_Debuff_Cast.prefab` | Cast ở Staff trước khi đánh | `Assets/EffectsPack/Vefects/Anime Stylized VFX/Shared/Particles/VFX_Debuff_Cast.prefab` |
 | Forbidden Seal | `Adjudicator_Forbidden Seal/VFX_Dark_Burst_01.prefab` | Đòn đánh diện rộng | `Assets/EffectsPack/Vefects/Stylized AoE VFX/VFX/Dark/Particles/VFX_Dark_Burst_01.prefab` |
-| Forbidden Seal | `Adjudicator_Forbidden Seal/VFX_Debuff_Cast.prefab` | Weaken và HealBan | `Assets/EffectsPack/Vefects/Anime Stylized VFX/Shared/Particles/VFX_Debuff_Cast.prefab` |
+| Forbidden Seal | `Adjudicator_Forbidden Seal/VFX_Debuff_Cast.prefab` | Cast ở Staff trước khi nổ diện rộng | `Assets/EffectsPack/Vefects/Anime Stylized VFX/Shared/Particles/VFX_Debuff_Cast.prefab` |
 | Flame Thrower | `None_Flame Thrower/Flamethrower.prefab` | Luồng lửa gây sát thương theo chu kỳ | `Assets/EffectsPack/Lana Studio/Casual RPG VFX/Prefabs/Fire/Flamethrower.prefab` |
+
+## Adjudicator: animation và thời điểm VFX
+
+`Adjudicator.prefab` dùng `Assets/MyGame/Animations/Adjudicator.controller`. `UnitAnimator` phát state theo `SkillType`; animation event gọi `SkillEffectRunner` để tạo VFX. Sát thương và status được authority xử lý một lần khi dùng skill, không phụ thuộc animation event.
+
+| Skill | Animator state / clip | Animation event | Particle được gán trong skill asset |
+|---|---|---|---|
+| `Verdict Stroke` (Normal, tầm 2) | `Normal Attack` / `Staff-Attack3` | `AnimEvent_Impact` tại 0.367 clip | `VFX_Piercing_Generic` ở ô mục tiêu; scale 0.27 để vệt dài khoảng 2 ô |
+| `Accusation` (GuardBreak 20%, 2 lượt nếu mục tiêu còn sống) | `Buff And Debuff` / `Staff-Boost1` | `AnimEvent_Cast` tại 0.2; `AnimEvent_Impact` tại 0.6 clip | `VFX_Debuff_Cast` tại Staff; `VFX_Piercing_Dark` ở ô mục tiêu, scale 0.34 cho tầm tối đa 3 ô |
+| `Forbidden Seal` (bán kính 1; Weaken 25%, HealBan 50% trong 2 lượt) | `Ultimate Attack` → `Staff-Cast-L-AOE2_loop` → `Staff-Cast-L-AOE2_end` | `AnimEvent_Cast` tại 0.15; `AnimEvent_Impact` tại 0.45 của clip `Staff-Cast-L-AOE2_start` | `VFX_Debuff_Cast` tại Staff; `VFX_Dark_Burst_01` tại tâm ô mục tiêu |
+
+`Accusation` dùng `SkillType.BuffAndDebuff` vì controller không có state `Active Attack`. Năm prefab trên có `PooledVFX` để phát lại khi lấy từ pool và trả về pool sau khi toàn bộ particle con kết thúc. VFX cast luôn phát khi dùng skill; biểu hiện `GuardBreak`, `Weaken`, `HealBan` theo kết quả thực tế thuộc hệ thống status. Chưa kiểm chứng hình ảnh và timing trong Play Mode.

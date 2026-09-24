@@ -10,7 +10,6 @@ namespace TurnBasedGame.ObjectPool
     {
         private ParticleSystem _particleSystem;
         private PooledObject _pooledObject;
-        private float _despawnTime;
         private bool _isPlaying;
 
         public bool IsActive => _isPlaying;
@@ -21,10 +20,23 @@ namespace TurnBasedGame.ObjectPool
             _pooledObject = GetComponent<PooledObject>();
         }
 
+        void OnEnable()
+        {
+            OnSpawnFromPool();
+        }
+
+        void OnDisable()
+        {
+            OnReturnToPool();
+        }
+
         void Update()
         {
-            if (_isPlaying && !_particleSystem.IsAlive())
+            if (_isPlaying && !_particleSystem.IsAlive(true))
             {
+                if (_pooledObject == null)
+                    TryGetComponent(out _pooledObject);
+
                 _pooledObject?.Despawn();
             }
         }
@@ -33,13 +45,6 @@ namespace TurnBasedGame.ObjectPool
         {
             _isPlaying = true;
             _particleSystem.Play(true);
-
-            // Backup: despawn after main duration nếu particle system có issue
-            if (_particleSystem.main.duration > 0)
-            {
-                _despawnTime = _particleSystem.main.duration + _particleSystem.main.startLifetime.constantMax;
-                _pooledObject?.DespawnAfter(_despawnTime);
-            }
         }
 
         public void OnReturnToPool()

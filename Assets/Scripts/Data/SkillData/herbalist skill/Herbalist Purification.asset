@@ -17,7 +17,7 @@ MonoBehaviour:
     nh\u1EA5t m\u1ED9t debuff, m\u1EE5c ti\xEAu nh\u1EADn Shield b\u1EB1ng 30% s\xE1t
     th\u01B0\u01A1ng hi\u1EC7n t\u1EA1i trong 2 l\u01B0\u1EE3t."
   skillType: 4
-  icon: {fileID: 101818151, guid: 5f1303ecbc3023f41ab52e57073ffa7f, type: 3}
+  icon: {fileID: -1559199429, guid: f68897359cc923e40bb35d6f5c5e3bc1, type: 3}
   cooldown: 3
   mpCost: 1
   range: 2

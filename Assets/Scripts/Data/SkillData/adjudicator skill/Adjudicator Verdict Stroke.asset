@@ -13,10 +13,11 @@ MonoBehaviour:
   m_Name: Adjudicator Verdict Stroke
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Skills.NormalAttackSkill
   skillName: "B\xFAt Ph\xE1n"
-  description: "G\xE2y 100% s\xE1t th\u01B0\u01A1ng hi\u1EC7n t\u1EA1i l\xEAn m\u1ED9t
-    k\u1EBB \u0111\u1ECBch trong t\u1EA7m 2."
+  description: "Vung g\xE2\u0323y phe\u0301p ta\u0323o ra m\xF4\u0323t lu\xF4\u0300ng
+    n\u0103ng l\u01B0\u01A1\u0323ng bo\u0301ng t\xF4\u0301i g\xE2y 100% s\xE1t th\u01B0\u01A1ng
+    hi\u1EC7n t\u1EA1i l\xEAn m\u1ED9t k\u1EBB \u0111\u1ECBch trong t\u1EA7m 2."
   skillType: 0
-  icon: {fileID: -244143224, guid: 5f1303ecbc3023f41ab52e57073ffa7f, type: 3}
+  icon: {fileID: -157058897, guid: f68897359cc923e40bb35d6f5c5e3bc1, type: 3}
   cooldown: 0
   mpCost: 0
   range: 2
@@ -24,8 +25,8 @@ MonoBehaviour:
     castVfxPrefab: {fileID: 0}
     releaseVfxPrefab: {fileID: 0}
     projectilePrefab: {fileID: 0}
-    impactVfxPrefab: {fileID: 0}
-    effectApplyTiming: 0
+    impactVfxPrefab: {fileID: 2748775980906258134, guid: aba6b26404555124b81108d7ffa78754, type: 3}
+    effectApplyTiming: 3
     castSpawnPoint: 1
     releaseSpawnPoint: 1
     impactSpawnPoint: 2

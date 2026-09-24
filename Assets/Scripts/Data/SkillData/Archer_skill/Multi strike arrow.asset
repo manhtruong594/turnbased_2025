@@ -19,7 +19,7 @@ MonoBehaviour:
     d\xE2\u0300n bu\u0300 la\u0323i co\u0301 ti\u0309 l\xEA\u0323 25% \u0111o\u0301ng
     b\u0103ng mu\u0323c ti\xEAu"
   skillType: 3
-  icon: {fileID: -2096388463, guid: 5f1303ecbc3023f41ab52e57073ffa7f, type: 3}
+  icon: {fileID: 1316630636, guid: f68897359cc923e40bb35d6f5c5e3bc1, type: 3}
   cooldown: 0
   mpCost: 1
   range: 5

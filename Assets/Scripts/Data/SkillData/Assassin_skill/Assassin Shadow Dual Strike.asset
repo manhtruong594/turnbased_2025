@@ -17,7 +17,7 @@ MonoBehaviour:
     c\xF4ng hai l\u1EA7n, k\u1EBFt li\u1EC5u k\u1EBB \u0111\u1ECBch c\xF2n \xEDt
     M\xE1u v\xE0 nh\u1EADn ShadowStep khi h\u1EA1 g\u1EE5c m\u1EE5c ti\xEAu."
   skillType: 3
-  icon: {fileID: 1092427537, guid: 5f1303ecbc3023f41ab52e57073ffa7f, type: 3}
+  icon: {fileID: -116274710, guid: f68897359cc923e40bb35d6f5c5e3bc1, type: 3}
   cooldown: 4
   mpCost: 1
   range: 3

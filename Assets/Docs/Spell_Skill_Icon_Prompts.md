@@ -1,77 +1,77 @@
-# Spell and Skill Icon Prompts
+# Prompt icon cho phép thuật và kỹ năng
 
-These prompts cover the 9 spell and 23 skill data assets in `Assets/Scripts/Data`. Attach the image provided in the conversation as the style reference when generating each image. Existing game icons were not used as references.
+Các prompt này bao gồm 9 data asset spell và 23 data asset skill trong `Assets/Scripts/Data`. Đính kèm ảnh được cung cấp trong cuộc trò chuyện làm mẫu phong cách khi tạo từng ảnh. Không dùng icon hiện có trong game làm mẫu.
 
-Combine the shared prompt with one individual prompt below for each icon.
+Ghép prompt chung với một prompt riêng bên dưới cho mỗi icon.
 
-## Shared prompt
+## Prompt chung
 
-> Use the provided image as the style reference. Create a square 1:1 fantasy RPG icon in its simple painterly style: one large, glowing symbol floating at the center of a nearly black, softly textured background. Use the same restrained light, soft vignette, warm gold accents, and generous dark space. The symbol must read clearly at 64×64 pixels. Add only a faint curved magical trail if needed. Use one dominant color specified below. Keep the composition and detail level consistent across the set. Do not copy the healing symbol or hand into unrelated icons. No extra objects, scenery, text, numbers, logo, watermark, border, or UI frame.
+> Dùng ảnh được cung cấp làm mẫu phong cách. Tạo một icon game nhập vai fantasy hình vuông 1:1 theo phong cách tranh vẽ đơn giản của ảnh: một biểu tượng lớn, phát sáng, lơ lửng ở giữa nền gần đen có chất liệu nhẹ. Giữ ánh sáng tiết chế, viền tối mềm, điểm nhấn vàng ấm và khoảng tối rộng như ảnh mẫu. Biểu tượng phải rõ khi thu nhỏ còn 64×64 pixel. Chỉ thêm một vệt phép thuật cong, mờ nếu cần. Dùng một màu chủ đạo được chỉ định bên dưới. Giữ bố cục và mức độ chi tiết đồng nhất trong cả bộ. Không sao chép biểu tượng hồi máu hoặc bàn tay vào các icon không liên quan. Không thêm đồ vật phụ, cảnh nền, chữ, số, logo, watermark, đường viền hoặc khung UI.
 
-## Spells
+## Phép thuật
 
-1. **Damage Spell:** A glowing jagged magic bolt. Dominant color: crimson.
-2. **Root Spell:** A single thick root twisted into a binding knot. Dominant color: forest green.
-3. **Shield Spell:** A simple glowing shield. Dominant color: sapphire blue.
-4. **Stun Spell:** A sharp lightning bolt with a bright center. Dominant color: electric yellow.
-5. **Dawn Absolution:** A clean dawn sunburst. Dominant color: warm gold.
-6. **Merciful Prison:** A heart-shaped cage made of vines. Dominant color: emerald green.
-7. **Ashen Ultimatum:** A cracked hourglass holding glowing ash. Dominant color: ember orange.
-8. **Ember Sacrifice:** A heart shaped from a single flame. Dominant color: blood red.
-9. **Stonewall Rise:** A solid stone pillar rising upward. Dominant color: earthy amber.
+1. **Damage Spell:** Một tia phép thuật gấp khúc phát sáng. Màu chủ đạo: đỏ thẫm.
+2. **Root Spell:** Một sợi rễ dày xoắn thành nút trói. Màu chủ đạo: xanh rừng.
+3. **Shield Spell:** Một tấm khiên phát sáng đơn giản. Màu chủ đạo: xanh sapphire.
+4. **Stun Spell:** Một tia sét sắc nhọn với tâm sáng. Màu chủ đạo: vàng điện.
+5. **Dawn Absolution:** Một quầng mặt trời bình minh tỏa tia, hình khối gọn rõ. Màu chủ đạo: vàng ấm.
+6. **Merciful Prison:** Một chiếc lồng hình trái tim đan bằng dây leo. Màu chủ đạo: xanh ngọc lục bảo.
+7. **Ashen Ultimatum:** Một chiếc đồng hồ cát nứt chứa tro phát sáng. Màu chủ đạo: cam than hồng.
+8. **Ember Sacrifice:** Một trái tim tạo thành từ một ngọn lửa. Màu chủ đạo: đỏ máu.
+9. **Stonewall Rise:** Một trụ đá vững chắc trồi lên. Màu chủ đạo: hổ phách ngả nâu đất.
 
-## Skills
+## Kỹ năng
 
-1. **NormalAttack (Slash attack):** A steel sword with one bright diagonal slash. Dominant color: steel silver.
-2. **Heal Skill:** A softly glowing healing heart. Dominant color: jade green.
-3. **Normal Arrow:** A single arrow pointing forward. Dominant color: woodland green.
-4. **Multi strike arrow:** Three arrows grouped in one clean silhouette. Dominant color: icy cyan.
-5. **Assassin Bleed:** A slim dagger with a red glowing edge. Dominant color: deep crimson.
-6. **Assassin Shadow Dual Strike:** Two crossed daggers emerging from shadow. Dominant color: dark violet.
-7. **Mace Smash:** A heavy spiked mace head. Dominant color: bronze.
-8. **Berserker Blood Hammer:** A broad warhammer head with a red glow. Dominant color: blood red.
-9. **Halberdier Crescent Slash:** A crescent halberd blade with one curved slash. Dominant color: turquoise.
-10. **Knight Holy Sword Stance:** An upright holy sword. Dominant color: radiant gold.
-11. **Fire Ball:** A single fireball with a bright center. Dominant color: fiery orange.
-12. **Magician Fire Seal:** A plain circular fire seal with a small flame at its center. Dominant color: scarlet orange.
-13. **Herbalist Staff Tap:** The glowing tip of a wooden staff. Dominant color: warm olive green.
-14. **Herbalist Field Remedy:** A single glowing medicinal leaf. Dominant color: fresh green.
-15. **Herbalist Purification:** A clear glowing water droplet. Dominant color: teal.
-16. **Militia Quick Slash:** A short sword with one narrow slash. Dominant color: steel blue.
-17. **Militia Power Strike:** A broad sword with a bright, forceful edge. Dominant color: amber gold.
-18. **Militia Bandage:** A simple glowing bandage roll. Dominant color: soft green.
-19. **Adjudicator Verdict Stroke:** A judge's brush with one glowing stroke, without writing. Dominant color: ivory gold.
-20. **Adjudicator Accusation:** A pointed judgment seal without letters or symbols. Dominant color: royal purple.
-21. **Adjudicator Forbidden Seal:** A closed arcane seal without writing. Dominant color: deep violet.
-22. **Heavy smash attack:** A large blunt weapon head with a bright impact edge. Dominant color: iron gray.
-23. **Smasher Earthquake:** A cracked stone pillar. Dominant color: ochre brown.
+1. **NormalAttack (Slash attack):** Một thanh kiếm thép với một vệt chém chéo sáng. Màu chủ đạo: bạc thép.
+2. **Heal Skill:** Một trái tim hồi máu phát sáng dịu. Màu chủ đạo: xanh ngọc bích.
+3. **Normal Arrow:** Một mũi tên hướng về phía trước. Màu chủ đạo: xanh rừng.
+4. **Multi strike arrow:** Ba mũi tên gom thành một hình khối gọn, rõ. Màu chủ đạo: xanh lơ băng giá.
+5. **Assassin Bleed:** Một con dao găm mảnh với lưỡi phát sáng đỏ. Màu chủ đạo: đỏ thẫm đậm.
+6. **Assassin Shadow Dual Strike:** Hai con dao găm bắt chéo xuất hiện từ bóng tối. Màu chủ đạo: tím tối.
+7. **Mace Smash:** Một đầu chùy tròn đặc với bốn gai lớn, cán ngắn nghiêng chéo xuống trái; một vệt va đập ngắn, sắc ở mép trên phải gợi cú nện trực tiếp. Giữ khối kim loại rõ, ánh đỏ chỉ tập trung ở cạnh va đập. Màu chủ đạo: đỏ máu.
+8. **Berserker Blood Mace:** Một đầu chùy dài có ba gờ lớn, dựng thẳng với cán hướng xuống; huyết khí cuộn thành một vòng cung dày ôm quanh đầu chùy. Lõi chùy phát sáng đỏ mạnh, hình khối tổng thể cao và được bao bởi vòng huyết khí. Giữ chùy và huyết khí thành một biểu tượng gọn, rõ ở 64×64 pixel. Màu chủ đạo: đỏ máu.
+9. **Halberdier Crescent Slash:** Một lưỡi rìu hình lưỡi liềm đang xoay, với vệt cong gọn kéo về sau gợi chuyển động lướt tới. Màu chủ đạo: xanh ngọc lam.
+10. **Knight Holy Sword Stance:** Một thanh thánh kiếm dựng thẳng. Màu chủ đạo: vàng rực rỡ.
+11. **Fire Ball:** Một quả cầu lửa với tâm sáng. Màu chủ đạo: cam lửa.
+12. **Magician Fire Seal:** Một khối sóng lửa thấp, rộng với chân lửa trải ngang, gợi biển lửa phủ và lưu lại trên mặt đất. Màu chủ đạo: cam đỏ.
+13. **Herbalist Staff Tap:** Một cây gậy gỗ đặt chéo đang quật mạnh, với vệt vung ngắn và điểm sáng ở đầu gậy. Màu chủ đạo: xanh ô liu ấm.
+14. **Herbalist Field Remedy:** Một chiếc lá thuốc phát sáng. Màu chủ đạo: xanh lá tươi.
+15. **Herbalist Purification:** Một giọt nước trong phát sáng. Màu chủ đạo: xanh mòng két.
+16. **Militia Quick Slash:** Một thanh kiếm ngắn với một vệt chém hẹp. Màu chủ đạo: xanh thép.
+17. **Militia Power Strike:** Một thanh kiếm bản rộng với lưỡi sáng, gợi lực chém mạnh. Màu chủ đạo: vàng hổ phách.
+18. **Militia Bandage:** Một cuộn băng đơn giản phát sáng. Màu chủ đạo: xanh lá dịu.
+19. **Adjudicator Verdict Stroke:** Một cây gậy phép đặt chéo với một vệt năng lượng bóng tối cong phát ra từ đầu gậy khi vung. Màu chủ đạo: tím đậm.
+20. **Adjudicator Accusation:** Một chùm năng lượng bóng tối nhọn lao thẳng tới, lõi sáng và hai vệt năng lượng phụ ôm sát thành một hình khối gọn. Màu chủ đạo: tím hoàng gia.
+21. **Adjudicator Forbidden Seal:** Một phong ấn ma thuật khép kín, không có chữ viết. Màu chủ đạo: tím đậm.
+22. **Heavy smash attack:** Một đầu búa lớn đang bổ xuống, với vệt chuyển động thẳng ngắn và cạnh va đập sáng. Màu chủ đạo: xám sắt.
+23. **Smasher Earthquake:** Một đầu búa giáng xuống, từ điểm va đập tỏa ra một vết nứt lớn và một cung xung lực ngắn; gộp thành một biểu tượng gọn. Màu chủ đạo: nâu đất son.
 
-## Status Effects — prompt icon vector
+## Hiệu ứng trạng thái — Prompt icon vector
 
-Danh sách gồm toàn bộ 17 giá trị hiệu ứng trong `StatusEffectType`: 6 buff và 11 debuff. Không tạo icon cho `None`. `BurningGround` là hiệu ứng trên ô bản đồ (`TileHazardType`), không phải status trên unit. Icon giữ nguyên màu có sẵn trong ảnh; UI không tô màu lại sprite. Không dùng icon hiện có trong game làm mẫu.
+Danh sách gồm toàn bộ 17 giá trị hiệu ứng trong `StatusEffectType`: 6 buff và 11 debuff. Không tạo icon cho `None`. `BurningGround` là hiệu ứng trên ô bản đồ (`TileHazardType`), không phải trạng thái trên unit. Icon giữ nguyên màu có sẵn trong ảnh; UI không tô màu lại sprite. Không dùng icon hiện có trong game làm mẫu.
 
 Ghép prompt chung với **một** prompt riêng bên dưới cho mỗi icon.
 
-### Prompt chung cho Status Effects
+### Prompt chung cho hiệu ứng trạng thái
 
-> Tạo một icon trạng thái game fantasy dạng **vector SVG thuần**, khung vuông `viewBox="0 0 64 64"`, nền trong suốt. Dùng một biểu tượng chính ở giữa, silhouette rõ khi thu nhỏ còn 24×24 px. Thiết kế bằng các mảng màu phẳng khép kín, đường viền đồng nhất, góc và khoảng trống đủ rộng; tối đa hai sắc độ của một màu chủ đạo, màu xanh cho buff và màu đỏ cho debuff. Giữ cùng độ dày nét, tỉ lệ, khoảng đệm và mức đơn giản cho cả bộ. Không dùng phong cách tranh vẽ của icon spell/skill, không gradient, glow, texture, đổ bóng, hiệu ứng 3D, chi tiết li ti, cảnh nền, nhân vật, chữ, số, logo, watermark hoặc khung UI. Chỉ thay hình biểu tượng theo mô tả riêng; xuất SVG với hình/path vector chỉnh sửa được, không nhúng ảnh raster.
+> Tạo một icon trạng thái game fantasy dạng **vector SVG thuần**, khung vuông `viewBox="0 0 64 64"`, nền trong suốt. Dùng một biểu tượng chính ở giữa, hình khối rõ khi thu nhỏ còn 24×24 px. Thiết kế bằng các mảng màu phẳng khép kín, đường viền đồng nhất, góc và khoảng trống đủ rộng; tối đa hai sắc độ của một màu chủ đạo, màu xanh lá cho buff và màu đỏ cho debuff. Giữ cùng độ dày nét, tỉ lệ, khoảng đệm và mức đơn giản cho cả bộ. Không dùng phong cách tranh vẽ của icon spell/skill, không chuyển màu, quầng sáng, chất liệu bề mặt, đổ bóng, hiệu ứng 3D, chi tiết li ti, cảnh nền, nhân vật, chữ, số, logo, watermark hoặc khung UI. Chỉ thay hình biểu tượng theo mô tả riêng; xuất SVG với hình/path vector chỉnh sửa được, không nhúng ảnh raster.
 
-### Buff
+### Buff — Hiệu ứng có lợi
 
 1. **HealOverTime — Hồi máu theo lượt:** Một trái tim cân đối với đường cong tuần hoàn ôm một bên, gợi dòng hồi phục lặp lại; trái tim vẫn là hình chính.
 2. **Shield — Khiên bảo vệ:** Một tấm khiên nguyên vẹn, bản rộng, có lõi sáng đơn giản ở giữa; đường bao chắc và dễ nhận ra.
-3. **DamageBuff — Tăng sát thương:** Một lưỡi kiếm thẳng hướng lên, thân kiếm nở rộng gần mũi để gợi sức mạnh tăng thêm; silhouette mạnh, gọn.
+3. **DamageBuff — Tăng sát thương:** Một lưỡi kiếm thẳng hướng lên, thân kiếm nở rộng gần mũi để gợi sức mạnh tăng thêm; hình khối mạnh, gọn.
 4. **BloodRage — Cuồng huyết:** Một nắm đấm siết chặt với mép ngoài nhọn như lửa bùng, thể hiện cơn cuồng nộ; giữ một khối chính liền mạch.
 5. **StanceGuard — Thế thủ:** Một tấm khiên dựng đứng và cắm vững xuống mặt đất bằng chân khiên nhọn, khác rõ với khiên bảo vệ thông thường.
 6. **ShadowStep — Bước bóng:** Một dấu chân đang tan dần thành hai mảng bóng kéo về phía sau, gợi né tránh và khó bị nhắm trực tiếp.
 
-### Debuff
+### Debuff — Hiệu ứng bất lợi
 
 1. **Burn — Thiêu đốt:** Một ngọn lửa dựng đứng với lõi lửa rỗng đơn giản, đầu nhọn và chân rộng; không thêm củi hoặc cảnh cháy.
 2. **Poison — Trúng độc:** Một giọt độc đầu nhọn với một bọt khí lớn bên trong, hình giọt bất đối xứng để phân biệt với hồi máu.
 3. **Slow — Chậm:** Một chiếc ủng hướng về trước nhưng bị kéo giật lại bởi một vệt cong dày, thể hiện di chuyển chậm mà vẫn có thể bước.
 4. **Weaken — Suy yếu:** Một thanh kiếm cụp xuống, lưỡi có một vết nứt lớn gần chuôi; phân biệt rõ với kiếm dựng lên của `DamageBuff`.
-5. **Root — Trói chân:** Một chiếc ủng đứng yên bị một dây rễ to quấn chặt quanh cổ chân; dây rễ và ủng tạo thành một silhouette thống nhất.
+5. **Root — Trói chân:** Một chiếc ủng đứng yên bị một dây rễ to quấn chặt quanh cổ chân; dây rễ và ủng tạo thành một hình khối thống nhất.
 6. **Stun — Choáng:** Một tia sét gấp khúc nằm trong vòng nổ ngắn, góc cạnh; diễn tả cú sốc làm mất khả năng hành động.
 7. **Freeze — Đóng băng:** Một tinh thể băng sáu nhánh lớn, đối xứng, có lõi hình thoi; tránh các nhánh mảnh dễ mất nét.
 8. **Bleed — Chảy máu:** Một giọt máu lớn bị một vết cắt chéo tách nhẹ ở phần trên; giữ đường bao giọt máu rõ ràng.

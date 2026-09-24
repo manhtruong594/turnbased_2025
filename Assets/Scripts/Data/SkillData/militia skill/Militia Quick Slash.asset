@@ -13,10 +13,12 @@ MonoBehaviour:
   m_Name: Militia Quick Slash
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Skills.NormalAttackSkill
   skillName: "Ch\xE9m Nhanh"
-  description: "G\xE2y 100% s\xE1t th\u01B0\u01A1ng hi\u1EC7n t\u1EA1i l\xEAn m\u1ED9t
-    k\u1EBB \u0111\u1ECBch."
+  description: "Che\u0301m m\xF4\u0323t \u0111\u01B0\u01A1\u0300ng ki\xEA\u0301m
+    nhanh khi\xEA\u0301n \u0111\xF4\u0301i ph\u01B0\u01A1ng kh\xF4ng ki\u0323p tr\u01A1\u0309
+    tay, g\xE2y 100% s\xE1t th\u01B0\u01A1ng hi\u1EC7n t\u1EA1i l\xEAn m\u1ED9t k\u1EBB
+    \u0111\u1ECBch."
   skillType: 0
-  icon: {fileID: -349080929, guid: 5f1303ecbc3023f41ab52e57073ffa7f, type: 3}
+  icon: {fileID: -1605858312, guid: f68897359cc923e40bb35d6f5c5e3bc1, type: 3}
   cooldown: 0
   mpCost: 0
   range: 1

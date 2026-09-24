@@ -13,20 +13,21 @@ MonoBehaviour:
   m_Name: Adjudicator Forbidden Seal
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Skills.AdjudicatorForbiddenSealSkill
   skillName: "\u0110\u1EA1i \u1EA4n C\u1EA5m Sinh"
-  description: "G\xE2y 160% s\xE1t th\u01B0\u01A1ng trong b\xE1n k\xEDnh 1, \xE1p
-    d\u1EE5ng Weaken 25% v\xE0 c\xF3 50% x\xE1c su\u1EA5t \xE1p d\u1EE5ng HealBan
-    trong 2 l\u01B0\u1EE3t l\xEAn m\u1ED7i k\u1EBB \u0111\u1ECBch c\xF2n s\u1ED1ng."
+  description: "Ta\u0323o m\xF4\u0323t vu\u0300ng c\xE2\u0301m thu\xE2\u0323t, g\xE2y
+    160% s\xE1t th\u01B0\u01A1ng trong b\xE1n k\xEDnh 1, \xE1p d\u1EE5ng Weaken 25%
+    v\xE0 c\xF3 50% x\xE1c su\u1EA5t \xE1p d\u1EE5ng HealBan trong 2 l\u01B0\u1EE3t
+    l\xEAn m\u1ED7i k\u1EBB \u0111\u1ECBch c\xF2n s\u1ED1ng."
   skillType: 3
-  icon: {fileID: 615436579, guid: 5f1303ecbc3023f41ab52e57073ffa7f, type: 3}
+  icon: {fileID: -291804118, guid: f68897359cc923e40bb35d6f5c5e3bc1, type: 3}
   cooldown: 5
   mpCost: 3
   range: 3
   vfxConfig:
-    castVfxPrefab: {fileID: 0}
+    castVfxPrefab: {fileID: 3628913460639372172, guid: 9cc105ab997e4f84895cb19ce55adea4, type: 3}
     releaseVfxPrefab: {fileID: 0}
     projectilePrefab: {fileID: 0}
-    impactVfxPrefab: {fileID: 0}
-    effectApplyTiming: 0
+    impactVfxPrefab: {fileID: 4748681987041982144, guid: 1bfd0a62bd2fabd42ad9080e7fcaa5ed, type: 3}
+    effectApplyTiming: 2
     castSpawnPoint: 1
     releaseSpawnPoint: 1
     impactSpawnPoint: 2

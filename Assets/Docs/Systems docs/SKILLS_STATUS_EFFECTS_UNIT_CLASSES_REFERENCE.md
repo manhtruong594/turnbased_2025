@@ -11,23 +11,22 @@
 | `Mace Smash` | Berserker | Gây sát thương bằng 125% sát thương hiện tại của người thi triển lên một kẻ địch. |
 | `Blood Hammer` | Berserker | Gây sát thương lớn lên mục tiêu chính và sát thương lan lên các kẻ địch lân cận, sau đó tiêu hao một phần Máu hiện tại nhưng không thể khiến người thi triển tử trận. Hạ mục tiêu chính sẽ nhận `BloodRage`. |
 | `Normal Attack` | Axe Soldier, Knight | Gây sát thương bằng 125% sát thương hiện tại của người thi triển lên một kẻ địch. |
-| `Crescent Slash` | Axe Soldier | Chém các kẻ địch trên một đường thẳng dài 2 ô, có thể gây `HealBan` và tạo `Shield` cho người thi triển. |
+| `Crescent Slash` | Axe Soldier | Xoay rìu lướt theo đường thẳng dài 2 ô, gây sát thương cho mục tiêu trên đường lướt, áp dụng `HealBan` lên mục tiêu đầu tiên và tạo `Shield` cho người thi triển. Nếu mục tiêu đang ở trên capture point, chắc chắn áp dụng `HealBan`. |
 | `Holy Sword Stance` | Knight | Chém các kẻ địch trên một đường thẳng dài 3 ô, gây `GuardBreak` lên kẻ địch đầu tiên trúng đòn, sau đó người thi triển nhận `StanceGuard`. |
-| `Fireball` | Magician | Gây 125% sát thương lên tất cả kẻ địch trong phạm vi 2 ô quanh ô mục tiêu. |
-| `Fire Seal` | Magician | Gây sát thương lửa diện rộng, tăng sát thương lên mục tiêu đang bị `Burn`, có thể gây `Burn` và để lại `Burning Ground` có khả năng gây `Burn`. |
-| `Heavy Smash Attack` | Smasher | Gây sát thương bằng 125% sát thương hiện tại của người thi triển lên một kẻ địch. |
-| `Earthquake` | Smasher | Gây sát thương và đẩy lùi một kẻ địch. Nếu mục tiêu va chạm với vật cản, mục tiêu nhận thêm sát thương và bị `Stun`. |
+| `Fireball` | Magician | Thi triển hỏa công, gây 125% sát thương lên tất cả kẻ địch trong phạm vi 2 ô quanh ô mục tiêu. |
+| `Fire Seal` | Magician | Triệu hồi một biển lửa, gây sát thương lửa diện rộng, tăng sát thương lên mục tiêu đang bị `Burn`, có thể gây `Burn` và để lại `Burning Ground` trên mặt đất có khả năng gây `Burn`. |
+| `Heavy Smash Attack` | Smasher | Bổ một nhát búa chí mạng, gây sát thương bằng 125% sát thương hiện tại của người thi triển lên một kẻ địch. |
+| `Earthquake` | Smasher | Dồn xung lực vào cây búa giáng mạnh xuống đất, gây sát thương và đẩy lùi một kẻ địch. Nếu mục tiêu va chạm với địa hình, mục tiêu nhận thêm sát thương và bị `Stun`. |
 | `Heal Skill` | Archer, Assassin, Axe Soldier, Berserker, Knight, Magician, Smasher | Hồi Máu cho bản thân bằng 150% sát thương hiện tại. |
-| `Quick Slash` | Militia | Gây 100% sát thương hiện tại lên một kẻ địch. |
-| `Power Strike` | Militia | Gây 175% sát thương hiện tại. Sát thương tăng thêm 30% nếu mục tiêu đang có `Shield`. |
+| `Quick Slash` | Militia | Chém một đường kiếm nhanh khiến đối phương không kịp trở tay, gây 100% sát thương hiện tại lên một kẻ địch. |
+| `Power Strike` | Militia | Dồn sức vào nhát chém quyết định, gây 175% sát thương hiện tại. Sát thương tăng thêm 30% nếu mục tiêu đang có `Shield`. |
 | `Bandage` | Militia | Hồi Máu cho bản thân bằng 150% sát thương hiện tại. |
-| `Staff Tap` | Herbalist | Gây 80% sát thương hiện tại lên một kẻ địch. |
+| `Staff Tap` | Herbalist | Vung gậy quật mạnh, gây 80% sát thương hiện tại lên một kẻ địch. |
 | `Field Remedy` | Herbalist | Hồi Máu cho bản thân hoặc đồng minh bằng 200% sát thương hiện tại. |
 | `Purification` | Herbalist | Xóa toàn bộ debuff trên mục tiêu. Nếu xóa thành công ít nhất một debuff, mục tiêu nhận `Shield` bằng 30% sát thương hiện tại trong 2 lượt. |
-| `Verdict Stroke` | Adjudicator | Gây 100% sát thương hiện tại lên một kẻ địch trong tầm 2 ô. |
-| `Accusation` | Adjudicator | Gây 100% sát thương hiện tại. Nếu mục tiêu còn sống, mục tiêu nhận `GuardBreak` 20% trong 2 lượt. |
-| `Forbidden Seal` | Adjudicator | Gây 160% sát thương trong bán kính 1 ô. Mỗi kẻ địch còn sống nhận `Weaken` 25% và có 50% xác suất nhận `HealBan` trong 2 lượt. |
-| `Flame Thrower` | None | Gây sát thương theo chu kỳ lên một kẻ địch trong một khoảng thời gian. |
+| `Verdict Stroke` | Adjudicator | Vung gậy phép tạo ra một luồng năng lượng bóng tối, gây 100% sát thương hiện tại lên một kẻ địch trong tầm 2 ô. |
+| `Accusation` | Adjudicator | Bắn một chùm năng lượng bóng tối, gây 100% sát thương hiện tại. Nếu mục tiêu còn sống, mục tiêu nhận `GuardBreak` 20% trong 2 lượt. |
+| `Forbidden Seal` | Adjudicator | Tạo một vùng cấm thuật, gây 160% sát thương trong bán kính 1 ô. Mỗi kẻ địch còn sống nhận `Weaken` 25% và có 50% xác suất nhận `HealBan` trong 2 lượt. |
 
 ## Spell Cards
 

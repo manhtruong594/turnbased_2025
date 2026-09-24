@@ -13,11 +13,12 @@ MonoBehaviour:
   m_Name: Magician Fire Seal
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Skills.MagicianFireSealSkill
   skillName: Hoa An Thien Tru
-  description: "G\xE2y s\xE1t th\u01B0\u01A1ng l\u1EEDa di\u1EC7n r\u1ED9ng, c\xF3
-    th\u1EC3 \xE1p d\u1EE5ng Burn l\xEAn m\u1EE5c ti\xEAu v\xE0 \u0111\u1EC3 l\u1EA1i
-    Burning Ground c\xF3 th\u1EC3 g\xE2y Burn."
+  description: "Tri\xEA\u0323u h\xF4\u0300i m\xF4\u0323t bi\xEA\u0309n l\u01B0\u0309a,
+    g\xE2y s\xE1t th\u01B0\u01A1ng l\u1EEDa di\u1EC7n r\u1ED9ng, c\xF3 th\u1EC3 \xE1p
+    d\u1EE5ng Burn l\xEAn m\u1EE5c ti\xEAu v\xE0 \u0111\u1EC3 l\u1EA1i Burning Ground
+    tr\xEAn m\u0103\u0323t \u0111\xE2\u0301t c\xF3 th\u1EC3 g\xE2y Burn."
   skillType: 3
-  icon: {fileID: 1819598031, guid: 5f1303ecbc3023f41ab52e57073ffa7f, type: 3}
+  icon: {fileID: -1697170743, guid: f68897359cc923e40bb35d6f5c5e3bc1, type: 3}
   cooldown: 5
   mpCost: 1
   range: 3
