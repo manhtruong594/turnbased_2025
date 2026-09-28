@@ -25,6 +25,7 @@ namespace TurnBasedGame.Core
         public bool IsTurnTransitionPending => _turnTransitionPending;
         public PlayerID? Winner => _winner;
         public double Deadline { get; private set; }
+        internal bool DeadlineExpired => _isTriggerTimer && Deadline <= MatchTime;
         private static double MatchTime => Unity.Netcode.NetworkManager.Singleton != null &&
             Unity.Netcode.NetworkManager.Singleton.IsListening ? Unity.Netcode.NetworkManager.Singleton.ServerTime.Time : Time.timeAsDouble;
 
@@ -95,7 +96,9 @@ namespace TurnBasedGame.Core
             if (!_isTriggerTimer)
                 return;
             Timer = (float)Math.Max(0, Deadline - MatchTime);
-            if (Timer <= 0 && TurnBasedGame.Multiplayer.MatchGameplayBootstrap.InputReady)
+            if (Timer <= 0 && (TurnBasedGame.Multiplayer.MatchGameplayBootstrap.Active
+                ? TurnBasedGame.Multiplayer.MatchGameplayBootstrap.Instance.CanAdvanceTimer
+                : TurnBasedGame.Multiplayer.MatchGameplayBootstrap.InputReady))
             {
                 LocalMatchAuthority.SubmitTimeoutTurn();
             }

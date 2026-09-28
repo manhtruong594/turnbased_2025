@@ -139,10 +139,11 @@ namespace TurnBasedGame.Multiplayer
                 root.pickingMode = showLobby ? PickingMode.Position : PickingMode.Ignore;
                 root.style.backgroundColor = showLobby ? new Color(0, 0, 0, 0.65f) : Color.clear;
             }
-            panel.style.display = showLobby || controller.Failed ? DisplayStyle.Flex : DisplayStyle.None;
+            bool serviceError = controller.DisconnectReason == Protocol.MatchDisconnectReason.ServiceError;
+            panel.style.display = showLobby || controller.Failed || !wasInputReady || serviceError ? DisplayStyle.Flex : DisplayStyle.None;
             lobby.style.display = showLobby ? DisplayStyle.Flex : DisplayStyle.None;
             string text = controller.Status;
-            if (!controller.Failed && controller.InMatch && MatchGameplayBootstrap.InputReady)
+            if (!controller.Failed && !serviceError && controller.InMatch && MatchGameplayBootstrap.InputReady)
                 text = controller.CanRematch
                     ? "Trận đã kết thúc. Cả hai chọn Tái đấu, sau đó host bắt đầu."
                     : "Đã kết nối • Trận " + controller.Round;

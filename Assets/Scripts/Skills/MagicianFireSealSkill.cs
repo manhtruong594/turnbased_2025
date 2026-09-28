@@ -24,12 +24,13 @@ namespace TurnBasedGame.Skills
 
         public override bool CanUse(UnitController caster, Vector3Int targetPos)
         {
-            if (caster == null || !caster.CanAct())
+            if (caster == null || caster.IsDead() || (!caster.IgnoreSkillUseLimitsForTest && !caster.CanAct()))
             {
                 Debug.LogWarning($"{skillName} cannot be used because the caster cannot act.");
                 return false;
             }
-            if (!ValidateCooldown() || !ValidateMP(caster) || !ValidateRange(caster, targetPos))
+            if ((!caster.IgnoreSkillUseLimitsForTest && !ValidateCooldown()) ||
+                !ValidateMP(caster) || !ValidateRange(caster, targetPos))
                 return false;
 
             return IsEnemyOrEmptyTile(caster, targetPos) && ValidateCustomConditions(caster, targetPos);

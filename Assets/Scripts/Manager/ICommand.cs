@@ -83,6 +83,19 @@ namespace TurnBasedGame.Command
             }, () => CaptureChanges(before), CaptureRollback());
             if (!result.Accepted) throw new System.InvalidOperationException(result.Detail);
         }
+        internal static void ForfeitDisconnectedGuest()
+        {
+            if (!IsAuthoritative || gate == null || TurnManager.Instance == null || TurnManager.Instance.Winner.HasValue) return;
+            var before = CaptureState();
+            var result = gate.ExecuteSystem(PlayerId.Player2, () =>
+            {
+                TurnManager.Instance.TriggerGameEnd(PlayerID.Player1);
+                return (CommandReason.None, (string)null);
+            }, () => CaptureChanges(before), CaptureRollback());
+            if (!result.Accepted) throw new System.InvalidOperationException(result.Detail);
+            CommandCommitted?.Invoke(result);
+            GameMediator.Instance.NotifyReplicaGameEnd(PlayerID.Player1);
+        }
         public static MatchGameplayTransport Transport { get; private set; }
         public static event System.Action<CommandAcknowledgement> CommandCommitted;
         private static List<System.Action> presentation;
@@ -352,6 +365,8 @@ namespace TurnBasedGame.Command
             var actor = (PlayerID)command.Actor;
             if (turn.CurrentPlayer != actor || turn.TurnCount != command.ExpectedTurn)
                 return (CommandReason.WrongTurn, "Command không khớp người chơi/lượt hiện tại.");
+            if (MatchContext.Mode == MatchMode.NetworkPvP && turn.DeadlineExpired && command.Kind != MatchCommandKind.EndTurn)
+                return (CommandReason.WrongTurn, "Đã hết thời hạn lượt trên host.");
             if (UnitSpawner.Instance != null)
                 for (int playerIndex = 1; playerIndex <= 2; playerIndex++)
                     foreach (var movingUnit in UnitSpawner.Instance.GetPlayerUnits((PlayerID)playerIndex))

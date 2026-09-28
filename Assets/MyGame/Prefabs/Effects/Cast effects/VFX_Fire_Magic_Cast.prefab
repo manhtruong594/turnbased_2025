@@ -14721,6 +14721,7 @@ GameObject:
   - component: {fileID: 6710118302476349399}
   - component: {fileID: 1447915409637239806}
   - component: {fileID: 7822361726535437146}
+  - component: {fileID: 1844599451102112825}
   m_Layer: 0
   m_Name: VFX_Fire_Magic_Cast
   m_TagString: Untagged
@@ -19657,6 +19658,18 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &1844599451102112825
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1680864063113293712}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b070947a23dce54e8640929696c53df, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.ObjectPool.PooledVFX
 --- !u!1 &1810612633307330240
 GameObject:
   m_ObjectHideFlags: 0

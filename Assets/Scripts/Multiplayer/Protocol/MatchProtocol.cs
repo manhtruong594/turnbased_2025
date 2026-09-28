@@ -107,7 +107,7 @@ namespace TurnBasedGame.Multiplayer.Protocol
     public static class MatchProtocol
     {
         public const ushort ProtocolVersion = 2;
-        public const int GameplayRulesVersion = 3;
+        public const int GameplayRulesVersion = 4;
         public const int MaxCommandBytes = 1024;
 
         public static bool IsHex(string value, int length)

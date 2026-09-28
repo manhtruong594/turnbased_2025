@@ -64,12 +64,12 @@ namespace TurnBasedGame.Skills
         #region Template Method - Validation Pipeline
         public virtual bool CanUse(UnitController caster, Vector3Int targetPos)
         {
-            if (caster == null || !caster.CanAct())
+            if (caster == null || caster.IsDead() || (!caster.IgnoreSkillUseLimitsForTest && !caster.CanAct()))
             {
                 Debug.LogWarning($"{skillName} cannot be used because the caster cannot act.");
                 return false;
             }
-            if (!ValidateCooldown())
+            if (!caster.IgnoreSkillUseLimitsForTest && !ValidateCooldown())
             {
                 Debug.LogWarning($"{skillName} is on cooldown.");
                 return false;
@@ -106,6 +106,8 @@ namespace TurnBasedGame.Skills
 
         protected virtual bool ValidateMP(UnitController caster)
         {
+            if (caster != null && caster.IgnoreSkillUseLimitsForTest)
+                return true;
             if (MPCost <= 0)
                 return true;
 
@@ -195,6 +197,8 @@ namespace TurnBasedGame.Skills
 
         private bool TrySpendMP(UnitController caster)
         {
+            if (caster != null && caster.IgnoreSkillUseLimitsForTest)
+                return true;
             if (MPCost <= 0)
                 return true;
 

@@ -21,7 +21,10 @@ namespace TurnBasedGame.Multiplayer
     public sealed class MatchGameplayBootstrap : MonoBehaviour
     {
         private string ControlMessage = "match-bootstrap-v1", SnapshotMessage = "match-snapshot-v1";
-        private bool sessionOwned, disposed, sessionSceneLoaded;
+        private bool sessionOwned, disposed, sessionSceneLoaded, reconnecting;
+        internal bool CanAdvanceTimer => !failed && !disposed && started &&
+            (MatchSessionController.Instance == null || !MatchSessionController.Instance.IsClosing) &&
+            (ready || (reconnecting && !peer.HasValue && IsHost));
         public static MatchGameplayBootstrap Instance { get; private set; }
         public static bool Active => Instance != null;
         public static bool InputReady => MatchSessionController.Instance != null && MatchSessionController.Instance.IsClosing ? false :
@@ -143,8 +146,8 @@ namespace TurnBasedGame.Multiplayer
 
         private void Update()
         {
-            if (failed || disposed || network == null) return;
-            if (!ready && Time.realtimeSinceStartupAsDouble >= expires) { Fail("Gameplay bootstrap/resync timeout (30s)."); return; }
+            if (failed || disposed || network == null || (reconnecting && !IsHost)) return;
+            if (!ready && !reconnecting && Time.realtimeSinceStartupAsDouble >= expires) { Fail("Gameplay bootstrap/resync timeout (30s)."); return; }
             if (sessionOwned && !sessionSceneLoaded) return;
             if (!managersReady)
             {
@@ -233,7 +236,9 @@ namespace TurnBasedGame.Multiplayer
                         else if (sequence != LocalMatchAuthority.ServerSequence) SendSnapshot();
                         else
                         {
-                            ready = true; SendControl(2, sender, sequence, hash);
+                            if (sessionOwned && !MatchSessionController.Instance.Reconnected()) return;
+                            ready = true; reconnecting = false;
+                            SendControl(2, sender, sequence, hash);
                             GameMediator.Instance.NotifyReplicaApplied();
                             Debug.Log("[MP-GAMEPLAY] READY sequence=" + sequence);
                         }
@@ -241,7 +246,8 @@ namespace TurnBasedGame.Multiplayer
                 }
                 else if (kind == 2 && issued != null && sequence == issued.State.ServerSequence && hash == issued.Hash)
                 {
-                    ready = true; awaitingSnapshot = false;
+                    if (sessionOwned && !MatchSessionController.Instance.Reconnected()) return;
+                    ready = true; awaitingSnapshot = false; reconnecting = false;
                     RefreshPresentation(); transport.RetryPending();
                     Debug.Log("[MP-GAMEPLAY] READY sequence=" + sequence);
                 }
@@ -345,8 +351,26 @@ namespace TurnBasedGame.Multiplayer
         private void OnDisconnect(ulong id)
         {
             if (IsHost && (!peer.HasValue || peer.Value != id)) return;
-            Fail("Gameplay peer disconnected; reconnect lifecycle belongs to phase 6.");
+            if (sessionOwned) { SuspendConnection(); return; }
+            Fail("Gameplay peer disconnected.");
         }
+        internal void SuspendConnection()
+        {
+            if (failed || disposed) return;
+            ready = false; reconnecting = true; peer = null; issued = null;
+            awaitingSnapshot = false;
+            if (!IsHost) { transport?.Dispose(); transport = null; }
+            GameMediator.Instance?.NotifyReplicaApplied();
+        }
+
+        internal void ResumeConnection()
+        {
+            if (failed || disposed || IsHost) return;
+            reconnecting = false; awaitingSnapshot = false; retryAt = 0; snapshotFailures = 0;
+            network.OnClientDisconnectCallback -= OnDisconnect;
+            RegisterHandlers();
+        }
+
         internal void Abort(string reason) => Fail(reason);
         private void OnSceneUnloaded(Scene scene)
         {

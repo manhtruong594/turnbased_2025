@@ -18,7 +18,7 @@ namespace TurnBasedGame.Skills
 
         public override bool CanUse(UnitController caster, Vector3Int targetPos)
         {
-             if (!ValidateCooldown()) 
+            if ((caster == null || !caster.IgnoreSkillUseLimitsForTest) && !ValidateCooldown())
             {
                 Debug.LogWarning($"{skillName} is on cooldown.");
                 return false;

@@ -1,6 +1,6 @@
 # Kế hoạch hoàn thiện multiplayer
 
-Cập nhật: `2026-09-18`
+Cập nhật: `2026-09-28`
 
 ## 1. Mục tiêu và phạm vi MVP
 
@@ -25,7 +25,7 @@ host migration và anti-cheat cấp competitive. Các mục này chỉ bắt đ�
 | Runtime/content ID ổn định | Đã triển khai, chờ kiểm chứng Unity | Registry, catalog GUID, host unit ID, spawn ID theo owner/grid |
 | State snapshot/delta | Đã thêm implementation Phase 4, chờ nghiệm thu | Snapshot, replica, ordered replacement state, hash/resync; chưa kiểm chứng hai process gameplay |
 | Transport/session/relay | Đã thêm implementation giai đoạn 5 | Authentication, Sessions, Relay `dtls`, create/join bằng mã; chưa kiểm chứng Relay Internet |
-| Lobby/reconnect | Đã thêm lobby/ready/rematch; reconnect chưa có | Loadout theo service player, host chốt trận, cleanup; reconnect thuộc giai đoạn 6 |
+| Lobby/reconnect | Đã thêm lobby/ready/rematch và reconnect giai đoạn 6 | Giữ slot 30 giây, xác thực lại và snapshot; chờ nghiệm thu Unity/Relay |
 | Multiplayer test | Prototype transport đạt | Hai process loopback trao đổi message và disconnect sạch; chưa đồng bộ gameplay |
 
 `LocalMatchAuthority` đã nhận DTO không chứa reference local qua executor. Luồng local được giữ; nút Multiplayer trong Prepare Battle mở session/replica bootstrap. Nó chưa phải
@@ -202,6 +202,15 @@ Tiêu chí hoàn thành:
 - Rời trận và rematch không để lại callback trùng, session rác hoặc state trận trước.
 
 ### Giai đoạn 6 — Timer, disconnect và reconnect
+
+Trạng thái `2026-09-28`: đã triển khai code; **chưa nghiệm thu milestone** vì chưa chạy Unity Play Mode,
+hai process và Relay Internet. Chi tiết: [Timer, disconnect và reconnect](../Systems%20docs/Multiplayer_Reconnect.md).
+
+- Deadline host, từ chối action mạng quá hạn, auto end-turn; giữ cách chơi local.
+- Khóa command khi disconnect, giữ slot đúng danh tính `30 giây`, join lại Relay và phục hồi snapshot.
+- Giữ authority/replay cache/counter; không tự phát lại intent đang chờ. Hết cửa sổ xử khách thua một lần.
+- Phân biệt reason lifecycle, đóng flow khi host rời/mất kết nối; không host migration.
+- `83/83` test thuần đạt trên Mono; thêm `3` test authority Unity chưa chạy. Rules version `4`.
 
 Thực hiện:
 

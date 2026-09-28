@@ -12,6 +12,8 @@ using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
+using Unity.Services.Relay;
+using Unity.Services.Relay.Models;
 using Unity.Services.Multiplayer;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -22,7 +24,40 @@ namespace TurnBasedGame.Multiplayer
     // One owner for service membership, peer identity and the lifetime of the Relay connection.
     public sealed class MatchSessionController : MonoBehaviour
     {
+        // Metadata schema is pinned to Multiplayer Services 2.3.1. Never log Relay credentials.
+        [Serializable] private sealed class RelayMetadata { public string RelayJoinCode; public string HostId; }
         [Serializable] private sealed class Identity { public string Player; public string Token; }
+        // Sessions owns Relay/membership; this handler owns NGO across temporary transport restarts.
+        private sealed class SessionNetworkHandler : INetworkHandler
+        {
+            private readonly NetworkManager manager;
+            public SessionNetworkHandler(NetworkManager manager) { this.manager = manager; }
+            public async Task StartAsync(NetworkConfiguration configuration)
+            {
+                if (configuration.Type != NetworkType.Relay ||
+                    (configuration.Role != NetworkRole.Host && configuration.Role != NetworkRole.Client))
+                    throw new InvalidOperationException("Only Relay host/client sessions are supported.");
+                bool host = configuration.Role == NetworkRole.Host;
+                var transport = (UnityTransport)manager.NetworkConfig.NetworkTransport;
+                transport.SetRelayServerData(configuration.RelayServerData);
+                if (!(host ? manager.StartHost() : manager.StartClient()))
+                    throw new InvalidOperationException("Cannot start session network.");
+                double deadline = Time.realtimeSinceStartupAsDouble + MatchReconnectWindow.Duration;
+                while (manager != null && manager.IsListening && !manager.IsConnectedClient &&
+                    Time.realtimeSinceStartupAsDouble < deadline) await Task.Yield();
+                if (manager == null || !manager.IsConnectedClient)
+                {
+                    await StopAsync();
+                    throw new InvalidOperationException("Kết nối Relay quá hạn hoặc bị host từ chối.");
+                }
+            }
+            public async Task StopAsync()
+            {
+                if (manager == null) return;
+                manager.Shutdown();
+                while (manager != null && manager.ShutdownInProgress) await Task.Yield();
+            }
+        }
         [Serializable] private sealed class LaunchData
         {
             public int Round;
@@ -35,6 +70,7 @@ namespace TurnBasedGame.Multiplayer
         public string Status { get; private set; } = "Tạo phòng hoặc nhập mã phòng để tham gia.";
         public bool Busy { get; private set; }
         public bool Failed => terminal;
+        public MatchDisconnectReason DisconnectReason { get; private set; }
         public bool IsClosing => leaving;
         public bool InMatch => launch != null;
         public bool HasSession => session != null || pendingCleanup != null;
@@ -47,7 +83,7 @@ namespace TurnBasedGame.Multiplayer
         {
             get
             {
-                if (terminal || session == null || session.PlayerCount != 2) return false;
+                if (terminal || reconnect.Active || session == null || session.PlayerCount != 2) return false;
                 foreach (var player in session.Players) if (!IsPlayerReady(player)) return false;
                 return true;
             }
@@ -66,6 +102,10 @@ namespace TurnBasedGame.Multiplayer
         private bool refreshing;
         private int committedRound;
         private string guestServiceId;
+        private readonly MatchReconnectWindow reconnect = new MatchReconnectWindow();
+        private bool reconnectAttempt;
+        private double nextReconnect;
+        private bool CanRecover => !leaving && !terminal && reconnect.Allows(Time.realtimeSinceStartupAsDouble);
 
         public static void Open(PlayerDataSO player, BattleMapDefinitionSO map, string scene, UIDocument sourceDocument)
         {
@@ -107,7 +147,8 @@ namespace TurnBasedGame.Multiplayer
                 {
                     ["build"] = Property(compatibility), ["map"] = Property(mapName), ["scene"] = Property(sceneName)
                 }
-            }.WithRelayNetwork().WithNetworkOptions(new NetworkOptions { RelayProtocol = RelayProtocol.DTLS }));
+            }.WithRelayNetwork().WithNetworkOptions(new NetworkOptions { RelayProtocol = RelayProtocol.DTLS })
+                .WithNetworkHandler(new SessionNetworkHandler(network)));
             AttachSession();
         }, true);
 
@@ -118,7 +159,8 @@ namespace TurnBasedGame.Multiplayer
             CreateNetwork();
             session = await MultiplayerService.Instance.JoinSessionByCodeAsync(code.Trim().ToUpperInvariant(),
                 new JoinSessionOptions { PlayerProperties = PlayerProperties() }
-                    .WithNetworkOptions(new NetworkOptions { RelayProtocol = RelayProtocol.DTLS }));
+                    .WithNetworkOptions(new NetworkOptions { RelayProtocol = RelayProtocol.DTLS })
+                    .WithNetworkHandler(new SessionNetworkHandler(network)));
             if (GetProperty("build") != compatibility) throw new InvalidOperationException("Khác phiên bản/content. Cả hai cần dùng cùng build.");
             mapName = GetProperty("map");
             ResolveMap(mapName);
@@ -158,6 +200,8 @@ namespace TurnBasedGame.Multiplayer
                 ConnectionData = Encoding.UTF8.GetBytes(JsonUtility.ToJson(new Identity { Player = AuthenticationService.Instance.PlayerId, Token = token })) };
             network.ConnectionApprovalCallback = Approve;
             network.OnClientDisconnectCallback += Disconnected;
+            network.OnTransportFailure += TransportFailed;
+            network.OnServerStopped += ServerStopped;
         }
 
         private async void Approve(NetworkManager.ConnectionApprovalRequest request, NetworkManager.ConnectionApprovalResponse response)
@@ -174,16 +218,20 @@ namespace TurnBasedGame.Multiplayer
                 if (session != current || leaving || terminal || GuestPeer.HasValue || current.PlayerCount != 2 ||
                     identity == null || identity.Player == current.Host || !current.HasPlayer(identity.Player)) return;
                 var player = current.GetPlayer(identity.Player);
+                if (InMatch && (identity.Player != launch.Guest || !reconnect.Allows(identity.Player, Time.realtimeSinceStartupAsDouble))) return;
+                if (!InMatch && reconnect.Active && !reconnect.Allows(identity.Player, Time.realtimeSinceStartupAsDouble)) return;
                 if (GetPlayerProperty(player, "proof") != identity.Token || string.IsNullOrEmpty(identity.Token) ||
                     GetPlayerProperty(player, "build") != compatibility) return;
                 GuestPeer = request.ClientNetworkId;
                 guestServiceId = identity.Player;
                 response.Approved = true;
+                if (!InMatch) Reconnected();
             }
             catch (Exception) { /* Never include identity/proof in logs or disconnect reasons. */ }
             finally
             {
-                if (!response.Approved) response.Reason = "Phòng đầy, khác build hoặc danh tính không hợp lệ. Kiểm tra mã phòng và thử lại.";
+                if (!response.Approved) response.Reason = GuestPeer.HasValue ? "MP_SLOT_BUSY" :
+                    "Phòng đầy, khác build hoặc danh tính không hợp lệ. Kiểm tra mã phòng và thử lại.";
                 response.Pending = false;
             }
         }
@@ -195,7 +243,7 @@ namespace TurnBasedGame.Multiplayer
             originalHost = session.Host;
             session.Changed += SessionChanged;
             session.Deleted += SessionEnded;
-            session.RemovedFromSession += SessionEnded;
+            session.RemovedFromSession += RemovedFromSession;
             session.SessionHostChanged += HostChanged;
             Status = "Host: Player1 • Khách: Player2. Kiểm tra đội hình rồi chọn Sẵn sàng.";
             SessionChanged();
@@ -203,7 +251,7 @@ namespace TurnBasedGame.Multiplayer
 
         public Task SetReady() => Run(async () =>
         {
-            if (session == null || terminal || (InMatch && !CanRematch)) return;
+            if (session == null || terminal || reconnect.Active || (InMatch && !CanRematch)) return;
             RequireLoadout(selected);
             string previous = GetPlayerProperty(session.CurrentPlayer, "ready");
             session.CurrentPlayer.SetProperty("ready", PlayerProperty(LocalReady ? "0" : (Round + 1).ToString()));
@@ -214,7 +262,7 @@ namespace TurnBasedGame.Multiplayer
 
         public Task StartMatch() => Run(async () =>
         {
-            if (!IsHost || terminal || (InMatch && !CanRematch)) return;
+            if (!IsHost || terminal || reconnect.Active || (InMatch && !CanRematch)) return;
             await session.RefreshAsync();
             if (terminal || leaving || session == null) return;
             var host = session.GetPlayer(originalHost);
@@ -285,7 +333,11 @@ namespace TurnBasedGame.Multiplayer
             try
             {
                 if (InMatch && session.PlayerCount != 2)
-                    throw new InvalidOperationException("Đối thủ đã rời phòng. Rời trận để trở về menu.");
+                {
+                    if (IsHost) ForfeitGuest("Đối thủ đã rời phòng hoặc bị loại khỏi session.", MatchDisconnectReason.ClientLeft);
+                    else Fail("Host đã rời phòng. Trận kết thúc; không chuyển host.", MatchDisconnectReason.HostLeft);
+                    return;
+                }
                 string json = GetProperty("launch");
                 if (string.IsNullOrEmpty(json)) return;
                 var next = JsonUtility.FromJson<LaunchData>(json);
@@ -370,11 +422,30 @@ namespace TurnBasedGame.Multiplayer
 
         private async void Update()
         {
-            if (session == null || leaving || terminal || Busy || refreshing || Time.realtimeSinceStartupAsDouble < nextRefresh) return;
+            if (session == null || leaving || terminal) return;
+            if (reconnect.Expired(Time.realtimeSinceStartupAsDouble))
+            {
+                if (IsHost) ForfeitGuest("Khách không reconnect trong 30 giây; khách thua do mất kết nối.", MatchDisconnectReason.ReconnectExpired);
+                else Fail("Không kết nối lại được host trong 30 giây. Trận kết thúc; không chuyển host.", MatchDisconnectReason.HostLost);
+                return;
+            }
+            if (reconnect.Active && !IsHost && !reconnectAttempt && Time.realtimeSinceStartupAsDouble >= nextReconnect)
+                _ = ReconnectClient();
+            if (Busy || refreshing || Time.realtimeSinceStartupAsDouble < nextRefresh) return;
             nextRefresh = Time.realtimeSinceStartupAsDouble + 5;
             refreshing = true;
-            try { await session.RefreshAsync(); SessionChanged(); }
-            catch (Exception) { Status = "Không cập nhật được phòng. Kiểm tra mạng hoặc rời phòng và thử lại."; Changed?.Invoke(); }
+            try
+            {
+                await session.RefreshAsync();
+                if (!leaving && !terminal && DisconnectReason == MatchDisconnectReason.ServiceError)
+                    DisconnectReason = reconnect.Active ? MatchDisconnectReason.TemporaryNetwork : MatchDisconnectReason.None;
+                SessionChanged();
+            }
+            catch (Exception)
+            {
+                if (!leaving && !terminal)
+                { DisconnectReason = MatchDisconnectReason.ServiceError; Status = "Không cập nhật được phòng. Kiểm tra mạng hoặc rời phòng và thử lại."; Changed?.Invoke(); }
+            }
             finally { refreshing = false; }
         }
 
@@ -382,17 +453,91 @@ namespace TurnBasedGame.Multiplayer
         {
             if (leaving || terminal || session == null) return;
             if (IsHost && GuestPeer != id) return;
+            if (!IsHost && !string.IsNullOrEmpty(network.DisconnectReason) &&
+                !(reconnect.Active && network.DisconnectReason == "MP_SLOT_BUSY"))
+            { Fail("Host từ chối hoặc ngắt kết nối: " + network.DisconnectReason,
+                network.DisconnectReason == "MP_HOST_LEFT" ? MatchDisconnectReason.HostLeft : MatchDisconnectReason.Rejected); return; }
             GuestPeer = null;
-            guestServiceId = null;
-            if (InMatch || !IsHost) Fail("Đối thủ/host đã ngắt kết nối. Rời phòng để trở về menu.");
-            else { Status = "Khách đã ngắt kết nối. Chờ khách tham gia lại và sẵn sàng."; Changed?.Invoke(); }
+            DisconnectReason = MatchDisconnectReason.TemporaryNetwork;
+            reconnect.Begin(Time.realtimeSinceStartupAsDouble, IsHost ? guestServiceId : originalHost);
+            MatchGameplayBootstrap.Instance?.SuspendConnection();
+            Status = IsHost ? "Khách mất kết nối. Giữ slot 30 giây; đồng hồ lượt vẫn chạy."
+                : "Mất kết nối host. Đang thử kết nối lại trong 30 giây…";
+            Changed?.Invoke();
         }
-        private void SessionEnded() { if (!leaving) Fail("Phòng đã đóng. Rời phòng để trở về menu."); }
-        private void HostChanged(string _) { if (!leaving) Fail("Host đã rời phòng. MVP không chuyển host; hãy tạo phòng mới."); }
-        internal void Fail(string message)
+
+        private async Task ReconnectClient()
+        {
+            reconnectAttempt = true;
+            var current = session;
+            try
+            {
+                while (CanRecover && network.ShutdownInProgress) await Task.Yield();
+                if (!CanRecover || current != session) return;
+                await current.ReconnectAsync();
+                await current.RefreshAsync();
+                if (!CanRecover || current != session) return;
+                if (current.Host != originalHost || !current.HasPlayer(originalHost))
+                { Fail("Host đã rời phòng. Trận kết thúc; không chuyển host.", MatchDisconnectReason.HostLeft); return; }
+                if (!AuthenticationService.Instance.IsSignedIn || current.CurrentPlayer.Id != AuthenticationService.Instance.PlayerId)
+                { Fail("Danh tính đăng nhập đã thay đổi. Không thể khôi phục slot.", MatchDisconnectReason.Rejected); return; }
+                // Rejoin Relay for fresh allocation data; an old client allocation may have expired.
+                var metadata = JsonUtility.FromJson<RelayMetadata>(GetProperty("_session_network"));
+                if (metadata == null || metadata.HostId != originalHost || string.IsNullOrEmpty(metadata.RelayJoinCode))
+                    throw new InvalidOperationException("Relay metadata unavailable.");
+                var allocation = await RelayService.Instance.JoinAllocationAsync(metadata.RelayJoinCode);
+                if (!CanRecover || current != session) return;
+                network.Shutdown();
+                while (CanRecover && network.ShutdownInProgress) await Task.Yield();
+                if (!CanRecover || current != session) return;
+                ((UnityTransport)network.NetworkConfig.NetworkTransport).SetRelayServerData(allocation.ToRelayServerData("dtls"));
+                if (!network.StartClient()) throw new InvalidOperationException("Cannot restart client.");
+                while (CanRecover && network.IsListening && !network.IsConnectedClient) await Task.Yield();
+                if (!CanRecover || current != session || !network.IsConnectedClient) return;
+                if (InMatch) MatchGameplayBootstrap.Instance?.ResumeConnection();
+                else Reconnected();
+                // Keep the original reconnect deadline until snapshot ACK completes.
+                while (CanRecover && network.IsConnectedClient) await Task.Yield();
+            }
+            catch (Exception)
+            {
+                if (CanRecover)
+                { Status = "Dịch vụ/Relay chưa phục hồi. Đang thử lại trong cửa sổ 30 giây…"; Changed?.Invoke(); }
+            }
+            finally { reconnectAttempt = false; nextReconnect = Time.realtimeSinceStartupAsDouble + 2; }
+        }
+
+        internal bool Reconnected()
+        {
+            if (leaving || terminal || reconnect.Expired(Time.realtimeSinceStartupAsDouble)) return false;
+            reconnect.Complete();
+            DisconnectReason = MatchDisconnectReason.None;
+            Status = "Đã kết nối lại và đồng bộ trạng thái trận.";
+            Changed?.Invoke();
+            return true;
+        }
+
+        private void ForfeitGuest(string reason, MatchDisconnectReason code)
+        {
+            try
+            {
+                if (InMatch && TurnManager.Instance != null && !TurnManager.Instance.Winner.HasValue)
+                    LocalMatchAuthority.ForfeitDisconnectedGuest();
+            }
+            finally { Fail(reason, code); }
+        }
+        private void TransportFailed()
+        {
+            if (IsHost) Fail("Host mất kết nối Relay. Trận kết thúc; không chuyển host.", MatchDisconnectReason.HostLost);
+        }
+        private void ServerStopped(bool _) { if (IsHost) TransportFailed(); }
+        private void SessionEnded() { if (!leaving) Fail("Host đã đóng phòng hoặc session bị xóa. Trận kết thúc.", MatchDisconnectReason.HostLeft); }
+        private void RemovedFromSession() { if (!leaving) Fail("Bạn đã bị loại khỏi phòng (kick). Không thể reconnect slot này.", MatchDisconnectReason.Kicked); }
+        private void HostChanged(string _) { if (!leaving) Fail("Host đã rời phòng. MVP không chuyển host; hãy tạo phòng mới.", MatchDisconnectReason.HostLeft); }
+        internal void Fail(string message, MatchDisconnectReason reason = MatchDisconnectReason.None)
         {
             if (leaving || terminal) return;
-            terminal = true; Status = message;
+            terminal = true; Status = message; DisconnectReason = reason;
             MatchGameplayBootstrap.Instance?.Abort(message);
             network?.Shutdown();
             Changed?.Invoke();
@@ -400,7 +545,9 @@ namespace TurnBasedGame.Multiplayer
         public async Task Leave()
         {
             if (leaving || Busy) return;
-            leaving = true; Busy = true; Changed?.Invoke();
+            leaving = true; reconnect.Complete(); Busy = true; Changed?.Invoke();
+            if (IsHost && GuestPeer.HasValue && network != null && network.IsListening)
+                network.DisconnectClient(GuestPeer.Value, "MP_HOST_LEFT");
             while (launching) await Task.Yield();
             bool returnToMenu = InMatch;
             if (!await Cleanup())
@@ -430,7 +577,7 @@ namespace TurnBasedGame.Multiplayer
             if (old != null)
             {
                 old.Changed -= SessionChanged; old.Deleted -= SessionEnded;
-                old.RemovedFromSession -= SessionEnded; old.SessionHostChanged -= HostChanged;
+                old.RemovedFromSession -= RemovedFromSession; old.SessionHostChanged -= HostChanged;
                 try { if (old.IsHost) await old.AsHost().DeleteAsync(); else await old.LeaveAsync(); }
                 catch (SessionException error) when (error.Error == SessionError.SessionDeleted || error.Error == SessionError.SessionNotFound) { }
                 catch (Exception)
@@ -443,6 +590,8 @@ namespace TurnBasedGame.Multiplayer
             if (network != null)
             {
                 network.OnClientDisconnectCallback -= Disconnected;
+                network.OnTransportFailure -= TransportFailed;
+                network.OnServerStopped -= ServerStopped;
                 network.ConnectionApprovalCallback = null;
                 network.Shutdown();
                 while (network != null && network.ShutdownInProgress) await Task.Yield();

@@ -349,6 +349,7 @@ namespace TurnBasedGame.Unit
             return true;
         }
         public bool IsActionFinished() => !CanAct();
+        internal bool IgnoreSkillUseLimitsForTest { get; set; }
         public bool CanAct() => !runtimeStats.IsDead && !runtimeStats.IsActionCompleted &&
                                 (_buffHandler == null || !_buffHandler.PreventsAction());
         public bool IsDead() => runtimeStats.IsDead;

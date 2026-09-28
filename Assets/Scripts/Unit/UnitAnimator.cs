@@ -67,6 +67,14 @@ namespace TurnBasedGame.Unit
             animator.CrossFadeInFixedTime(AnimationHashLib.Death, _transitionDuration);
         }
 
+        public void PreviewAnimation(int stateHash)
+        {
+            if (animator == null) return;
+            _currentSkill = null;
+            animator.SetBool(AnimationHashLib.IsMoving, false);
+            animator.CrossFadeInFixedTime(stateHash, _transitionDuration);
+        }
+
         #endregion
 
         #region Animation Events
