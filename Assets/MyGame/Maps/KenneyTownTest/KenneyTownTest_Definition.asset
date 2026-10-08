@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b46567fd500d5a4792dee672b18ce52, type: 3}
+  m_Name: KenneyTownTest_Definition
+  m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Maps.BattleMapDefinitionSO
+  _displayName: "Kenney \u2014 Town Square"
+  _preview: {fileID: 0}
+  _mapSettings: {fileID: 11400000, guid: f1c1613a0166a8d44aad2ffbdee05ea5, type: 2}
+  _spawnPoints:
+  - Owner: 1
+    GridPosition: {x: -9, y: 0, z: -6}
+  - Owner: 1
+    GridPosition: {x: -9, y: 0, z: 6}
+  - Owner: 2
+    GridPosition: {x: 9, y: 0, z: -6}
+  - Owner: 2
+    GridPosition: {x: 9, y: 0, z: 6}
+  _capturePoints:
+  - {x: 0, y: 0, z: -6}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 6}
+  _environmentPrefab: {fileID: 7801745341138737663, guid: edddc287fe6446b449fd36b325111e21, type: 3}
+  _enabled: 1

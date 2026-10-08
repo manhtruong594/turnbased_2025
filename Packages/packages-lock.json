@@ -5,10 +5,26 @@
       "depth": 0,
       "source": "git",
       "dependencies": {
+        "com.unity.modules.animation": "1.0.0",
+        "com.unity.modules.imageconversion": "1.0.0",
+        "com.unity.modules.physics": "1.0.0",
+        "com.unity.modules.physics2d": "1.0.0",
+        "com.unity.modules.uielements": "1.0.0",
+        "com.unity.modules.screencapture": "1.0.0",
+        "com.unity.modules.unitywebrequest": "1.0.0",
         "com.unity.nuget.newtonsoft-json": "3.0.2",
         "com.unity.test-framework": "1.1.31"
       },
-      "hash": "61521a26b7a85c67ef18d99f802f9ae5d154a3a1"
+      "hash": "30d22075093d1d35dfb0091c1c7550e9ad948577"
+    },
+    "com.ucp.bridge": {
+      "version": "https://github.com/mflRevan/unity-control-protocol.git?path=unity-package/com.ucp.bridge#v0.6.4",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {
+        "com.unity.test-framework": "1.1.31"
+      },
+      "hash": "d857b2b679d401d533d210631f907b78f2561b98"
     },
     "com.unity.2d.sprite": {
       "version": "1.0.0",
@@ -166,15 +182,6 @@
       "dependencies": {},
       "url": "https://packages.unity.com"
     },
-    "com.unity.shadergraph": {
-      "version": "17.3.0",
-      "depth": 0,
-      "source": "builtin",
-      "dependencies": {
-        "com.unity.render-pipelines.core": "17.3.0",
-        "com.unity.searcher": "4.9.3"
-      }
-    },
     "com.unity.services.authentication": {
       "version": "3.7.0",
       "depth": 1,
@@ -255,6 +262,15 @@
         "com.unity.services.authentication": "2.7.4"
       },
       "url": "https://packages.unity.com"
+    },
+    "com.unity.shadergraph": {
+      "version": "17.3.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {
+        "com.unity.render-pipelines.core": "17.3.0",
+        "com.unity.searcher": "4.9.3"
+      }
     },
     "com.unity.test-framework": {
       "version": "1.6.0",

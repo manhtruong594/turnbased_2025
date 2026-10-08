@@ -69,7 +69,7 @@ namespace TurnBasedGame.VFX
             OnReachTarget = null;
 
             if (trailEffect != null)
-                trailEffect.Stop();
+                trailEffect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
         }
 
         #region Public Methods
@@ -92,7 +92,10 @@ namespace TurnBasedGame.VFX
             _isFlying = true;
 
             if (trailEffect != null)
+            {
+                trailEffect.Clear(true);
                 trailEffect.Play();
+            }
         }
 
         /// <summary>

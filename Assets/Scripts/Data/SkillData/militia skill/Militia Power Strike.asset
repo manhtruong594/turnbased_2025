@@ -24,13 +24,13 @@ MonoBehaviour:
   range: 1
   vfxConfig:
     castVfxPrefab: {fileID: 0}
-    releaseVfxPrefab: {fileID: 0}
+    releaseVfxPrefab: {fileID: 8765350373887584717, guid: 50586f34d5f89b34098fff5fbca8e4bc, type: 3}
     projectilePrefab: {fileID: 0}
-    impactVfxPrefab: {fileID: 0}
-    effectApplyTiming: 0
-    castSpawnPoint: 1
+    impactVfxPrefab: {fileID: 8765350373887584717, guid: 50586f34d5f89b34098fff5fbca8e4bc, type: 3}
+    effectApplyTiming: 1
+    castSpawnPoint: 0
     releaseSpawnPoint: 1
-    impactSpawnPoint: 2
+    impactSpawnPoint: 1
   targetTypes: 2
   damageMultiplier: 1.75
   shieldedTargetDamageMultiplier: 1.3

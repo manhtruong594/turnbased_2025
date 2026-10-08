@@ -48953,6 +48953,7 @@ GameObject:
   - component: {fileID: 2607184467005568375}
   - component: {fileID: -8759425826186554283}
   - component: {fileID: 1848641969365953087}
+  - component: {fileID: 8709524973540522132}
   m_Layer: 0
   m_Name: VFX_Dark_Burst_01
   m_TagString: Untagged
@@ -53918,6 +53919,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5b070947a23dce54e8640929696c53df, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.ObjectPool.PooledVFX
+--- !u!114 &8709524973540522132
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4748681987041982144}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 48e50b14446777c4ba9beb866bedc31f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.ObjectPool.PooledObject
 --- !u!1 &5168067233960651730
 GameObject:
   m_ObjectHideFlags: 0

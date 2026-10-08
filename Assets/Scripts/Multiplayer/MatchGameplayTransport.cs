@@ -14,6 +14,7 @@ namespace TurnBasedGame.Multiplayer
         private const string CommandMessage = "match-command-v2", ResultMessage = "match-result-state-v1";
         private readonly NetworkManager network;
         private readonly Dictionary<ulong, PlayerId> players = new();
+        private readonly Dictionary<ulong, MatchMessageBudget> budgets = new();
         private Action<MatchCommandResult> pending;
         private long pendingId, nextId;
         private ulong nextSequence = 1, serverSequence;
@@ -63,6 +64,7 @@ namespace TurnBasedGame.Multiplayer
             foreach (var pair in players)
                 if (pair.Key != clientId && pair.Value == player) throw new InvalidOperationException("Player already bound.");
             players[clientId] = player;
+            if (!budgets.ContainsKey(clientId)) budgets[clientId] = new MatchMessageBudget(UnityEngine.Time.realtimeSinceStartupAsDouble);
         }
 
         internal MatchCommandDto Create(MatchCommandKind kind, PlayerId actor, int turn)
@@ -91,10 +93,23 @@ namespace TurnBasedGame.Multiplayer
         private void OnCommand(ulong sender, FastBufferReader reader)
         {
             if (!network.IsServer || !MatchGameplayBootstrap.InputReady || !players.TryGetValue(sender, out var actor)) return;
+            if (!budgets[sender].TryConsume(UnityEngine.Time.realtimeSinceStartupAsDouble))
+            {
+                UnityEngine.Debug.LogWarning(MatchAudit.Command(matchId, actor, 0, 0, LocalMatchAuthority.ServerSequence, CommandReason.RateLimited));
+                network.DisconnectClient(sender, "MP_COMMAND_RATE_LIMIT");
+                players.Remove(sender); budgets.Remove(sender);
+                return;
+            }
             var bytes = ReadBytes(reader, MatchProtocol.MaxCommandBytes);
-            if (bytes == null || !MatchProtocol.TryDeserialize(bytes, out _, out _)) return;
-            var result = LocalMatchAuthority.SubmitBytes(bytes, actor).Acknowledgement;
-            SendResult(sender, actor, result);
+            if (bytes == null || !MatchProtocol.TryDeserialize(bytes, out var command, out _))
+            {
+                UnityEngine.Debug.LogWarning(MatchAudit.Command(matchId, actor, 0, 0, LocalMatchAuthority.ServerSequence, CommandReason.InvalidPayload));
+                return;
+            }
+            ulong before = LocalMatchAuthority.ServerSequence;
+            var result = LocalMatchAuthority.Submit(command, actor).Acknowledgement;
+            // New commits were already broadcast by OnCommitted. Rejections/replays still need an ACK.
+            if (!result.Accepted || result.ServerSequence <= before) SendResult(sender, actor, result);
         }
 
         private void OnResult(ulong sender, FastBufferReader reader)
@@ -176,6 +191,7 @@ namespace TurnBasedGame.Multiplayer
         private void OnDisconnected(ulong peer)
         {
             players.Remove(peer);
+            budgets.Remove(peer);
             if (!network.IsServer) FailPending();
         }
 
@@ -192,6 +208,7 @@ namespace TurnBasedGame.Multiplayer
             LocalMatchAuthority.CommandCommitted -= OnCommitted;
             network.CustomMessagingManager?.UnregisterNamedMessageHandler(IsServer ? CommandMessage : ResultMessage);
             players.Clear();
+            budgets.Clear();
             FailPending();
             LocalMatchAuthority.DetachTransport(this);
         }

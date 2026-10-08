@@ -49,8 +49,6 @@ namespace TurnBasedGame.Unit
 
             if (hasProjectile)
                 LaunchProjectile(skill, projectilePrefab, timing);
-            else if (releaseVfxPrefab != null)
-                SpawnVfx(releaseVfxPrefab, skill.VfxConfig.ReleaseSpawnPoint, skill);
 
             if (timing == SkillEffectApplyTiming.OnRelease)
                 skill.ApplyEffect();

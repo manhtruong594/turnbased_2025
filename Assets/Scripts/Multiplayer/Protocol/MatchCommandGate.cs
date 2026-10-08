@@ -9,14 +9,16 @@ namespace TurnBasedGame.Multiplayer.Protocol
         private readonly MatchCompatibility compatibility;
         private readonly Dictionary<(PlayerId, long), (byte[] Payload, CommandAcknowledgement Result)> processed = new();
         private readonly ulong[] clientSequences = new ulong[3];
+        public const int ReplayCapacity = 256;
+        private readonly Queue<(PlayerId, long)> history = new();
+        private readonly long[] maximumIds = new long[3];
         private bool executing;
         private bool faulted;
         public ulong ServerSequence { get; private set; }
         public long NextCommandId(PlayerId actor)
         {
-            long maximum = 0;
-            foreach (var key in processed.Keys) if (key.Item1 == actor) maximum = Math.Max(maximum, key.Item2);
-            return checked(maximum + 1);
+            if (!MatchProtocol.IsPlayer(actor)) throw new ArgumentException("Invalid actor.");
+            return checked(maximumIds[(int)actor] + 1);
         }
         public ulong NextClientSequence(PlayerId actor) => MatchProtocol.IsPlayer(actor)
             ? checked(clientSequences[(int)actor] + 1) : throw new ArgumentException("Invalid actor.");
@@ -48,6 +50,8 @@ namespace TurnBasedGame.Multiplayer.Protocol
                 return Copy(cached.Result);
             }
             int actorIndex = (int)command.Actor;
+            if (command.CommandId <= maximumIds[actorIndex])
+                return Result(command, CommandReason.ReplayConflict, "CommandId is older than retained replay history.");
             if (executing || faulted) return Result(command, CommandReason.InvalidState, "Authority is busy or faulted.");
             if (command.ClientSequence != clientSequences[actorIndex] + 1 ||
                 command.AcknowledgedServerSequence > ServerSequence)
@@ -55,6 +59,9 @@ namespace TurnBasedGame.Multiplayer.Protocol
 
             // Consume before calling gameplay, including reentrant calls from mediator subscribers.
             clientSequences[actorIndex] = command.ClientSequence;
+            maximumIds[actorIndex] = command.CommandId;
+            if (history.Count >= ReplayCapacity) processed.Remove(history.Dequeue());
+            history.Enqueue(key);
             processed.Add(key, (payload, Result(command, CommandReason.InvalidState, "Command is executing.")));
             (CommandReason Reason, string Detail) outcome;
             executing = true;

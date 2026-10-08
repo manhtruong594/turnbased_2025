@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 3628913460639372174}
   - component: {fileID: 3628913460639372173}
   - component: {fileID: 2487712071680623918}
+  - component: {fileID: 3866144974290318154}
   m_Layer: 0
   m_Name: VFX_Debuff_Cast
   m_TagString: Untagged
@@ -4867,6 +4868,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5b070947a23dce54e8640929696c53df, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.ObjectPool.PooledVFX
+--- !u!114 &3866144974290318154
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3628913460639372172}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 48e50b14446777c4ba9beb866bedc31f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.ObjectPool.PooledObject
 --- !u!1 &6853078140835361563
 GameObject:
   m_ObjectHideFlags: 0

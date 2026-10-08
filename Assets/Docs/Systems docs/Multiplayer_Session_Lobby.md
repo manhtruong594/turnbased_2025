@@ -85,7 +85,8 @@ Nếu dịch vụ không xác nhận delete/leave, giữ handle cleanup và hi�
 không cho tạo thêm session trong lúc cleanup còn thất bại. Host rời hoặc mất kết nối trong trận sẽ khóa
 gameplay và báo lý do. Không host migration. Giai đoạn 6 bổ sung giữ slot/reconnect 30 giây; xem
 [Timer, disconnect và reconnect](Multiplayer_Reconnect.md).
-Timeout handshake/snapshot vẫn là 30 giây; timeout tác vụ dịch vụ hiện theo SDK.
+Timeout handshake/snapshot là 30 giây. Giai đoạn 7 bổ sung timeout từng lời gọi dịch vụ 30 giây,
+cancellation khi đóng flow và cleanup session trả về muộn; xem [Hardening](Multiplayer_Hardening.md).
 
 ## Kiểm chứng
 

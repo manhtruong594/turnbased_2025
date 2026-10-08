@@ -43,6 +43,7 @@ namespace TurnBasedGame.Multiplayer
         private int snapshotFailures;
         private string gameplayScene;
         private string role;
+        private MatchMessageBudget controlBudget;
 
         private void Start()
         {
@@ -142,6 +143,7 @@ namespace TurnBasedGame.Multiplayer
             if (!network.IsServer) network.CustomMessagingManager.RegisterNamedMessageHandler(SnapshotMessage, OnSnapshot);
             network.OnClientDisconnectCallback += OnDisconnect;
             expires = Time.realtimeSinceStartupAsDouble + 30;
+            controlBudget = new MatchMessageBudget(Time.realtimeSinceStartupAsDouble);
         }
 
         private void Update()
@@ -199,16 +201,32 @@ namespace TurnBasedGame.Multiplayer
         private void OnControl(ulong sender, FastBufferReader buffer)
         {
             if (failed || !managersReady) return;
+            if (network.IsServer)
+            {
+                if (sender == NetworkManager.ServerClientId ||
+                    (sessionOwned && MatchSessionController.Instance.GuestPeer != sender) ||
+                    (peer.HasValue && peer.Value != sender)) return;
+                if (!controlBudget.TryConsume(Time.realtimeSinceStartupAsDouble))
+                {
+                    Debug.LogWarning(MatchAudit.Command(matchId, PlayerId.Player2, 0, 0,
+                        LocalMatchAuthority.ServerSequence, CommandReason.RateLimited));
+                    network.DisconnectClient(sender, "MP_CONTROL_RATE_LIMIT"); return;
+                }
+            }
+            else if (sender != NetworkManager.ServerClientId) return;
             try
             {
                 var bytes = MatchGameplayTransport.ReadBytes(buffer, 1024);
                 if (bytes == null) return;
                 using var reader = new BinaryReader(new MemoryStream(bytes));
                 byte kind = reader.ReadByte();
+                if (kind > 2 || (network.IsServer ? kind == 2 : kind != 2)) return;
                 var compatibility = MatchProtocol.DeserializeCompatibility(reader.ReadBytes(70));
                 string scene = reader.ReadString();
                 ulong sequence = reader.ReadUInt64(); string hash = reader.ReadString();
                 if (reader.BaseStream.Position != reader.BaseStream.Length) return;
+                if (!MatchProtocol.IsHex(scene, 64) ||
+                    (kind == 0 ? sequence != 0 || hash.Length != 0 : !MatchProtocol.IsHex(hash, 64))) return;
                 if (!network.IsServer && sender != NetworkManager.ServerClientId) return;
                 if (LocalMatchAuthority.Compatibility.Compare(compatibility) != CommandReason.None || scene != sceneHash)
                 {
@@ -224,7 +242,8 @@ namespace TurnBasedGame.Multiplayer
                     if (kind == 0)
                     {
                         if (!peer.HasValue) { peer = sender; transport.BindAuthenticatedPeer(sender, PlayerId.Player2); }
-                        ready = false; expires = Time.realtimeSinceStartupAsDouble + 30;
+                        if (ready) expires = Time.realtimeSinceStartupAsDouble + 30;
+                        ready = false;
                         SendSnapshot();
                     }
                     else if (kind == 1 && peer == sender && issued != null && sequence == issued.State.ServerSequence && hash == issued.Hash)
@@ -252,8 +271,14 @@ namespace TurnBasedGame.Multiplayer
                     Debug.Log("[MP-GAMEPLAY] READY sequence=" + sequence);
                 }
             }
-            catch (Exception error) when (error is IOException || error is ArgumentException || error is InvalidOperationException)
-            { Fail(error.Message); }
+            catch (Exception error) when (error is IOException || error is ArgumentException ||
+                error is FormatException || error is InvalidOperationException)
+            {
+                if (network.IsServer)
+                    Debug.LogWarning(MatchAudit.Command(matchId, PlayerId.Player2, 0, 0,
+                        LocalMatchAuthority.ServerSequence, CommandReason.InvalidPayload));
+                else Fail("Invalid gameplay control payload.");
+            }
         }
 
         private void OnSnapshot(ulong sender, FastBufferReader reader)
@@ -297,6 +322,9 @@ namespace TurnBasedGame.Multiplayer
         public void RequestSnapshot()
         {
             if (failed || awaitingSnapshot || network == null || network.IsServer || !managersReady) return;
+            Debug.LogWarning("[MP-RESYNC] " + MatchAudit.Command(matchId, PlayerId.Player2, 0,
+                TurnManager.Instance != null ? TurnManager.Instance.TurnCount : 0,
+                transport?.AppliedSequence ?? 0, CommandReason.InvalidSequence));
             ready = false; awaitingSnapshot = true; expires = Time.realtimeSinceStartupAsDouble + 30;
             GameMediator.Instance?.NotifyReplicaApplied();
             SendControl(0, NetworkManager.ServerClientId);

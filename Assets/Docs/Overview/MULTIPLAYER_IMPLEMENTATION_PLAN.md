@@ -1,6 +1,6 @@
 # Kế hoạch hoàn thiện multiplayer
 
-Cập nhật: `2026-09-28`
+Cập nhật: `2026-10-08`
 
 ## 1. Mục tiêu và phạm vi MVP
 
@@ -21,7 +21,7 @@ host migration và anti-cheat cấp competitive. Các mục này chỉ bắt đ�
 |---|---|---|
 | Command authority | Đã triển khai coverage giai đoạn 3, chờ nghiệm thu Unity | 9 command, adapter NGO, transaction/result; đã nối bootstrap và session ở giai đoạn 4–5 |
 | Validation lượt | Hiện có, cần Play Mode test | Kiểm tra `CommandId`, `Actor`, `ExpectedTurn` và command trùng |
-| Network-safe command DTO | Đã mở rộng giai đoạn 3 | Protocol/rules version 2, 9 command và result có state; callback nằm ngoài payload |
+| Network-safe command DTO | Đã mở rộng giai đoạn 3 | Protocol version `2`, rules version `5`, 9 command và result có state; callback nằm ngoài payload |
 | Runtime/content ID ổn định | Đã triển khai, chờ kiểm chứng Unity | Registry, catalog GUID, host unit ID, spawn ID theo owner/grid |
 | State snapshot/delta | Đã thêm implementation Phase 4, chờ nghiệm thu | Snapshot, replica, ordered replacement state, hash/resync; chưa kiểm chứng hai process gameplay |
 | Transport/session/relay | Đã thêm implementation giai đoạn 5 | Authentication, Sessions, Relay `dtls`, create/join bằng mã; chưa kiểm chứng Relay Internet |
@@ -227,6 +227,20 @@ Tiêu chí hoàn thành:
 - Host/client disconnect ở lobby, loading, trong lượt và endgame đều thoát flow sạch.
 
 ### Giai đoạn 7 — Độ bền và an toàn
+
+Trạng thái `2026-10-08`: đã triển khai hardening; **chưa nghiệm thu milestone** vì chưa chạy
+Unity Play Mode/hai process với spam, disconnect và dịch vụ trả về muộn.
+Chi tiết: [Độ bền và an toàn multiplayer](../Systems%20docs/Multiplayer_Hardening.md).
+
+- Command tối đa `1024 byte`; coordinate trong `[-1000000, 1000000]`; ID/enum/payload được kiểm tra.
+- Rate limit trước deserialize: burst `20`, hồi `10 message/giây`; vượt giới hạn ngắt peer.
+- Replay cache giữ `256` command gần nhất; ID cũ bị từ chối ngay cả khi đã loại khỏi cache.
+- Log chỉ gồm ID chuẩn hóa, số và reason enum; bổ sung mốc resync, không ghi credential/payload.
+- Lời gọi dịch vụ có timeout `30 giây`, hủy continuation khi đóng flow; dọn session trả về muộn.
+- Kết quả trận schema `1`, rules `5`, ghi một lần sau authority commit. Chưa có backend save/reward;
+  bản ghi hiện tại nằm trong RAM, không cam kết chống double reward qua process restart.
+- `76/76` case protocol/snapshot hiện có đạt trên Mono ngoài Unity, gồm `15` case mới.
+  Compile sơ bộ protocol/runtime/Editor/test bằng Roslyn đạt; không thay thế Unity Console/Play Mode.
 
 Thực hiện:
 

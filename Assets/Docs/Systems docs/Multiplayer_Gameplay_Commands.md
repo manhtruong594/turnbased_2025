@@ -89,7 +89,7 @@ snapshot/session chưa triển khai trong giai đoạn này. Cần test fault in
 
 ## Result và wire version
 
-`ProtocolVersion = 2`, `GameplayRulesVersion = 2`; peer version 1 bị từ chối. Command vẫn tối đa 1024 byte.
+`ProtocolVersion = 2`, `GameplayRulesVersion = 5`; peer version 1 bị từ chối. Command vẫn tối đa 1024 byte.
 Acknowledgement gồm ID, actor, client/server sequence, `NextClientSequence`, accepted/reason/detail,
 `DiceValue` và `StateChanges`. Tối đa 2048 entry, decoder giới hạn 256 KiB. NGO dùng
 `ReliableFragmentedSequenced` vì result lớn hơn một gói transport.
@@ -145,3 +145,9 @@ Phase 4–5 để biết giới hạn và kiểm chứng còn thiếu. Trong ses
 Trước nghiệm thu: chạy EditMode tests; smoke spawn/move/undo/attack từng skill/spell; thử invalid target,
 cost/cooldown/owner, replay, target chết trong multi-hit, capture/victory, tick status đúng một lần;
 fault injection giữa effect; rồi nối session/bootstrap và kiểm tra hai process nhận cùng kết quả.
+
+## Hardening giai đoạn 7 (`2026-10-08`)
+
+Replay cache giữ `256` command gần nhất; ID cũ hơn bị từ chối bằng `ReplayConflict`, không thực thi lại.
+Transport giới hạn burst `20`, hồi `10 message/giây`; vượt giới hạn ngắt peer trước deserialize.
+Validation coordinate/ID, structured log và timeout được mô tả tại [Hardening](Multiplayer_Hardening.md).

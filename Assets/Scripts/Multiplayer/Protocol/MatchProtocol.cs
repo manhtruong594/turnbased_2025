@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Globalization;
 
 namespace TurnBasedGame.Multiplayer.Protocol
 {
@@ -15,7 +16,7 @@ namespace TurnBasedGame.Multiplayer.Protocol
         None, InvalidPayload, ProtocolMismatch, RulesMismatch, ContentMismatch,
         MatchMismatch, ActorMismatch, InvalidSequence, ReplayConflict,
         InvalidState, WrongTurn, ExecutionRejected, InvalidOwner, InvalidTarget,
-        OutOfRange, BlockedLineOfSight, InsufficientMP, Cooldown, InvalidCard, ExecutionFault
+        OutOfRange, BlockedLineOfSight, InsufficientMP, Cooldown, InvalidCard, ExecutionFault, RateLimited
     }
 
     [Serializable]
@@ -107,8 +108,26 @@ namespace TurnBasedGame.Multiplayer.Protocol
     public static class MatchProtocol
     {
         public const ushort ProtocolVersion = 2;
-        public const int GameplayRulesVersion = 4;
+        public const int GameplayRulesVersion = 5;
         public const int MaxCommandBytes = 1024;
+        public const int MaxCoordinate = 1000000;
+
+        public static bool IsCoordinate(GridCoordinate value) =>
+            value.X >= -MaxCoordinate && value.X <= MaxCoordinate &&
+            value.Y >= -MaxCoordinate && value.Y <= MaxCoordinate &&
+            value.Z >= -MaxCoordinate && value.Z <= MaxCoordinate;
+
+        public static bool IsSpawnPointId(string value)
+        {
+            if (string.IsNullOrEmpty(value) || value.Length > 64) return false;
+            var parts = value.Split(':');
+            if (parts.Length != 4 || (parts[0] != "1" && parts[0] != "2")) return false;
+            for (int i = 1; i < 4; i++)
+                if (!int.TryParse(parts[i], NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out int coordinate) ||
+                    coordinate < -MaxCoordinate || coordinate > MaxCoordinate ||
+                    parts[i] != coordinate.ToString(CultureInfo.InvariantCulture)) return false;
+            return true;
+        }
 
         public static bool IsHex(string value, int length)
         {
@@ -124,7 +143,9 @@ namespace TurnBasedGame.Multiplayer.Protocol
         {
             if (command == null || command.Compatibility == null || !IsHex(command.MatchId, 32) ||
                 !IsHex(command.Compatibility.ContentCatalogHash, 64) || !IsPlayer(command.Actor) ||
-                command.CommandId <= 0 || command.ClientSequence == 0 || command.ExpectedTurn < 0)
+                command.CommandId <= 0 || command.CommandId == long.MaxValue ||
+                command.ClientSequence == 0 || command.ClientSequence == ulong.MaxValue || command.ExpectedTurn < 0 ||
+                !IsCoordinate(command.Destination))
                 throw new ArgumentException("Invalid command envelope.");
             using var stream = new MemoryStream();
             using var writer = new BinaryWriter(stream, Encoding.UTF8, true);
@@ -156,6 +177,8 @@ namespace TurnBasedGame.Multiplayer.Protocol
                     break;
                 case MatchCommandKind.SpawnUnit:
                     if (!IsHex(command.UnitContentId, 32)) throw new ArgumentException("Invalid UnitContentId.");
+                    if (!string.IsNullOrEmpty(command.SpawnPointId) && !IsSpawnPointId(command.SpawnPointId))
+                        throw new ArgumentException("Invalid SpawnPointId.");
                     WriteFixed(writer, command.UnitContentId);
                     WriteShortString(writer, command.SpawnPointId ?? "", 64);
                     break;

@@ -78,7 +78,7 @@ Header command gồm `ProtocolVersion`, `GameplayRulesVersion`, `ContentCatalogH
 
 `MatchProtocol` dùng binary little-endian, header cố định và string length có giới hạn. Command tối đa
 `1024` byte; payload thiếu byte, thừa byte, enum/ID không hợp lệ và field không thuộc kind đều bị từ chối.
-`ProtocolVersion = 2`, `GameplayRulesVersion = 2`. Thay wire shape không tương thích phải tăng version.
+`ProtocolVersion = 2`, `GameplayRulesVersion = 5`. Thay wire shape không tương thích phải tăng version.
 
 `LocalMatchAuthority.SubmitBytes(payload, authenticatedActor)` deserialize rồi qua `MatchCommandGate`.
 Transport/session phải lấy `authenticatedActor` từ kết nối đã xác thực, không sao chép từ payload.
@@ -148,3 +148,9 @@ hai process với cùng catalog và lần lượt thay version/hash để kiểm
 
 Kết quả mới nhất giai đoạn 3: 50/50 test protocol/gate đạt, runtime/Editor/test compile 0 lỗi;
 5 test authority EditMode chưa chạy. Xem [Gameplay commands](Multiplayer_Gameplay_Commands.md).
+
+## Hardening giai đoạn 7 (`2026-10-08`)
+
+Replay cache giữ `256` command gần nhất; ID cũ hơn bị từ chối bằng `ReplayConflict`, không thực thi lại.
+Transport giới hạn burst `20`, hồi `10 message/giây`; vượt giới hạn ngắt peer trước deserialize.
+Validation coordinate/ID, structured log và timeout được mô tả tại [Hardening](Multiplayer_Hardening.md).

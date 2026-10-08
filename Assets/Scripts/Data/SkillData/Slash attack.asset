@@ -25,10 +25,10 @@ MonoBehaviour:
     castVfxPrefab: {fileID: 0}
     releaseVfxPrefab: {fileID: 0}
     projectilePrefab: {fileID: 0}
-    impactVfxPrefab: {fileID: 0}
-    effectApplyTiming: 0
-    castSpawnPoint: 1
+    impactVfxPrefab: {fileID: 8765350373887584717, guid: defa3ef8ec9bb834b95b107bdf37f0c6, type: 3}
+    effectApplyTiming: 1
+    castSpawnPoint: 0
     releaseSpawnPoint: 1
-    impactSpawnPoint: 2
+    impactSpawnPoint: 1
   targetTypes: 10
   multipleDmg: 1.25

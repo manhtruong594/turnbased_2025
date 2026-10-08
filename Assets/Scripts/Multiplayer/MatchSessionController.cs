@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
 using TurnBasedGame.Command;
 using TurnBasedGame.Core;
 using TurnBasedGame.Maps;
@@ -31,12 +32,15 @@ namespace TurnBasedGame.Multiplayer
         private sealed class SessionNetworkHandler : INetworkHandler
         {
             private readonly NetworkManager manager;
-            public SessionNetworkHandler(NetworkManager manager) { this.manager = manager; }
+            private readonly CancellationToken cancellation;
+            public SessionNetworkHandler(NetworkManager manager, CancellationToken cancellation)
+            { this.manager = manager; this.cancellation = cancellation; }
             public async Task StartAsync(NetworkConfiguration configuration)
             {
                 if (configuration.Type != NetworkType.Relay ||
                     (configuration.Role != NetworkRole.Host && configuration.Role != NetworkRole.Client))
                     throw new InvalidOperationException("Only Relay host/client sessions are supported.");
+                cancellation.ThrowIfCancellationRequested();
                 bool host = configuration.Role == NetworkRole.Host;
                 var transport = (UnityTransport)manager.NetworkConfig.NetworkTransport;
                 transport.SetRelayServerData(configuration.RelayServerData);
@@ -44,8 +48,8 @@ namespace TurnBasedGame.Multiplayer
                     throw new InvalidOperationException("Cannot start session network.");
                 double deadline = Time.realtimeSinceStartupAsDouble + MatchReconnectWindow.Duration;
                 while (manager != null && manager.IsListening && !manager.IsConnectedClient &&
-                    Time.realtimeSinceStartupAsDouble < deadline) await Task.Yield();
-                if (manager == null || !manager.IsConnectedClient)
+                    !cancellation.IsCancellationRequested && Time.realtimeSinceStartupAsDouble < deadline) await Task.Yield();
+                if (cancellation.IsCancellationRequested || manager == null || !manager.IsConnectedClient)
                 {
                     await StopAsync();
                     throw new InvalidOperationException("Kết nối Relay quá hạn hoặc bị host từ chối.");
@@ -55,7 +59,8 @@ namespace TurnBasedGame.Multiplayer
             {
                 if (manager == null) return;
                 manager.Shutdown();
-                while (manager != null && manager.ShutdownInProgress) await Task.Yield();
+                double deadline = Time.realtimeSinceStartupAsDouble + 5;
+                while (manager != null && manager.ShutdownInProgress && Time.realtimeSinceStartupAsDouble < deadline) await Task.Yield();
             }
         }
         [Serializable] private sealed class LaunchData
@@ -73,7 +78,7 @@ namespace TurnBasedGame.Multiplayer
         public MatchDisconnectReason DisconnectReason { get; private set; }
         public bool IsClosing => leaving;
         public bool InMatch => launch != null;
-        public bool HasSession => session != null || pendingCleanup != null;
+        public bool HasSession => session != null || pendingCleanup != null || pendingConnection;
         public bool IsHost => session != null && session.IsHost;
         public string Code => session?.Code ?? string.Empty;
         public int PlayerCount => session?.PlayerCount ?? 0;
@@ -90,6 +95,9 @@ namespace TurnBasedGame.Multiplayer
         }
         public bool CanRematch => !terminal && InMatch && TurnManager.Instance != null && TurnManager.Instance.Winner.HasValue;
         public ulong? GuestPeer { get; private set; }
+        private CancellationTokenSource lifetime = new CancellationTokenSource();
+        private bool pendingConnection;
+        private AsyncOperation sceneLoad;
         private ISession session;
         private ISession pendingCleanup;
         private NetworkManager network;
@@ -139,7 +147,7 @@ namespace TurnBasedGame.Multiplayer
         {
             await InitializeServices();
             CreateNetwork();
-            session = await MultiplayerService.Instance.CreateSessionAsync(new SessionOptions
+            session = await WaitForSession(MultiplayerService.Instance.CreateSessionAsync(new SessionOptions
             {
                 Name = "The Summoners 1v1", MaxPlayers = 2, IsPrivate = true,
                 PlayerProperties = PlayerProperties(),
@@ -148,7 +156,7 @@ namespace TurnBasedGame.Multiplayer
                     ["build"] = Property(compatibility), ["map"] = Property(mapName), ["scene"] = Property(sceneName)
                 }
             }.WithRelayNetwork().WithNetworkOptions(new NetworkOptions { RelayProtocol = RelayProtocol.DTLS })
-                .WithNetworkHandler(new SessionNetworkHandler(network)));
+                .WithNetworkHandler(new SessionNetworkHandler(network, lifetime.Token))));
             AttachSession();
         }, true);
 
@@ -157,10 +165,10 @@ namespace TurnBasedGame.Multiplayer
             if (string.IsNullOrWhiteSpace(code)) throw new InvalidOperationException("Nhập mã phòng do host cung cấp.");
             await InitializeServices();
             CreateNetwork();
-            session = await MultiplayerService.Instance.JoinSessionByCodeAsync(code.Trim().ToUpperInvariant(),
+            session = await WaitForSession(MultiplayerService.Instance.JoinSessionByCodeAsync(code.Trim().ToUpperInvariant(),
                 new JoinSessionOptions { PlayerProperties = PlayerProperties() }
                     .WithNetworkOptions(new NetworkOptions { RelayProtocol = RelayProtocol.DTLS })
-                    .WithNetworkHandler(new SessionNetworkHandler(network)));
+                    .WithNetworkHandler(new SessionNetworkHandler(network, lifetime.Token))));
             if (GetProperty("build") != compatibility) throw new InvalidOperationException("Khác phiên bản/content. Cả hai cần dùng cùng build.");
             mapName = GetProperty("map");
             ResolveMap(mapName);
@@ -168,12 +176,53 @@ namespace TurnBasedGame.Multiplayer
             AttachSession();
         }, true);
 
+        private Task Wait(Task task) => MatchServiceWait.Run(task, lifetime.Token);
+
+        private async Task<T> WaitForSession<T>(Task<T> request) where T : ISession
+        {
+            try { return await MatchServiceWait.Run(request, lifetime.Token); }
+            catch { pendingConnection = true; _ = CleanupLateSession(request); throw; }
+        }
+
+        private async Task CleanupLateSession<T>(Task<T> request) where T : ISession
+        {
+            ISession late = null;
+            try
+            {
+                late = await request;
+                await MatchServiceWait.Run(late.IsHost ? late.AsHost().DeleteAsync() : late.LeaveAsync(), CancellationToken.None);
+            }
+            catch
+            {
+                if (late != null) Debug.LogWarning("[MP-SESSION] Late session cleanup failed.");
+                if (late != null && this != null)
+                {
+                    pendingCleanup = late;
+                    terminal = true;
+                    Status = "Phòng trả về muộn chưa dọn được. Bấm Rời phòng để thử lại.";
+                }
+            }
+            finally { pendingConnection = false; if (this != null) Changed?.Invoke(); }
+        }
+
+        private static async Task WaitScene(AsyncOperation operation)
+        {
+            if (operation == null) return;
+            double deadline = Time.realtimeSinceStartupAsDouble + 30;
+            while (!operation.isDone)
+            {
+                if (Time.realtimeSinceStartupAsDouble >= deadline)
+                    throw new TimeoutException("Tải scene quá hạn (30s). Chờ tải xong rồi bấm Rời phòng để thử lại.");
+                await Task.Yield();
+            }
+        }
+
         private async Task InitializeServices()
         {
             if (!Application.CanStreamedLevelBeLoaded(menuScene) || !Application.CanStreamedLevelBeLoaded(sceneName))
                 throw new InvalidOperationException("Menu và scene trận cần có trong build trước khi tạo/tham gia phòng.");
-            if (UnityServices.State != ServicesInitializationState.Initialized) await UnityServices.InitializeAsync();
-            if (!AuthenticationService.Instance.IsSignedIn) await AuthenticationService.Instance.SignInAnonymouslyAsync();
+            if (UnityServices.State != ServicesInitializationState.Initialized) await Wait(UnityServices.InitializeAsync());
+            if (!AuthenticationService.Instance.IsSignedIn) await Wait(AuthenticationService.Instance.SignInAnonymouslyAsync());
             token = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N");
         }
 
@@ -214,7 +263,7 @@ namespace TurnBasedGame.Multiplayer
                 var current = session;
                 if (current == null || leaving || terminal || GuestPeer.HasValue || request.Payload.Length > 512) return;
                 var identity = JsonUtility.FromJson<Identity>(Encoding.UTF8.GetString(request.Payload));
-                await current.RefreshAsync();
+                await Wait(current.RefreshAsync());
                 if (session != current || leaving || terminal || GuestPeer.HasValue || current.PlayerCount != 2 ||
                     identity == null || identity.Player == current.Host || !current.HasPlayer(identity.Player)) return;
                 var player = current.GetPlayer(identity.Player);
@@ -255,7 +304,7 @@ namespace TurnBasedGame.Multiplayer
             RequireLoadout(selected);
             string previous = GetPlayerProperty(session.CurrentPlayer, "ready");
             session.CurrentPlayer.SetProperty("ready", PlayerProperty(LocalReady ? "0" : (Round + 1).ToString()));
-            try { await session.SaveCurrentPlayerDataAsync(); }
+            try { await Wait(session.SaveCurrentPlayerDataAsync()); }
             catch { session.CurrentPlayer.SetProperty("ready", PlayerProperty(previous)); throw; }
             Status = LocalReady ? "Đã sẵn sàng. Chờ host bắt đầu." : "Đã hủy sẵn sàng.";
         });
@@ -263,7 +312,7 @@ namespace TurnBasedGame.Multiplayer
         public Task StartMatch() => Run(async () =>
         {
             if (!IsHost || terminal || reconnect.Active || (InMatch && !CanRematch)) return;
-            await session.RefreshAsync();
+            await Wait(session.RefreshAsync());
             if (terminal || leaving || session == null) return;
             var host = session.GetPlayer(originalHost);
             IReadOnlyPlayer guest = null;
@@ -282,7 +331,7 @@ namespace TurnBasedGame.Multiplayer
             bool previousLock = owner.IsLocked;
             owner.IsLocked = true;
             owner.SetProperty("launch", Property(JsonUtility.ToJson(next)));
-            try { await owner.SavePropertiesAsync(); committedRound = next.Round; }
+            try { await Wait(owner.SavePropertiesAsync()); committedRound = next.Round; }
             catch
             {
                 owner.IsLocked = previousLock;
@@ -356,8 +405,8 @@ namespace TurnBasedGame.Multiplayer
                 MatchGameplayBootstrap.BeginSession(network, IsHost, next.Round);
                 Status = "Đang tải trận và chờ đối thủ xác nhận snapshot…";
                 Changed?.Invoke();
-                var operation = SceneManager.LoadSceneAsync(next.Scene);
-                while (!operation.isDone) await Task.Yield();
+                sceneLoad = SceneManager.LoadSceneAsync(next.Scene);
+                await WaitScene(sceneLoad);
             }
             catch (Exception error) { Fail(error.Message); }
             finally { launching = false; Changed?.Invoke(); }
@@ -412,12 +461,14 @@ namespace TurnBasedGame.Multiplayer
             try { await action(); }
             catch (Exception error)
             {
+                if (this == null) return;
                 Status = error is SessionException serviceError
                     ? $"Dịch vụ: {serviceError.Error}. Kiểm tra mã phòng, kết nối và cấu hình Unity Services; thử lại."
                     : error.Message;
-                if (connecting) await Cleanup();
+                if (connecting) { lifetime.Cancel(); await Cleanup(); lifetime.Dispose(); lifetime = new CancellationTokenSource(); }
+                else if (error is TimeoutException) Fail(Status, MatchDisconnectReason.ServiceError);
             }
-            finally { Busy = false; SessionChanged(); }
+            finally { if (this != null) { Busy = false; SessionChanged(); } }
         }
 
         private async void Update()
@@ -436,7 +487,7 @@ namespace TurnBasedGame.Multiplayer
             refreshing = true;
             try
             {
-                await session.RefreshAsync();
+                await Wait(session.RefreshAsync());
                 if (!leaving && !terminal && DisconnectReason == MatchDisconnectReason.ServiceError)
                     DisconnectReason = reconnect.Active ? MatchDisconnectReason.TemporaryNetwork : MatchDisconnectReason.None;
                 SessionChanged();
@@ -474,8 +525,8 @@ namespace TurnBasedGame.Multiplayer
             {
                 while (CanRecover && network.ShutdownInProgress) await Task.Yield();
                 if (!CanRecover || current != session) return;
-                await current.ReconnectAsync();
-                await current.RefreshAsync();
+                await Wait(current.ReconnectAsync());
+                await Wait(current.RefreshAsync());
                 if (!CanRecover || current != session) return;
                 if (current.Host != originalHost || !current.HasPlayer(originalHost))
                 { Fail("Host đã rời phòng. Trận kết thúc; không chuyển host.", MatchDisconnectReason.HostLeft); return; }
@@ -485,7 +536,7 @@ namespace TurnBasedGame.Multiplayer
                 var metadata = JsonUtility.FromJson<RelayMetadata>(GetProperty("_session_network"));
                 if (metadata == null || metadata.HostId != originalHost || string.IsNullOrEmpty(metadata.RelayJoinCode))
                     throw new InvalidOperationException("Relay metadata unavailable.");
-                var allocation = await RelayService.Instance.JoinAllocationAsync(metadata.RelayJoinCode);
+                var allocation = await MatchServiceWait.Run(RelayService.Instance.JoinAllocationAsync(metadata.RelayJoinCode), lifetime.Token);
                 if (!CanRecover || current != session) return;
                 network.Shutdown();
                 while (CanRecover && network.ShutdownInProgress) await Task.Yield();
@@ -537,7 +588,7 @@ namespace TurnBasedGame.Multiplayer
         internal void Fail(string message, MatchDisconnectReason reason = MatchDisconnectReason.None)
         {
             if (leaving || terminal) return;
-            terminal = true; Status = message; DisconnectReason = reason;
+            terminal = true; lifetime.Cancel(); Status = message; DisconnectReason = reason;
             MatchGameplayBootstrap.Instance?.Abort(message);
             network?.Shutdown();
             Changed?.Invoke();
@@ -545,10 +596,17 @@ namespace TurnBasedGame.Multiplayer
         public async Task Leave()
         {
             if (leaving || Busy) return;
-            leaving = true; reconnect.Complete(); Busy = true; Changed?.Invoke();
+            leaving = true; lifetime.Cancel(); reconnect.Complete(); Busy = true; Changed?.Invoke();
             if (IsHost && GuestPeer.HasValue && network != null && network.IsListening)
                 network.DisconnectClient(GuestPeer.Value, "MP_HOST_LEFT");
             while (launching) await Task.Yield();
+            // Unity cannot cancel an in-flight scene load. Never restore local authority before it finishes.
+            try { await WaitScene(sceneLoad); }
+            catch (TimeoutException error)
+            {
+                Status = error.Message; leaving = false; Busy = false; terminal = true;
+                Changed?.Invoke(); return;
+            }
             bool returnToMenu = InMatch;
             if (!await Cleanup())
             {
@@ -560,8 +618,13 @@ namespace TurnBasedGame.Multiplayer
             {
                 if (!Application.CanStreamedLevelBeLoaded(menuScene))
                 { Status = "Menu chưa có trong build: " + menuScene; Busy = false; leaving = false; Changed?.Invoke(); return; }
-                var operation = SceneManager.LoadSceneAsync(menuScene);
-                while (!operation.isDone) await Task.Yield();
+                sceneLoad = SceneManager.LoadSceneAsync(menuScene);
+                try { await WaitScene(sceneLoad); }
+                catch (TimeoutException error)
+                {
+                    Status = error.Message; leaving = false; Busy = false; terminal = true;
+                    Changed?.Invoke(); return;
+                }
             }
             MatchContext.ConfigureLocalPvP(); BattleLaunchContext.Clear();
             LocalMatchAuthority.ClearSessionState();
@@ -578,7 +641,7 @@ namespace TurnBasedGame.Multiplayer
             {
                 old.Changed -= SessionChanged; old.Deleted -= SessionEnded;
                 old.RemovedFromSession -= RemovedFromSession; old.SessionHostChanged -= HostChanged;
-                try { if (old.IsHost) await old.AsHost().DeleteAsync(); else await old.LeaveAsync(); }
+                try { await MatchServiceWait.Run(old.IsHost ? old.AsHost().DeleteAsync() : old.LeaveAsync(), CancellationToken.None); }
                 catch (SessionException error) when (error.Error == SessionError.SessionDeleted || error.Error == SessionError.SessionNotFound) { }
                 catch (Exception)
                 {
@@ -594,7 +657,8 @@ namespace TurnBasedGame.Multiplayer
                 network.OnServerStopped -= ServerStopped;
                 network.ConnectionApprovalCallback = null;
                 network.Shutdown();
-                while (network != null && network.ShutdownInProgress) await Task.Yield();
+                double deadline = Time.realtimeSinceStartupAsDouble + 5;
+                while (network != null && network.ShutdownInProgress && Time.realtimeSinceStartupAsDouble < deadline) await Task.Yield();
                 if (network != null) Destroy(network.gameObject);
                 network = null;
                 await Task.Yield();
@@ -605,6 +669,8 @@ namespace TurnBasedGame.Multiplayer
         }
         private void OnDestroy()
         {
+            lifetime.Cancel();
+            lifetime.Dispose();
             if (Instance == this) Instance = null;
         }
     }

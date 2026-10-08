@@ -9873,8 +9873,9 @@ GameObject:
   - component: {fileID: 899160742590076544}
   - component: {fileID: 672638817509174813}
   - component: {fileID: 7944420166242513732}
+  - component: {fileID: 3108239603747319270}
   m_Layer: 0
-  m_Name: PS_Piercing_Dark
+  m_Name: VFX_Piercing_Dark
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -14812,6 +14813,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5b070947a23dce54e8640929696c53df, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.ObjectPool.PooledVFX
+--- !u!114 &3108239603747319270
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6628276393031643956}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 48e50b14446777c4ba9beb866bedc31f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.ObjectPool.PooledObject
 --- !u!1 &7758920411372221092
 GameObject:
   m_ObjectHideFlags: 0

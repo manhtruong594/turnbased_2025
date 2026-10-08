@@ -69,6 +69,14 @@ namespace TurnBasedGame.Command
     public static class LocalMatchAuthority
     {
         private static MatchCommandGate gate;
+        private static MatchResultRecorder finalResult = new MatchResultRecorder();
+        public static MatchFinalResult FinalResult => finalResult.Result;
+        private static void RecordFinalResult(CommandAcknowledgement commit)
+        {
+            if (finalResult.TryRecord(IsAuthoritative, commit))
+                Debug.Log(MatchAudit.Command(commit.MatchId, finalResult.Result.Winner, commit.CommandId,
+                    finalResult.Result.Turn, commit.ServerSequence, commit.Reason));
+        }
         internal static ulong ServerSequence => gate?.ServerSequence ?? 0;
         internal static ulong NextClientSequence(PlayerId player) => gate.NextClientSequence(player);
         internal static long NextCommandId(PlayerId player) => gate.NextCommandId(player);
@@ -93,6 +101,7 @@ namespace TurnBasedGame.Command
                 return (CommandReason.None, (string)null);
             }, () => CaptureChanges(before), CaptureRollback());
             if (!result.Accepted) throw new System.InvalidOperationException(result.Detail);
+            RecordFinalResult(result);
             CommandCommitted?.Invoke(result);
             GameMediator.Instance.NotifyReplicaGameEnd(PlayerID.Player1);
         }
@@ -146,6 +155,7 @@ namespace TurnBasedGame.Command
             random = new MatchRandom(seed == 0 ? 1u : seed);
             Runtime = new MatchRuntimeRegistry();
             gate = new MatchCommandGate(MatchId, Compatibility);
+            finalResult = new MatchResultRecorder();
             nextCommandId = 0;
             diceTurn = -1;
             usedDice = 0;
@@ -158,11 +168,13 @@ namespace TurnBasedGame.Command
             Runtime = new MatchRuntimeRegistry();
             random = null;
             gate = null;
+            finalResult = new MatchResultRecorder();
         }
 
         internal static void ClearSessionState()
         {
             gate = null; random = null; MatchId = null;
+            finalResult = new MatchResultRecorder();
             Runtime = new MatchRuntimeRegistry();
             nextCommandId = 0; diceTurn = -1; usedDice = 0; aiManaTurn = -1; LastDiceValue = 0;
         }
@@ -236,8 +248,12 @@ namespace TurnBasedGame.Command
                     () => CaptureChanges(before), () => command.Kind == MatchCommandKind.RollDice ? LastDiceValue : 0, rollback));
             }
             finally { presentation = priorPresentation; }
+            if (MatchContext.Mode == MatchMode.NetworkPvP)
+                Debug.Log(MatchAudit.Command(MatchId, actor, command?.CommandId ?? 0,
+                    command?.ExpectedTurn ?? 0, result.ServerSequence, result.Reason));
             if (result.Succeeded && gate.ServerSequence > previousSequence)
             {
+                RecordFinalResult(result.Acknowledgement);
                 try { CommandCommitted?.Invoke(result.Acknowledgement); }
                 catch (System.Exception error) { Debug.LogException(error); }
                 Present(actions);
@@ -502,6 +518,7 @@ namespace TurnBasedGame.Command
             finally { presentation = priorPresentation; }
             if (result.Succeeded)
             {
+                RecordFinalResult(result.Acknowledgement);
                 try { CommandCommitted?.Invoke(result.Acknowledgement); }
                 catch (System.Exception error) { Debug.LogException(error); }
                 Present(actions);
