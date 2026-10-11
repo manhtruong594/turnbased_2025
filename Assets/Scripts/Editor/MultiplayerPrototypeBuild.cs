@@ -49,7 +49,8 @@ public static class MultiplayerPrototypeBuild
         // Explicit menu action only; does not rewrite the user's Build Settings or scenes.
         var scenes = new System.Collections.Generic.List<string> { "Assets/Scenes/HUDScene.unity" };
         foreach (var scene in EditorBuildSettings.scenes)
-            if (scene.enabled && !scenes.Contains(scene.path) && scene.path != ScenePath) scenes.Add(scene.path);
+            if (scene.enabled && !scenes.Contains(scene.path) && scene.path != ScenePath && File.Exists(scene.path))
+                scenes.Add(scene.path);
         string output = "Builds/MultiplayerGameplay/MultiplayerGameplay.exe";
         Directory.CreateDirectory(Path.GetDirectoryName(output));
         var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions { scenes = scenes.ToArray(), locationPathName = output,

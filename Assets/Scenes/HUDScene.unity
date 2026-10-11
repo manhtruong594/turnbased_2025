@@ -21959,6 +21959,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1429214263}
     m_Modifications:
+    - target: {fileID: 1338784804373472132, guid: edddc287fe6446b449fd36b325111e21, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7801745341138737663, guid: edddc287fe6446b449fd36b325111e21, type: 3}
       propertyPath: m_Name
       value: KenneyTown_Environment
