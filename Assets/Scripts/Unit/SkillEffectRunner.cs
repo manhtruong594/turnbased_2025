@@ -8,6 +8,8 @@ namespace TurnBasedGame.Unit
 {
     public class SkillEffectRunner : MonoBehaviour
     {
+        private const float PooledVfxFallbackLifetime = 3f;
+
         private Transform _casterRoot;
         private Transform _effectSpawnPoint;
 
@@ -108,7 +110,47 @@ namespace TurnBasedGame.Unit
             if (prefab == null) return;
 
             var spawnPoint = ResolveSpawnPoint(spawnPointType, skill);
-            ObjectPoolManager.Instance.Spawn(prefab, spawnPoint.Position, spawnPoint.Rotation);
+            var instance = ObjectPoolManager.Instance.Spawn(prefab, spawnPoint.Position, spawnPoint.Rotation);
+            if (instance == null) return;
+
+            EnsureAutoDespawn(instance);
+        }
+
+        /// <summary>
+        /// Đảm bảo VFX được trả về pool khi particle kết thúc.
+        /// Nhiều prefab VFX thiếu PooledVFX nên object không bao giờ despawn,
+        /// pool luôn rỗng và mỗi lần cast phải Instantiate lại.
+        /// Projectile có tự despawn (Projectile.cs) nên bỏ qua.
+        /// </summary>
+        private static void EnsureAutoDespawn(GameObject instance)
+        {
+            if (instance.GetComponent<PooledVFX>() != null) return;
+
+            if (instance.TryGetComponent<Projectile>(out _)) return;
+
+            if (!instance.TryGetComponent<ParticleSystem>(out _)) return;
+
+            instance.AddComponent<PooledVFX>();
+
+            // Prefab chỉ có particle loop thì PooledVFX không bao giờ despawn,
+            // fallback bằng timer để object vẫn được trả về pool.
+            if (instance.TryGetComponent<PooledObject>(out var pooledObject) &&
+                !HasFiniteParticleSystem(instance))
+            {
+                pooledObject.DespawnAfter(PooledVfxFallbackLifetime);
+            }
+        }
+
+        private static bool HasFiniteParticleSystem(GameObject instance)
+        {
+            var systems = instance.GetComponentsInChildren<ParticleSystem>(true);
+            for (int i = 0; i < systems.Length; i++)
+            {
+                if (systems[i] != null && !systems[i].main.loop)
+                    return true;
+            }
+
+            return false;
         }
 
         private Transform GetEffectSpawnPoint()

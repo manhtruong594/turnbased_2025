@@ -13,6 +13,14 @@ namespace TurnBasedGame.ObjectPool
 
         private Dictionary<string, ObjectPool<PooledObject>> _pools = new Dictionary<string, ObjectPool<PooledObject>>();
         private Dictionary<string, GameObject> _prefabCache = new Dictionary<string, GameObject>();
+        private Dictionary<GameObject, string> _poolKeyByPrefab = new Dictionary<GameObject, string>();
+
+        [Header("Pool Settings")]
+        [Tooltip("Số object tạo sẵn khi pool VFX được tạo lười (lazy). Giữ >= 3 để cast liên tiếp không gây Instantiate giữa combat.")]
+        [SerializeField] private int vfxPoolInitialSize = 4;
+
+        [Tooltip("Số object tối thiểu được giữ sẵn trong pool VFX sau khi prewarm.")]
+        [SerializeField] private int vfxPrewarmSize = 4;
 
         void Awake()
         {
@@ -44,6 +52,11 @@ namespace TurnBasedGame.ObjectPool
             }
 
             _prefabCache[key] = prefab;
+
+            // Ghi nhận key theo prefab để Spawn(GameObject) tái sử dụng pool đã đăng ký
+            // thay vì tạo pool trùng cho cùng một prefab.
+            if (!_poolKeyByPrefab.ContainsKey(prefab))
+                _poolKeyByPrefab[prefab] = key;
 
             var pool = new ObjectPool<PooledObject>(
                 createFunc: () => CreatePooledObject(key),
@@ -126,18 +139,14 @@ namespace TurnBasedGame.ObjectPool
         
         public GameObject Spawn(GameObject prefab, Transform parent = null)
         {
-            if (!_pools.TryGetValue(prefab.name, out var pool))
+            if (prefab == null) return null;
+
+            var key = GetPoolKeyForPrefab(prefab);
+            if (!_pools.TryGetValue(key, out var pool))
             {
-                if (_prefabCache.TryGetValue(prefab.name, out var cachedPrefab))
-                {
-                    CreatePool(prefab.name, cachedPrefab);
-                    return Spawn(prefab.name, parent);
-                }
-                else
-                {
-                    CreatePool(prefab.name, prefab);
-                    return Spawn(prefab.name, parent);
-                }
+                CreatePool(key, prefab, vfxPoolInitialSize);
+                if (!_pools.TryGetValue(key, out pool))
+                    return null;
             }
 
             var pooledObj = pool.Get();
@@ -148,6 +157,42 @@ namespace TurnBasedGame.ObjectPool
                 pooledObj.transform.SetParent(parent, false);
             }
             return pooledObj.gameObject;
+        }
+
+        /// <summary>
+        /// Lấy key pool duy nhất cho prefab. Các prefab trùng tên (ví dụ nhiều VFX_Buff_Cast,
+        /// Shield_gold) phải dùng pool riêng nên key không được chỉ là prefab.name.
+        /// </summary>
+        private string GetPoolKeyForPrefab(GameObject prefab)
+        {
+            if (_poolKeyByPrefab.TryGetValue(prefab, out var existing))
+                return existing;
+
+            var key = $"{prefab.name}#{prefab.GetInstanceID()}";
+            _poolKeyByPrefab[prefab] = key;
+            return key;
+        }
+
+        /// <summary>
+        /// Đảm bảo pool của prefab có sẵn ít nhất size object, tránh Instantiate giữa combat.
+        /// </summary>
+        public void PrewarmVfx(GameObject prefab, int count = 0)
+        {
+            if (prefab == null) return;
+
+            var size = count > 0 ? count : vfxPrewarmSize;
+            var key = GetPoolKeyForPrefab(prefab);
+            if (!_pools.TryGetValue(key, out var pool))
+            {
+                CreatePool(key, prefab, size);
+                return;
+            }
+
+            var missing = size - pool.CountAll;
+            for (int i = 0; i < missing; i++)
+            {
+                pool.Prewarm(1);
+            }
         }   
 
         public T Spawn<T>(string key, Transform parent = null) where T : PooledObject
@@ -212,9 +257,21 @@ namespace TurnBasedGame.ObjectPool
             {
                 pool.Clear();
                 _pools.Remove(key);
-                _prefabCache.Remove(key);
+                if (_prefabCache.Remove(key, out var prefab))
+                    ForgetPrefabKey(prefab);
                 Debug.Log($"Pool '{key}' destroyed.");
             }
+        }
+
+        private void ClearPrefabKeyCache()
+        {
+            _poolKeyByPrefab.Clear();
+        }
+
+        private void ForgetPrefabKey(GameObject prefab)
+        {
+            if (prefab != null)
+                _poolKeyByPrefab.Remove(prefab);
         }
 
         /// <summary>
@@ -228,6 +285,7 @@ namespace TurnBasedGame.ObjectPool
             }
             _pools.Clear();
             _prefabCache.Clear();
+            ClearPrefabKeyCache();
         }
 
         /// <summary>

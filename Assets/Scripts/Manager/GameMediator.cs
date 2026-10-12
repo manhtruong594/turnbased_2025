@@ -84,6 +84,7 @@ public class GameMediator : MonoBehaviour
         mpManager.Initialize(this);
         mapManager.Initialize(this);
         unitSpawner.Initialize(this);
+        PrewarmSkillVfxPools();
         areaPathManager.Initialize(this);
         spellCardManager.SetCachedMap(mapManager.MapEntity);    // spell card sẽ được initialize trong PlayerController
         areaPathManager.SetCachedMap(mapManager.MapEntity);
@@ -94,7 +95,45 @@ public class GameMediator : MonoBehaviour
         IsInitialized = true;
     }
 
-    #region  Notify Methods
+        #region VFX Prewarm
+
+        /// <summary>
+        /// Tạo sẵn object cho pool VFX của skill để cast đầu tiên không gây spike do Instantiate.
+        /// Gọi một lần sau khi unit đã được spawn.
+        /// </summary>
+        private void PrewarmSkillVfxPools()
+        {
+            var poolManager = TurnBasedGame.ObjectPool.ObjectPoolManager.Instance;
+            if (poolManager == null || unitSpawner == null) return;
+
+            PrewarmPlayerVfx(poolManager, PlayerID.Player1);
+            PrewarmPlayerVfx(poolManager, PlayerID.Player2);
+        }
+
+        private void PrewarmPlayerVfx(TurnBasedGame.ObjectPool.ObjectPoolManager poolManager, PlayerID player)
+        {
+            var units = unitSpawner.GetPlayerUnits(player);
+            for (int u = 0; u < units.Count; u++)
+            {
+                var skills = units[u].UnitData?.StartingSkills;
+                if (skills == null) continue;
+
+                for (int i = 0; i < skills.Count; i++)
+                {
+                    var skill = skills[i];
+                    if (skill == null) continue;
+
+                    poolManager.PrewarmVfx(skill.GetCastVfxPrefab());
+                    poolManager.PrewarmVfx(skill.GetReleaseVfxPrefab());
+                    poolManager.PrewarmVfx(skill.GetProjectilePrefab());
+                    poolManager.PrewarmVfx(skill.GetImpactVfxPrefab());
+                }
+            }
+        }
+
+        #endregion
+
+        #region  Notify Methods
 
     public void NotifyPlayerTurnStarted(PlayerID player)
     {
