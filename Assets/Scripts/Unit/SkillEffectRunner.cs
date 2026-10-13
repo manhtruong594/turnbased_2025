@@ -10,6 +10,9 @@ namespace TurnBasedGame.Unit
     {
         private const float PooledVfxFallbackLifetime = 3f;
 
+        // Instance pool được tái sử dụng: chỉ cấu hình auto-despawn một lần.
+        private static readonly System.Collections.Generic.HashSet<int> PreparedVfxInstances = new();
+
         private Transform _casterRoot;
         private Transform _effectSpawnPoint;
 
@@ -124,6 +127,8 @@ namespace TurnBasedGame.Unit
         /// </summary>
         private static void EnsureAutoDespawn(GameObject instance)
         {
+            if (!PreparedVfxInstances.Add(instance.GetInstanceID())) return;
+
             if (instance.GetComponent<PooledVFX>() != null) return;
 
             if (instance.TryGetComponent<Projectile>(out _)) return;
