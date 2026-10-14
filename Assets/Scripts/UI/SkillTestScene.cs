@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using RedBjorn.ProtoTiles.Example;
 using TurnBasedGame.Command;
 using TurnBasedGame.Core;
@@ -33,6 +34,7 @@ namespace TurnBasedGame.UI
         private Label stats;
         private VisualElement skills;
         private string validationMessage;
+        private readonly StringBuilder statsBuilder = new(256);
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetSelection() { characterIndex = 0; targetIndex = 0; }
@@ -151,7 +153,7 @@ namespace TurnBasedGame.UI
             foreach (var item in caster.AttackComponent.ActiveSkills)
                 if (item is SkillBase skill && skill.Type != SkillType.Passive)
                     AddButton(panel, "Animation: " + skill.SkillName, () => Preview(AnimationHashLib.GetHashAnimByAttackType(skill.Type)));
-            panel.schedule.Execute(UpdateStats).Every(200);
+            // panel.schedule.Execute(UpdateStats).Every(500);
             UpdateStats();
         }
 
@@ -166,18 +168,30 @@ namespace TurnBasedGame.UI
         private void UpdateStats()
         {
             if (stats == null || MPManager.Instance == null) return;
-            string value = $"MP: {MPManager.Instance.GetCurrentMP(PlayerID.Player1)}/{MPManager.Instance.MaxMP}";
+            statsBuilder.Clear();
+            statsBuilder.Append("MP: ").Append(MPManager.Instance.GetCurrentMP(PlayerID.Player1)).Append('/').Append(MPManager.Instance.MaxMP);
             if (caster != null)
             {
-                value += $" | HP: {caster.GetCurrentHealth()}/{caster.GetMaxHealth()}\nHành động: {(caster.CanAct() ? "sẵn sàng" : "đã dùng / bị khóa — scene test vẫn cho dùng skill")}";
+                statsBuilder.Append(" | HP: ").Append(caster.GetCurrentHealth()).Append('/').Append(caster.GetMaxHealth());
+                statsBuilder.Append("\nHành động: ").Append(caster.CanAct() ? "sẵn sàng" : "đã dùng / bị khóa — scene test vẫn cho dùng skill");
                 if (caster.BuffHandler != null && caster.BuffHandler.HasEffect(StatusEffectType.Slow))
-                    value += " | Debuff: Slow";
+                    statsBuilder.Append(" | Debuff: Slow");
                 foreach (var skill in caster.AttackComponent.ActiveSkills)
-                    value += $"\n{skill.SkillName}: cooldown {skill.CurrentCooldown}";
+                    statsBuilder.Append('\n').Append(skill.SkillName).Append(": cooldown ").Append(skill.CurrentCooldown);
             }
-            foreach (var target in UnitSpawner.Instance.GetPlayerUnits(PlayerID.Player2))
-                if (target != null) value += $"\n{target.UnitData.unitName}: HP {target.GetCurrentHealth()}/{target.GetMaxHealth()}";
-            stats.text = value;
+            if (UnitSpawner.Instance != null)
+            {
+                foreach (var target in UnitSpawner.Instance.GetPlayerUnits(PlayerID.Player2))
+                {
+                    if (target != null)
+                        statsBuilder.Append('\n').Append(target.UnitData.unitName).Append(": HP ")
+                            .Append(target.GetCurrentHealth()).Append('/').Append(target.GetMaxHealth());
+                }
+            }
+
+            string newText = statsBuilder.ToString();
+            if (stats.text != newText)
+                stats.text = newText;
         }
 
         private void BeginPlacement()
@@ -268,6 +282,7 @@ namespace TurnBasedGame.UI
                 Spawn(targetIndex, PlayerID.Player2, tile.Position);
                 CancelSelection();
                 status.text = "Đã đặt target tại " + tile.Position;
+                UpdateStats();
                 return;
             }
             if (caster == null) { status.text = "Caster không còn tồn tại. Nhấn Reset test."; CancelSelection(); return; }
