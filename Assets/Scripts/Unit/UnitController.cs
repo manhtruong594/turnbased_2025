@@ -20,6 +20,7 @@ namespace TurnBasedGame.Unit
         readonly UnitRuntimeStats runtimeStats = new();
         Coroutine _movingCoroutine;
         Coroutine _deathCoroutine;
+        Coroutine _displacementCoroutine;
         private Vector3Int _previousMovePosition;
         private bool _canUndoMove;
         private ulong _undoAtSequence;
@@ -55,7 +56,8 @@ namespace TurnBasedGame.Unit
                 if (this == null) return;
                 if (_movingCoroutine != null) StopCoroutine(_movingCoroutine);
                 if (_deathCoroutine != null && !dead) StopCoroutine(_deathCoroutine);
-                _movingCoroutine = null; _deathCoroutine = null; OnCompleteMove = null;
+                if (_displacementCoroutine != null) StopCoroutine(_displacementCoroutine);
+                _movingCoroutine = null; _deathCoroutine = null; _displacementCoroutine = null; OnCompleteMove = null;
                 runtimeStats.Health = health; runtimeStats.IsDead = dead;
                 runtimeStats.IsMoveCompleted = moved; runtimeStats.IsActionCompleted = acted;
                 runtimeStats.IsInAttackMode = attackMode; _canUndoMove = undo;
@@ -76,7 +78,7 @@ namespace TurnBasedGame.Unit
 
         internal void ApplyReplica(TurnBasedGame.Multiplayer.Protocol.MatchStateChange state)
         {
-            StopAllCoroutines(); _movingCoroutine = null; _deathCoroutine = null; OnCompleteMove = null;
+            StopAllCoroutines(); _movingCoroutine = null; _deathCoroutine = null; _displacementCoroutine = null; OnCompleteMove = null;
             _canUndoMove = state.Value4 != 0;
             runtimeStats.Health = state.Value; runtimeStats.IsDead = false;
             runtimeStats.IsMoveCompleted = state.Value2 != 0; runtimeStats.IsActionCompleted = state.Value3 != 0;
@@ -278,7 +280,7 @@ namespace TurnBasedGame.Unit
             GameMediator.Instance?.NotifyUnitMoved(this, oldPosition, newGridPos);
         }
 
-        public void TeleportTo(Vector3Int newGridPos)
+        public void TeleportTo(Vector3Int newGridPos, bool applyVisualImmediately = true)
         {
             if (!LocalMatchAuthority.IsAuthoritative) return;
             var map = runtimeStats.MapEntity ?? MapManager.Instance?.MapEntity;
@@ -291,8 +293,57 @@ namespace TurnBasedGame.Unit
                 _movingCoroutine = null;
             }
 
-            _myTrans.position = map.WorldPosition(newGridPos);
+            if (_displacementCoroutine != null)
+            {
+                StopCoroutine(_displacementCoroutine);
+                _displacementCoroutine = null;
+            }
+
+            if (applyVisualImmediately)
+            {
+                _myTrans.position = map.WorldPosition(newGridPos);
+            }
             UpdateGridPosition(newGridPos);
+        }
+
+        public void SyncVisualPosition(bool smooth = false)
+        {
+            var map = runtimeStats.MapEntity ?? MapManager.Instance?.MapEntity;
+            if (map == null || map.Tile(currentGridPosition) == null)
+                return;
+
+            var targetPoint = map.WorldPosition(currentGridPosition);
+            if (!smooth || !gameObject.activeInHierarchy)
+            {
+                if (_displacementCoroutine != null)
+                {
+                    StopCoroutine(_displacementCoroutine);
+                    _displacementCoroutine = null;
+                }
+                _myTrans.position = targetPoint;
+                return;
+            }
+
+            if (_displacementCoroutine != null)
+            {
+                StopCoroutine(_displacementCoroutine);
+            }
+            _displacementCoroutine = StartCoroutine(SmoothDisplacement(targetPoint, 0.15f));
+        }
+
+        private IEnumerator SmoothDisplacement(Vector3 targetPoint, float duration)
+        {
+            Vector3 startPos = _myTrans.position;
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                _myTrans.position = Vector3.Lerp(startPos, targetPoint, t);
+                yield return null;
+            }
+            _myTrans.position = targetPoint;
+            _displacementCoroutine = null;
         }
         #endregion
 

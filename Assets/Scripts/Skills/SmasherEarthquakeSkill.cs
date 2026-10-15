@@ -15,8 +15,11 @@ namespace TurnBasedGame.Skills
         [SerializeField, Min(1)] private int knockbackDistance = 1;
         [SerializeField, Min(1)] private int stunDuration = 1;
 
+        private UnitController _pendingDisplacedTarget;
+
         protected override void ExecuteEffect(UnitController caster, Vector3Int targetPos)
         {
+            _pendingDisplacedTarget = null;
             var target = MapManager.Instance?.GetUnitAtTile(targetPos);
             if (target == null || target.IsDead() || target.GetOwner() == caster.GetOwner())
                 return;
@@ -28,6 +31,16 @@ namespace TurnBasedGame.Skills
             TryKnockbackOrCollide(caster, target, targetPos);
         }
 
+        public override void ApplyEffect()
+        {
+            base.ApplyEffect();
+            if (_pendingDisplacedTarget != null)
+            {
+                _pendingDisplacedTarget.SyncVisualPosition(true);
+                _pendingDisplacedTarget = null;
+            }
+        }
+
         protected override bool ValidateCustomConditions(UnitController caster, Vector3Int targetPos)
         {
             Vector3Int direction = SkillAreaUtility.NormalizeDirection(targetPos - caster.currentGridPosition);
@@ -37,9 +50,15 @@ namespace TurnBasedGame.Skills
         private void TryKnockbackOrCollide(UnitController caster, UnitController target, Vector3Int targetPos)
         {
             Vector3Int direction = SkillAreaUtility.NormalizeDirection(targetPos - caster.currentGridPosition);
-            var result = DisplacementUtility.TryPushUnit(target, direction, knockbackDistance);
+            var result = DisplacementUtility.TryPushUnit(target, direction, knockbackDistance, applyVisualImmediately: false);
 
-            if (result.WasImmune || result.WasMoved)
+            if (result.WasMoved)
+            {
+                _pendingDisplacedTarget = target;
+                return;
+            }
+
+            if (result.WasImmune)
                 return;
 
             if (result.WasBlocked)

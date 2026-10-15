@@ -23,7 +23,7 @@ namespace TurnBasedGame.Skills
 
     public static class DisplacementUtility
     {
-        public static DisplacementResult TryPushUnit(UnitController unit, Vector3Int direction, int distance)
+        public static DisplacementResult TryPushUnit(UnitController unit, Vector3Int direction, int distance, bool applyVisualImmediately = true)
         {
             if (unit == null || unit.IsDead())
                 return DisplacementResult.Blocked();
@@ -42,12 +42,12 @@ namespace TurnBasedGame.Skills
                 if (!CanMoveInto(nextTile))
                     return destination == unit.currentGridPosition
                         ? DisplacementResult.Blocked()
-                        : MoveUnit(unit, destination);
+                        : MoveUnit(unit, destination, applyVisualImmediately);
 
                 destination = nextTile;
             }
 
-            return MoveUnit(unit, destination);
+            return MoveUnit(unit, destination, applyVisualImmediately);
         }
 
         private static bool CanMoveInto(Vector3Int tilePos)
@@ -55,9 +55,9 @@ namespace TurnBasedGame.Skills
             return MapManager.Instance != null && MapManager.Instance.IsTileAvailable(tilePos);
         }
 
-        private static DisplacementResult MoveUnit(UnitController unit, Vector3Int destination)
+        private static DisplacementResult MoveUnit(UnitController unit, Vector3Int destination, bool applyVisualImmediately = true)
         {
-            unit.TeleportTo(destination);
+            unit.TeleportTo(destination, applyVisualImmediately);
             return DisplacementResult.Moved();
         }
     }
