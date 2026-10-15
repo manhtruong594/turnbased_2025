@@ -359,22 +359,26 @@ namespace TurnBasedGame.Unit
         public void TakeDamage(float damage, bool canBreakFreeze = true)
         {
             if (!LocalMatchAuthority.IsAuthoritative || IsDead()) return;
-            // �p d?ng Shield gi?m s�t thuong
+            // Áp dụng Shield giảm sát thương
             if (damage > 0 && _buffHandler != null)
                 damage = _buffHandler.ModifyIncomingDamage(damage, canBreakFreeze);
 
-            runtimeStats.Health -= (int)damage;
+            int finalDamage = (int)damage;
+            runtimeStats.Health -= finalDamage;
             runtimeStats.Health = Mathf.Clamp(runtimeStats.Health, 0, runtimeStats.MaxHealth);
-            _healthBar.UpdateHealthBar((float)runtimeStats.Health / runtimeStats.MaxHealth);
-            if (runtimeStats.Health <= 0)
+            bool isLethal = runtimeStats.Health <= 0;
+            if (isLethal)
             {
-                Die();
+                MarkDeadAuthorized();
             }
-            else if (damage > 0)
+
+            if (SkillBase.ActiveExecutingSkill != null)
             {
-                _unitAnimator.PlayHit();
+                SkillBase.ActiveExecutingSkill.RecordDamageHit(this, finalDamage, runtimeStats.Health, runtimeStats.MaxHealth, isLethal);
+                return;
             }
-            FloatingTextSpawner.Instance?.SpawnDamage(transform.position, (int)damage);
+
+            ApplyVisualDamage(finalDamage, runtimeStats.Health, runtimeStats.MaxHealth, isLethal);
         }
 
         public bool TrySacrifice()
@@ -382,20 +386,50 @@ namespace TurnBasedGame.Unit
             if (!LocalMatchAuthority.IsAuthoritative || IsDead()) return false;
 
             runtimeStats.Health = 0;
-            _healthBar.UpdateHealthBar(0f);
-            Die();
+            MarkDeadAuthorized();
+            ApplyVisualDamage(0, 0, runtimeStats.MaxHealth, true);
             return true;
         }
 
-        private void Die()
+        private void MarkDeadAuthorized()
         {
             if (runtimeStats.IsDead) return;
             runtimeStats.IsDead = true;
-            _unitAnimator.PlayDeath();
-            MapManager.Instance.UnregisterUnit(currentGridPosition);
+            MapManager.Instance?.UnregisterUnit(currentGridPosition);
             LocalMatchAuthority.Runtime.RemoveUnit(this);
             UnitSpawner.Instance?.RemoveDeadUnit(this);
-            _deathCoroutine = StartCoroutine(DelayDead());
+        }
+
+        internal void ShowVisualHit(SkillVisualHitData hit)
+        {
+            if (hit.IsHeal)
+            {
+                _healthBar.UpdateHealthBar((float)hit.HealthAfter / hit.MaxHealth);
+                FloatingTextSpawner.Instance?.SpawnHeal(transform.position, hit.Value);
+                return;
+            }
+
+            ApplyVisualDamage(hit.Value, hit.HealthAfter, hit.MaxHealth, hit.IsLethal);
+        }
+
+        private void ApplyVisualDamage(int damage, int currentHealth, int maxHealth, bool isLethal)
+        {
+            _healthBar.UpdateHealthBar((float)currentHealth / maxHealth);
+            if (damage > 0)
+            {
+                FloatingTextSpawner.Instance?.SpawnDamage(transform.position, damage);
+            }
+
+            if (isLethal)
+            {
+                _unitAnimator.PlayDeath();
+                if (_deathCoroutine != null) StopCoroutine(_deathCoroutine);
+                _deathCoroutine = StartCoroutine(DelayDead());
+            }
+            else if (damage > 0)
+            {
+                _unitAnimator.PlayHit();
+            }
         }
 
         public void TakeNonLethalDamage(float damage)
@@ -408,6 +442,13 @@ namespace TurnBasedGame.Unit
             int previousHealth = runtimeStats.Health;
             runtimeStats.Health = Mathf.Max(1, runtimeStats.Health - safeDamage);
             int actualDamage = previousHealth - runtimeStats.Health;
+
+            if (SkillBase.ActiveExecutingSkill != null)
+            {
+                SkillBase.ActiveExecutingSkill.RecordDamageHit(this, actualDamage, runtimeStats.Health, runtimeStats.MaxHealth, false);
+                return;
+            }
+
             _healthBar.UpdateHealthBar((float)runtimeStats.Health / runtimeStats.MaxHealth);
             FloatingTextSpawner.Instance?.SpawnDamage(transform.position, actualDamage);
         }
@@ -423,6 +464,12 @@ namespace TurnBasedGame.Unit
 
             runtimeStats.Health += healAmount;
             runtimeStats.Health = Mathf.Clamp(runtimeStats.Health, 0, runtimeStats.MaxHealth);
+            if (SkillBase.ActiveExecutingSkill != null)
+            {
+                SkillBase.ActiveExecutingSkill.RecordHealHit(this, healAmount, runtimeStats.Health, runtimeStats.MaxHealth);
+                return;
+            }
+
             _healthBar.UpdateHealthBar((float)runtimeStats.Health / runtimeStats.MaxHealth);
             FloatingTextSpawner.Instance?.SpawnHeal(transform.position, healAmount);
         }

@@ -7,9 +7,56 @@ using System;
 using RedBjorn.ProtoTiles.Example;
 using TurnBasedGame.Resources;
 using TurnBasedGame.EditorSupport;
+using TurnBasedGame.SpellCard;
 
 namespace TurnBasedGame.Skills
 {
+    public enum SkillBuffVisualAction
+    {
+        Add,
+        Remove
+    }
+
+    public readonly struct SkillVisualBuffData
+    {
+        public readonly BuffDebuffHandler Handler;
+        public readonly ActiveStatusEffect Effect;
+        public readonly SkillBuffVisualAction Action;
+
+        public SkillVisualBuffData(BuffDebuffHandler handler, ActiveStatusEffect effect, SkillBuffVisualAction action)
+        {
+            Handler = handler;
+            Effect = effect;
+            Action = action;
+        }
+    }
+
+    public readonly struct SkillVisualHitData
+    {
+        public readonly UnitController Target;
+        public readonly int Value;
+        public readonly int HealthAfter;
+        public readonly int MaxHealth;
+        public readonly bool IsLethal;
+        public readonly bool IsHeal;
+
+        public SkillVisualHitData(UnitController target, int value, int healthAfter, int maxHealth, bool isLethal, bool isHeal = false)
+        {
+            Target = target;
+            Value = value;
+            HealthAfter = healthAfter;
+            MaxHealth = maxHealth;
+            IsLethal = isLethal;
+            IsHeal = isHeal;
+        }
+    }
+
+    public class VisualHitStep
+    {
+        public readonly List<SkillVisualHitData> Hits = new();
+        public readonly List<SkillVisualBuffData> Buffs = new();
+    }
+
     /// <summary>
     /// Base class cho tất cả skills (Template Method Pattern + Strategy Pattern)
     /// Định nghĩa template algorithm, subclass implement các bước cụ thể
@@ -47,7 +94,13 @@ namespace TurnBasedGame.Skills
         internal Action CaptureRollback()
         {
             int savedCooldown = currentCooldown;
-            return () => { currentCooldown = savedCooldown; _isExecuting = false; };
+            return () =>
+            {
+                currentCooldown = savedCooldown;
+                _isExecuting = false;
+                _pendingHitSteps.Clear();
+                _currentStep = null;
+            };
         }
         public SkillVfxConfig VfxConfig => GetVfxConfig();
 
@@ -56,6 +109,51 @@ namespace TurnBasedGame.Skills
         public bool CanTargetSelf => (targetTypes & TargetType.Self) != 0;
         public bool CanTargetEmptyTile => (targetTypes & TargetType.EmptyTile) != 0;
         #endregion
+
+        public static SkillBase ActiveExecutingSkill { get; private set; }
+        private readonly Queue<VisualHitStep> _pendingHitSteps = new();
+        private VisualHitStep _currentStep;
+
+        public void RecordDamageHit(UnitController target, int damage, int healthAfterHit, int maxHealth, bool isLethal)
+        {
+            if (_currentStep == null)
+                _currentStep = new VisualHitStep();
+
+            _currentStep.Hits.Add(new SkillVisualHitData(target, damage, healthAfterHit, maxHealth, isLethal, false));
+        }
+
+        public void RecordHealHit(UnitController target, int healAmount, int healthAfterHit, int maxHealth)
+        {
+            if (_currentStep == null)
+                _currentStep = new VisualHitStep();
+
+            _currentStep.Hits.Add(new SkillVisualHitData(target, healAmount, healthAfterHit, maxHealth, false, true));
+        }
+
+        public void RecordBuffAction(BuffDebuffHandler handler, ActiveStatusEffect effect, SkillBuffVisualAction action)
+        {
+            if (_currentStep == null)
+                _currentStep = new VisualHitStep();
+
+            _currentStep.Buffs.Add(new SkillVisualBuffData(handler, effect, action));
+        }
+
+        public void AdvanceHitStep()
+        {
+            if (_currentStep != null && (_currentStep.Hits.Count > 0 || _currentStep.Buffs.Count > 0))
+            {
+                _pendingHitSteps.Enqueue(_currentStep);
+                _currentStep = new VisualHitStep();
+            }
+        }
+
+        public void FlushRemainingVisualHits()
+        {
+            while (_pendingHitSteps.Count > 0)
+            {
+                ApplyEffect();
+            }
+        }
 
         protected bool _isExecuting = false;
         protected virtual bool CanDirectTargetUntargetableUnit => false;
@@ -179,12 +277,26 @@ namespace TurnBasedGame.Skills
 
             _currentExecutionContext = (caster, targetPos);
             _isExecuting = true;
+            _pendingHitSteps.Clear();
+            _currentStep = new VisualHitStep();
+            ActiveExecutingSkill = this;
             try
             {
                 ExecuteEffect(caster, targetPos);
+                if (_currentStep != null && (_currentStep.Hits.Count > 0 || _currentStep.Buffs.Count > 0))
+                {
+                    _pendingHitSteps.Enqueue(_currentStep);
+                    _currentStep = null;
+                }
                 StartCooldown();
             }
-            finally { _isExecuting = false; }
+            finally
+            {
+                _isExecuting = false;
+                ActiveExecutingSkill = null;
+                _currentStep = null;
+            }
+
             if (caster != null) caster.FinishTurnActionsAuthorized();
             // Animation cues are presentation only; gameplay has already resolved once.
             TurnBasedGame.Command.LocalMatchAuthority.PublishAfterCommit(() =>
@@ -217,7 +329,20 @@ namespace TurnBasedGame.Skills
 
         public virtual void ApplyEffect()
         {
-            // Kept for serialized animation/VFX callers. Authority resolves effects in ExecuteAuthorized.
+            if (_pendingHitSteps.Count > 0)
+            {
+                var step = _pendingHitSteps.Dequeue();
+                foreach (var hit in step.Hits)
+                {
+                    if (hit.Target != null)
+                        hit.Target.ShowVisualHit(hit);
+                }
+                foreach (var buff in step.Buffs)
+                {
+                    if (buff.Handler != null)
+                        buff.Handler.ShowVisualBuff(buff);
+                }
+            }
         }
 
         protected virtual void OnExecuteComplete(UnitController caster, Vector3Int targetPos)

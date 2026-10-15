@@ -37,6 +37,8 @@ public class MultiArrowSkill : SkillBase
 
             if (_currentArrowCount > 1)
                 TryApplyExtraArrowEffect(caster, target);
+
+            AdvanceHitStep();
         }
 
         _currentArrowCount = 0;

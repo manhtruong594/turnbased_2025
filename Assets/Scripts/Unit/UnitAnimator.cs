@@ -44,6 +44,8 @@ namespace TurnBasedGame.Unit
             animator.SetBool(AnimationHashLib.IsMoving, false);
         }
 
+        private Coroutine _safetyFlushCoroutine;
+
         public void PlayAttack(SkillBase skill, float attackSpeed = -1f)
         {
             if (animator == null) return;
@@ -53,6 +55,16 @@ namespace TurnBasedGame.Unit
 
             _currentSkill = skill;
             animator.CrossFadeInFixedTime(AnimationHashLib.GetHashAnimByAttackType(skill.Type), _transitionDuration);
+
+            if (_safetyFlushCoroutine != null) StopCoroutine(_safetyFlushCoroutine);
+            _safetyFlushCoroutine = StartCoroutine(SafetyFlushTimer(skill, 2.5f));
+        }
+
+        private System.Collections.IEnumerator SafetyFlushTimer(SkillBase skill, float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            skill?.FlushRemainingVisualHits();
+            _safetyFlushCoroutine = null;
         }
 
         public void PlayHit()
@@ -79,8 +91,14 @@ namespace TurnBasedGame.Unit
 
         #region Animation Events
 
+        public Animator Animator => animator;
+
+        /// <summary>Raised for every animation event received; used by the skill test scene.</summary>
+        public event Action<string> AnimationEventRaised;
+
         public void AnimEvent_SkillCue(string cueName)
         {
+            LogAnimationEvent("SkillCue(" + cueName + ")");
             if (!Enum.TryParse(cueName, true, out SkillAnimationCue cue))
             {
                 Debug.LogWarning($"Invalid skill animation cue: {cueName}");
@@ -92,41 +110,62 @@ namespace TurnBasedGame.Unit
 
         public void AnimEvent_Cast()
         {
+            LogAnimationEvent("Cast");
             _skillEffectRunner.HandleCue(_currentSkill, SkillAnimationCue.Cast);
         }
 
         public void AnimEvent_Release()
         {
+            LogAnimationEvent("Release");
             _skillEffectRunner.HandleCue(_currentSkill, SkillAnimationCue.Release);
         }
 
         public void AnimEvent_Impact()
         {
+            LogAnimationEvent("Impact");
             _skillEffectRunner.HandleCue(_currentSkill, SkillAnimationCue.Impact);
         }
 
         public void AnimEvent_AttackHit()
         {
+            LogAnimationEvent("AttackHit (legacy)");
             AnimEvent_Impact();
         }
 
         public void AnimEvent_AttackStart()
         {
+            LogAnimationEvent("AttackStart (legacy)");
             AnimEvent_Release();
         }
 
         public void AnimEvent_StartEffect()
         {
+            LogAnimationEvent("StartEffect (legacy)");
             AnimEvent_Impact();
         }
 
         public void AnimEvent_AttackComplete()
         {
+            LogAnimationEvent("AttackComplete");
             _skillEffectRunner.HandleCue(_currentSkill, SkillAnimationCue.Complete);
+            if (_safetyFlushCoroutine != null)
+            {
+                StopCoroutine(_safetyFlushCoroutine);
+                _safetyFlushCoroutine = null;
+            }
+            _currentSkill?.FlushRemainingVisualHits();
         }
 
         public void AnimEvent_DeathComplete()
         {
+            AnimationEventRaised?.Invoke("DeathComplete");
+        }
+
+        private void LogAnimationEvent(string eventName)
+        {
+            #if UNITY_EDITOR
+            AnimationEventRaised?.Invoke(eventName);
+            #endif
         }
 
         #endregion

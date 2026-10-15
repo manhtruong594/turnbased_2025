@@ -2005,7 +2005,7 @@ PrefabInstance:
       objectReference: {fileID: 9100000, guid: b3f8b6df3c05ff742a5faacdd1a17bde, type: 2}
     - target: {fileID: 3791382581847649467, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: -0.80720997
       objectReference: {fileID: 0}
     - target: {fileID: 3791382581847649467, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}
       propertyPath: m_LocalPosition.y
@@ -2013,7 +2013,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3791382581847649467, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: -2.15867
       objectReference: {fileID: 0}
     - target: {fileID: 3791382581847649467, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}
       propertyPath: m_LocalRotation.w
@@ -2021,15 +2021,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3791382581847649467, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 3791382581847649467, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 3791382581847649467, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 3791382581847649467, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -2043,6 +2043,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3791382581847649467, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4399936470503347770, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}
       propertyPath: _effectSpawnPoint
       value: 
@@ -2054,6 +2058,18 @@ PrefabInstance:
     - target: {fileID: 5204393105807402248, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}
       propertyPath: m_TagString
       value: Player
+      objectReference: {fileID: 0}
+    - target: {fileID: 7208497065503833964, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7208497065503833964, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7208497065503833964, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects:

@@ -4,6 +4,7 @@ using UnityEngine;
 using TurnBasedGame.Unit;
 using TurnBasedGame.Core;
 using TurnBasedGame.ObjectPool;
+using TurnBasedGame.Skills;
 
 namespace TurnBasedGame.SpellCard
 {
@@ -91,14 +92,45 @@ namespace TurnBasedGame.SpellCard
             }
         }
 
+        internal void ApplyVisualAdd(ActiveStatusEffect effect)
+        {
+            OnEffectAdded?.Invoke(effect);
+            SpawnVfx(effect);
+        }
+
+        internal void ApplyVisualRemove(ActiveStatusEffect effect)
+        {
+            OnEffectRemoved?.Invoke(effect);
+            DespawnVfx(effect.Type);
+        }
+
+        public void ShowVisualBuff(SkillVisualBuffData buffData)
+        {
+            if (this == null || gameObject == null) return;
+            if (buffData.Action == SkillBuffVisualAction.Add)
+            {
+                ApplyVisualAdd(buffData.Effect);
+            }
+            else if (buffData.Action == SkillBuffVisualAction.Remove)
+            {
+                ApplyVisualRemove(buffData.Effect);
+            }
+        }
+
         public void AddEffect(ActiveStatusEffect effect)
         {
             if (!TurnBasedGame.Command.LocalMatchAuthority.IsAuthoritative) return;
             // Cùng loại thì thay thế (refresh duration)
             RemoveByType(effect.Type);
             _activeEffects.Add(effect);
-            OnEffectAdded?.Invoke(effect);
-            SpawnVfx(effect);
+            if (SkillBase.ActiveExecutingSkill != null)
+            {
+                SkillBase.ActiveExecutingSkill.RecordBuffAction(this, effect, SkillBuffVisualAction.Add);
+            }
+            else
+            {
+                ApplyVisualAdd(effect);
+            }
             Debug.Log($"[Effect] {_owner.name} nhận {effect.Type} ({effect.Value}) trong {effect.RemainingTurns} lượt");
         }
 
@@ -168,8 +200,14 @@ namespace TurnBasedGame.SpellCard
                     continue;
 
                 _activeEffects.RemoveAt(i);
-                OnEffectRemoved?.Invoke(effect);
-                DespawnVfx(effect.Type);
+                if (SkillBase.ActiveExecutingSkill != null)
+                {
+                    SkillBase.ActiveExecutingSkill.RecordBuffAction(this, effect, SkillBuffVisualAction.Remove);
+                }
+                else
+                {
+                    ApplyVisualRemove(effect);
+                }
                 Debug.Log($"[Effect] {_owner.name} hết hiệu ứng {effect.Type}");
             }
         }
@@ -183,33 +221,55 @@ namespace TurnBasedGame.SpellCard
                 {
                     var removed = _activeEffects[i];
                     _activeEffects.RemoveAt(i);
-                    OnEffectRemoved?.Invoke(removed);
-                    DespawnVfx(removed.Type);
+                    if (SkillBase.ActiveExecutingSkill != null)
+                    {
+                        SkillBase.ActiveExecutingSkill.RecordBuffAction(this, removed, SkillBuffVisualAction.Remove);
+                    }
+                    else
+                    {
+                        ApplyVisualRemove(removed);
+                    }
                 }
             }
         }
 
         private void SpawnVfx(ActiveStatusEffect effect)
         {
-            var vfxSrc = EffectManager.Instance.GetBuffEffect(effect.Type);
+            if (_owner == null || _owner.IsDead()) return;
+            var vfxSrc = EffectManager.Instance != null ? EffectManager.Instance.GetBuffEffect(effect.Type) : null;
             if (vfxSrc == null) return;
 
-            var vfx = ObjectPoolManager.Instance.Spawn<BuffEffect>(effect.Type.ToString(), _owner.transform);
-            activeVFX.Add(vfx);
-            vfx.effectType = effect.Type;
-            vfx.transform.localPosition = Vector3.zero;
+            var vfx = ObjectPoolManager.Instance != null ? ObjectPoolManager.Instance.Spawn<BuffEffect>(effect.Type.ToString(), _owner.transform) : null;
+            if (vfx != null)
+            {
+                activeVFX.Add(vfx);
+                vfx.effectType = effect.Type;
+                vfx.transform.localPosition = Vector3.zero;
+            }
         }
 
         private void DespawnVfx(StatusEffectType type)
         {
             for (int i = activeVFX.Count - 1; i >= 0; i--)
             {
-                if (activeVFX[i].effectType == type)
+                if (activeVFX[i] != null && activeVFX[i].effectType == type)
                 {
-                    ObjectPoolManager.Instance.Despawn(activeVFX[i]);
+                    ObjectPoolManager.Instance?.Despawn(activeVFX[i]);
                     activeVFX.RemoveAt(i);
                 }
             }
+        }
+
+        private void OnDestroy()
+        {
+            for (int i = activeVFX.Count - 1; i >= 0; i--)
+            {
+                if (activeVFX[i] != null)
+                {
+                    ObjectPoolManager.Instance?.Despawn(activeVFX[i]);
+                }
+            }
+            activeVFX.Clear();
         }
 
         #region  SUPPORTTING METHODS
@@ -324,8 +384,14 @@ namespace TurnBasedGame.SpellCard
             {
                 var removed = _activeEffects[i];
                 _activeEffects.RemoveAt(i);
-                OnEffectRemoved?.Invoke(removed);
-                DespawnVfx(removed.Type);
+                if (SkillBase.ActiveExecutingSkill != null)
+                {
+                    SkillBase.ActiveExecutingSkill.RecordBuffAction(this, removed, SkillBuffVisualAction.Remove);
+                }
+                else
+                {
+                    ApplyVisualRemove(removed);
+                }
             }
         }
 
@@ -339,8 +405,14 @@ namespace TurnBasedGame.SpellCard
 
                 var removed = _activeEffects[i];
                 _activeEffects.RemoveAt(i);
-                OnEffectRemoved?.Invoke(removed);
-                DespawnVfx(removed.Type);
+                if (SkillBase.ActiveExecutingSkill != null)
+                {
+                    SkillBase.ActiveExecutingSkill.RecordBuffAction(this, removed, SkillBuffVisualAction.Remove);
+                }
+                else
+                {
+                    ApplyVisualRemove(removed);
+                }
             }
         }
 

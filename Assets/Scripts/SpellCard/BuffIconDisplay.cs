@@ -18,9 +18,20 @@ namespace TurnBasedGame.SpellCard
 
         public void Init()
         {
-            foreach (var entry in _activeIcons.Values)
-                ObjectPoolManager.Instance.Despawn(entry);
+            if (ObjectPoolManager.Instance != null)
+            {
+                foreach (var entry in _activeIcons.Values)
+                {
+                    if (entry != null)
+                        ObjectPoolManager.Instance.Despawn(entry);
+                }
+            }
             _activeIcons.Clear();
+        }
+
+        private void OnDestroy()
+        {
+            Init();
         }
 
         public void OnEffectAdded(ActiveStatusEffect effect)
@@ -33,7 +44,8 @@ namespace TurnBasedGame.SpellCard
         {
             if (_activeIcons.TryGetValue(effect.Type, out var entry))
             {
-                ObjectPoolManager.Instance.Despawn(entry);
+                if (ObjectPoolManager.Instance != null && entry != null)
+                    ObjectPoolManager.Instance.Despawn(entry);
                 _activeIcons.Remove(effect.Type);
             }
         }

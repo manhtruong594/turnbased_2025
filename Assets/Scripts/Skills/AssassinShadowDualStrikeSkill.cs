@@ -28,12 +28,21 @@ namespace TurnBasedGame.Skills
             bool targetWasAlive = !target.IsDead();
             caster.TeleportTo(teleportTile);
             ApplyStrike(caster, target, firstHitMultiplier);
+            if (targetWasAlive && target.IsDead())
+            {
+                ApplyShadowStep(caster);
+            }
+            AdvanceHitStep();
 
             if (!target.IsDead())
+            {
                 ApplyStrike(caster, target, ResolveSecondHitMultiplier(target));
-
-            if (targetWasAlive && target.IsDead())
-                ApplyShadowStep(caster);
+                if (targetWasAlive && target.IsDead())
+                {
+                    ApplyShadowStep(caster);
+                }
+                AdvanceHitStep();
+            }
         }
 
         protected override bool ValidateCustomConditions(UnitController caster, Vector3Int targetPos)
