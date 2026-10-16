@@ -91,6 +91,8 @@ public class MapManager : BaseManager
         {
             var child = MapView.transform.GetChild(index).gameObject;
             child.SetActive(false);
+            child.name = $"{child.name}_Destroying";
+            child.transform.SetParent(null);
             Destroy(child);
         }
     }
