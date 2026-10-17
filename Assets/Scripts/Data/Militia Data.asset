@@ -19,7 +19,7 @@ MonoBehaviour:
   BaseDamage: 8
   spawnCost: 2
   moveRange: 5
-  icon: {fileID: 0}
+  icon: {fileID: -2146110356, guid: 323d7b0fc00e0db43bd22ad35f436dd2, type: 3}
   startingSkills:
   - {fileID: 11400000, guid: 3775ed46eaf9fa14aa49afaf2737ccaa, type: 2}
   - {fileID: 11400000, guid: 13cd37830e302144fb8afb1ecd763a14, type: 2}

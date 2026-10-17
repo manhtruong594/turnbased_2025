@@ -37,203 +37,41 @@ Căn cứ vào vai trò chiến thuật, bộ kỹ năng và cơ chế VFX của
 | **Halberdier** | Melee tầm xa 2 ô, lướt `Crescent Slash`, cấm hồi máu | Type: -40<br/>Size: +10<br/>Muscle: +30 | Giáp xích kết hợp giáp tấm nhẹ, mũ lính canh | Thép xanh, trắng bạc, vải viền xanh | Phải: `Spear_Medium` (`Item_Hand_R`) |
 | **Assassin** | Cơ động, áp sát nhanh, `Shadow Dual Strike`, gây `Bleed` | Type: -20<br/>Size: -30<br/>Muscle: +20 | Quần áo da bó sát, khăn che mặt, mũ trùm | Đen bóng đêm, tím thẫm, xám tro | Phải: `Weapon_Assassin_R`<br/>Trái: `Weapon_Assassin_L` |
 | **Archer** | Bắn tỉa tầm xa, `Multi Strike Arrow`, gây `Freeze` | Type: 0<br/>Size: -15<br/>Muscle: +10 | Áo da nhẹ, bao tay bắn cung, ống tên lưng | Xanh lá rừng, nâu da thuộc, xanh băng | Trái: `Weapon_Archer` (`Item_Hand_L`) |
-| **Militia** | Bộ binh giá rẻ, `Power Strike` phá giáp, tự `Bandage` | Type: -30<br/>Size: 0<br/>Muscle: +10 | Quần áo vải thô, giáp ngực đơn sơ, mũ nồi sắt | Nâu đất mộc, xám vải lanh, da thô | Phải: `Weapon_soldier` (`Item_Hand_R`) |
+| **Militia** | Bộ binh giá rẻ, `Power Strike` phá giáp, tự `Bandage` | Type: -30<br/>Size: 0<br/>Muscle: +10 | Quần áo vải thô, giáp ngực đơn sơ, mũ nồi sắt | Nâu đất mộc, xám vải lanh, da thô | Phải: `Weapon_Militia` (`Item_Hand_R`) |
 | **Herbalist** | Hồi máu (`Field Remedy`), giải debuff, khiên (`Purification`) | Type: +20<br/>Size: -20<br/>Muscle: -30 | Áo vải choàng nhẹ, túi da đeo hông chứa thảo dược | Xanh lá thảo mộc, nâu gỗ, trắng ngà | Phải: `Weapon_Herbalist` (`Item_Hand_R`) |
-| **Adjudicator** | Phán quan, debuff diện rộng, `Verdict Stroke` | Type: -10<br/>Size: +15<br/>Muscle: +15 | Áo choàng tư tế uy nghi, cổ áo đứng, vương miện | Đen huyền bí, viền vàng kim, đỏ ruby | Phải: `Weapon_Adjudicator` (`Item_Hand_R`) |
+| **Adjudicator** | Phán quan, debuff diện rộng, `Verdict Stroke` | Type: -10<br/>Size: +15<br/>Muscle: +15 | Áo choàng tư tế uy nghi, cổ áo đứng, vương miện | Đen huyền bí, viền vàng kim, đỏ ruby | Phải: `Weapon_Adjudicator` (`prop_r`, pos: `(-0.014, -0.15, -0.033)`, rot: `(180, 0, 0)`) |
 
 ---
 
 ## 3. Kịch Bản Tự Động Hóa UCP (`IUCPScript`)
 
-Để thực thi an toàn trên Main Thread của Unity Editor, tạo script `CharacterBuilder.cs` tại `Assets/Scripts/Editor/CharacterBuilder.cs`:
+Script tự động hóa được triển khai tại [`Assets/Scripts/Editor/CharacterBuilder.cs`](file:///e:/UnityProject/My%20Turnbased/turnbased_2025/Assets/Scripts/Editor/CharacterBuilder.cs), kế thừa `IUCPScript` (`UCP.Bridge`) để chạy trực tiếp trên Main Thread của Unity Editor thông qua UCP CLI.
 
-```csharp
-#if UNITY_EDITOR
-using System;
-using System.IO;
-using UCP.Bridge;
-using UnityEditor;
-using UnityEngine;
+### Bảng Tham Số Cấu Hình (`BuildParams`)
 
-public class CharacterBuilder : IUCPScript
-{
-    public string Name => "character-builder";
-    public string Description => "Automated Unit Prefab assembly, UnitData SO setup, and catalog rebuild.";
-
-    [Serializable]
-    public class BuildParams
-    {
-        public string action = "build"; // "build" hoặc "validate"
-        public string className;
-        public string modelPrefabPath;
-        public int health;
-        public int baseDamage;
-        public int spawnCost;
-        public int moveRange;
-        public string weaponRightPath;
-        public string weaponLeftPath;
-        public string[] skillPaths;
-        public string animatorControllerPath;
-    }
-
-    public object Execute(string paramsJson)
-    {
-        BuildParams p = JsonUtility.FromJson<BuildParams>(paramsJson);
-        if (p == null || string.IsNullOrEmpty(p.className))
-            throw new ArgumentException("Invalid parameters: className is required.");
-
-        if (p.action == "validate")
-        {
-            return ValidateUnit(p.className);
-        }
-
-        string unitPrefabPath = $"Assets/MyGame/Resource/Unit/{p.className}.prefab";
-        string templatePrefabPath = "Assets/MyGame/Resource/Unit/Knight.prefab";
-
-        if (!File.Exists(unitPrefabPath))
-        {
-            AssetDatabase.CopyAsset(templatePrefabPath, unitPrefabPath);
-            AssetDatabase.ImportAsset(unitPrefabPath);
-        }
-
-        GameObject root = PrefabUtility.LoadPrefabContents(unitPrefabPath);
-        try
-        {
-            Transform body = root.transform.Find("Body");
-            if (body == null) throw new InvalidOperationException("Prefab missing 'Body' child node.");
-            body.localScale = new Vector3(1.5f, 1.5f, 1.5f);
-
-            // 1. Gắn Model Prefab vào Body
-            if (!string.IsNullOrEmpty(p.modelPrefabPath))
-            {
-                for (int i = body.childCount - 1; i >= 0; i--)
-                {
-                    Transform child = body.GetChild(i);
-                    if (!child.name.Contains("Socket") && !child.name.Contains("EffectSpawnPoint"))
-                    {
-                        UnityEngine.Object.DestroyImmediate(child.gameObject);
-                    }
-                }
-
-                GameObject modelPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(p.modelPrefabPath);
-                if (modelPrefab != null)
-                {
-                    GameObject modelInst = (GameObject)PrefabUtility.InstantiatePrefab(modelPrefab, body);
-                    modelInst.transform.localPosition = Vector3.zero;
-                    modelInst.transform.localRotation = Quaternion.identity;
-                    modelInst.transform.localScale = Vector3.one;
-                }
-            }
-
-            // 2. Cấu hình Animator
-            Animator animator = body.GetComponent<Animator>();
-            if (animator != null && !string.IsNullOrEmpty(p.animatorControllerPath))
-            {
-                animator.runtimeAnimatorController = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(p.animatorControllerPath);
-                animator.applyRootMotion = false;
-            }
-
-            // 3. Gắn Socket Vũ khí
-            AttachWeapon(body, "Item_Hand_R", p.weaponRightPath);
-            AttachWeapon(body, "Item_Hand_L", p.weaponLeftPath);
-
-            // 4. Cấu hình UnitData ScriptableObject
-            string dataPath = $"Assets/Scripts/Data/{p.className} Data.asset";
-            UnitData data = AssetDatabase.LoadAssetAtPath<UnitData>(dataPath);
-            if (data == null)
-            {
-                data = ScriptableObject.CreateInstance<UnitData>();
-                AssetDatabase.CreateAsset(data, dataPath);
-            }
-
-            data.unitName = p.className;
-            data.Health = p.health;
-            data.BaseDamage = p.baseDamage;
-            data.spawnCost = p.spawnCost;
-            data.moveRange = p.moveRange;
-
-            if (p.skillPaths != null && p.skillPaths.Length > 0)
-            {
-                data.startingSkills = new SkillBase[p.skillPaths.Length];
-                for (int i = 0; i < p.skillPaths.Length; i++)
-                {
-                    data.startingSkills[i] = AssetDatabase.LoadAssetAtPath<SkillBase>(p.skillPaths[i]);
-                }
-            }
-            EditorUtility.SetDirty(data);
-
-            // 5. Gán UnitData vào UnitController
-            UnitController controller = root.GetComponent<UnitController>();
-            if (controller != null)
-            {
-                controller.unitData = data;
-                controller.RotationNode = body;
-            }
-
-            PrefabUtility.SaveAsPrefabAsset(root, unitPrefabPath);
-        }
-        finally
-        {
-            PrefabUtility.UnloadPrefabContents(root);
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-        }
-
-        // 6. Rebuild Catalog
-        EditorApplication.ExecuteMenuItem("Tools/Multiplayer/Rebuild Content Catalog");
-
-        return new { success = true, className = p.className, prefab = unitPrefabPath };
-    }
-
-    private void AttachWeapon(Transform parent, string socketName, string weaponPath)
-    {
-        if (string.IsNullOrEmpty(weaponPath)) return;
-        Transform socket = FindDeepChild(parent, socketName);
-        if (socket == null) return;
-
-        for (int i = socket.childCount - 1; i >= 0; i--)
-        {
-            UnityEngine.Object.DestroyImmediate(socket.GetChild(i).gameObject);
-        }
-
-        GameObject weaponPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(weaponPath);
-        if (weaponPrefab != null)
-        {
-            GameObject inst = (GameObject)PrefabUtility.InstantiatePrefab(weaponPrefab, socket);
-            inst.transform.localPosition = Vector3.zero;
-            inst.transform.localRotation = Quaternion.identity;
-            inst.transform.localScale = Vector3.one;
-        }
-    }
-
-    private Transform FindDeepChild(Transform parent, string name)
-    {
-        foreach (Transform child in parent)
-        {
-            if (child.name == name) return child;
-            Transform res = FindDeepChild(child, name);
-            if (res != null) return res;
-        }
-        return null;
-    }
-
-    private object ValidateUnit(string className)
-    {
-        string prefabPath = $"Assets/MyGame/Resource/Unit/{className}.prefab";
-        GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
-        if (prefab == null) return new { valid = false, error = "Prefab not found" };
-
-        UnitController controller = prefab.GetComponent<UnitController>();
-        if (controller == null) return new { valid = false, error = "Missing UnitController" };
-        if (controller.unitData == null) return new { valid = false, error = "Missing UnitData reference" };
-        if (controller.unitData.startingSkills == null || controller.unitData.startingSkills.Length != 3)
-            return new { valid = false, error = "Starting skills count must be exactly 3" };
-
-        return new { valid = true, className = className, prefab = prefabPath };
-    }
-}
-#endif
-```
+| Nhóm | Tham số | Kiểu dữ liệu | Mặc định | Mô tả |
+|---|---|---|---|---|
+| **Chung** | `action` | `string` | `"build"` | `"build"` (lắp ráp/tạo unit) hoặc `"validate"` (kiểm tra toàn vẹn) |
+| | `className` | `string` | *(Bắt buộc)* | Tên class (ví dụ: `Berserker`, `Adjudicator`, `Herbalist`) |
+| | `outputPrefabPath` | `string` | `Assets/MyGame/Resource/Unit/<className>.prefab` | Đường dẫn lưu Unit Prefab hoàn chỉnh |
+| | `baseUnitPrefabPath` | `string` | `Assets/MyGame/Resource/Unit/Knight.prefab` | Template prefab chuẩn chứa `Body`, `UnitController`, `UnitAnimator` |
+| **Synty Sidekick** | `generateSidekickModel` | `bool` | `false` | `true`: tự động query DB, combine mesh, bake texture và tạo Humanoid Avatar |
+| | `bodyTypeBlend` | `float` | `-10` | Hình thể (-100: vạm vỡ/nam tính, +100: mảnh mai/nữ tính) |
+| | `bodySizeBlend` | `float` | `15` | Độ to béo / gầy |
+| | `musclesBlend` | `float` | `15` | Độ cơ bắp |
+| | `partNames` | `string[]` | *Bộ Adjudicator* | Danh sách tên mesh part (`SidekickPart`) ghép vào nhân vật |
+| | `palette` | `ColorPaletteParams`| `null` | Nhóm màu: `skinColor`, `hairColor`, `eyeColor`, `primaryColor`, `secondaryColor`, `trimColor`, `metalColor`, `jewelColor` |
+| | `primaryColor`, ... | `string` | *(Mặc định)* | Các trường mã hex màu flat tương đương (thuận tiện khi truyền CLI) |
+| | `colorOverrides` | `ColorOverride[]` | `null` | Mảng ghi đè màu trực tiếp theo từ khóa tên thuộc tính |
+| | `modelPrefabPath` | `string` | `Assets/MyGame/Prefabs/Model/<className>_M/<className>.prefab` | Đường dẫn Model Prefab (sử dụng khi `generateSidekickModel = false`) |
+| **Vũ khí** | `weaponPrefabPath` | `string` | `""` | Đường dẫn prefab vũ khí gắn vào socket |
+| | `weaponBoneName` | `string` | `"prop_r"` | Tên bone gắn vũ khí (tự động fallback `prop_r` -> `hand_r` -> `ring_01_r`) |
+| | `weaponLocalPos` | `Vector3` | `(0.033, 0.016, 0.002)` | Vị trí offset local |
+| | `weaponLocalEuler` | `Vector3` | `(-2.5, -94, 88)` | Góc xoay offset local |
+| | `weaponLocalScale` | `Vector3` | `(1, 1, 1)` | Tỉ lệ phóng to/thu nhỏ |
+| **Gameplay Data** | `unitDataPath` | `string` | `""` | Đường dẫn ScriptableObject `UnitData` |
+| | `skillPaths` | `string[]` | `[]` | Danh sách asset `SkillBase` nạp vào `StartingSkills` của UnitData |
+| | `animatorControllerPath` | `string` | `""` | Đường dẫn `RuntimeAnimatorController` gắn vào Animator trên `Body` |
 
 ---
 
@@ -253,23 +91,59 @@ ucp compile --json
 
 ### Bước 2: Kiểm Tra Danh Sách UCP Scripts
 ```powershell
-# Xác nhận CharacterBuilder đã được phát hiện bởi UCP Bridge
+# Xác nhận character-builder đã được phát hiện bởi UCP Bridge
 ucp exec list
 ```
 
 ### Bước 3: Thực Thi Dựng Character Qua UCP Script
-Ví dụ tạo nhân vật **Herbalist**:
+
+#### Kịch bản A: Tự động sinh Model Sidekick + Lắp ráp Unit Prefab (Ví dụ: Berserker)
+```powershell
+ucp exec run character-builder --params '{
+  "action": "build",
+  "className": "Berserker",
+  "generateSidekickModel": true,
+  "bodyTypeBlend": -90,
+  "bodySizeBlend": 30,
+  "musclesBlend": 80,
+  "primaryColor": "8B0000",
+  "secondaryColor": "4A2E18",
+  "trimColor": "1F1F1F",
+  "metalColor": "4B4B4B",
+  "partNames": [
+    "SK_HUMN_BASE_02_01HEAD_HU01",
+    "SK_HUMN_BASE_03_03EBRL_HU01",
+    "SK_HUMN_BASE_03_04EBRR_HU01",
+    "SK_HUMN_BASE_01_05EYEL_HU01",
+    "SK_HUMN_BASE_01_06EYER_HU01",
+    "SK_HUMN_BASE_01_07EARL_HU01",
+    "SK_HUMN_BASE_01_08EARR_HU01",
+    "SK_HUMN_BASE_02_35NOSE_HU01",
+    "SK_HUMN_BASE_01_36TETH_HU01",
+    "SK_HUMN_BASE_01_37TONG_HU01",
+    "SK_FANT_WARR_01_10TORS_HU01",
+    "SK_FANT_WARR_01_17HIPS_HU01",
+    "SK_FANT_WARR_01_18LEGL_HU01",
+    "SK_FANT_WARR_01_19LEGR_HU01",
+    "SK_FANT_WARR_01_20FOTL_HU01",
+    "SK_FANT_WARR_01_21FOTR_HU01"
+  ],
+  "weaponPrefabPath": "Assets/MyGame/Resource/Weapon/Weapon_Smasher.prefab",
+  "unitDataPath": "Assets/Scripts/Data/Berserker Data.asset",
+  "animatorControllerPath": "Assets/MyGame/Animations/BerserkerController.controller"
+}' --json
+```
+
+#### Kịch bản B: Dùng Model Prefab có sẵn từ Sidekick Editor (Ví dụ: Herbalist)
 ```powershell
 ucp exec run character-builder --params '{
   "action": "build",
   "className": "Herbalist",
-  "modelPrefabPath": "Assets/MyGame/Prefabs/Model/Herbalist_M/Herbalist/Herbalist.prefab",
-  "health": 80,
-  "baseDamage": 12,
-  "spawnCost": 3,
-  "moveRange": 3,
-  "weaponRightPath": "Assets/MyGame/Resource/Unit/Weapons/Weapon_Herbalist.prefab",
-  "weaponLeftPath": "",
+  "generateSidekickModel": false,
+  "modelPrefabPath": "Assets/MyGame/Prefabs/Model/Herbalist_M/Herbalist.prefab",
+  "weaponPrefabPath": "Assets/MyGame/Resource/Unit/Weapons/Weapon_Herbalist.prefab",
+  "weaponBoneName": "prop_r",
+  "unitDataPath": "Assets/Scripts/Data/Herbalist Data.asset",
   "skillPaths": [
     "Assets/Scripts/Data/SkillData/Herbalist/FieldRemedy.asset",
     "Assets/Scripts/Data/SkillData/Herbalist/Purification.asset",
@@ -281,8 +155,8 @@ ucp exec run character-builder --params '{
 
 ### Bước 4: Kiểm Chứng Tự Động (Integrity Validation)
 ```powershell
-# Chạy validate logic prefab và data
-ucp exec run character-builder --params '{"action":"validate","className":"Herbalist"}' --json
+# Chạy validate cấu trúc Prefab, Body scale 1.5, Avatar, Controller, UnitData và StartingSkills
+ucp exec run character-builder --params "{\"action\":\"validate\",\"className\":\"Berserker\"}" --json
 
 # Kiểm tra log Console để đảm bảo không có cảnh báo/lỗi missing scripts
 ucp log tail --lines 20

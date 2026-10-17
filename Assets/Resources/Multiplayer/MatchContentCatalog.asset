@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 56a7464fb5a87c146b1c91793d9f6b44, type: 3}
   m_Name: MatchContentCatalog
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Multiplayer.MatchContentCatalog
-  ContentCatalogHash: b175cebff3ee7193a8729181244150c5e4b127f9cebb4ce72e6a31ebfb30de50
+  ContentCatalogHash: 1e494290f0ea93874800a4cc5d278f7214c43ea42625a12c66e59f78e74c2e81
   Entries:
   - Id: 05c17095b200410b9466fe345b145015
     Content: {fileID: 11400000, guid: 05c17095b200410b9466fe345b145015, type: 2}
@@ -43,7 +43,7 @@ MonoBehaviour:
     UnitPrefab: {fileID: 0}
   - Id: 414478662d1450141ad466afa71837d0
     Content: {fileID: 11400000, guid: 414478662d1450141ad466afa71837d0, type: 2}
-    UnitPrefab: {fileID: 6062364554213119048, guid: be98d2a002398dc4b9a93de0c95ec410, type: 3}
+    UnitPrefab: {fileID: 8591134147916149521, guid: be98d2a002398dc4b9a93de0c95ec410, type: 3}
   - Id: 41460af04a662ac4385e25ea070ccfe2
     Content: {fileID: 11400000, guid: 41460af04a662ac4385e25ea070ccfe2, type: 2}
     UnitPrefab: {fileID: 0}
@@ -92,6 +92,9 @@ MonoBehaviour:
   - Id: a4f17f060f59e8843807307f138992b7
     Content: {fileID: 11400000, guid: a4f17f060f59e8843807307f138992b7, type: 2}
     UnitPrefab: {fileID: 0}
+  - Id: a506ad674e17be4428efac3a99dbc227
+    Content: {fileID: 11400000, guid: a506ad674e17be4428efac3a99dbc227, type: 2}
+    UnitPrefab: {fileID: 6272048982195779728, guid: e32ceb8ee6280bd49b96ea7a2442ed90, type: 3}
   - Id: a5e2871c338541841aedca1a4fae0271
     Content: {fileID: 11400000, guid: a5e2871c338541841aedca1a4fae0271, type: 2}
     UnitPrefab: {fileID: 0}
@@ -109,13 +112,10 @@ MonoBehaviour:
     UnitPrefab: {fileID: 0}
   - Id: b6f0ae7d63909c0448595e31cc7d8a7d
     Content: {fileID: 11400000, guid: b6f0ae7d63909c0448595e31cc7d8a7d, type: 2}
-    UnitPrefab: {fileID: 678356117257400548, guid: e9362e580f20daf4d987433e540de6a0, type: 3}
+    UnitPrefab: {fileID: 2308730758283776138, guid: cdd9b3085a90c7d499a792828106d980, type: 3}
   - Id: b71a40d448013d7489959c52ea13912c
     Content: {fileID: 11400000, guid: b71a40d448013d7489959c52ea13912c, type: 2}
     UnitPrefab: {fileID: 0}
-  - Id: c23b5fc0f13ad354aa337310e48e1178
-    Content: {fileID: 11400000, guid: c23b5fc0f13ad354aa337310e48e1178, type: 2}
-    UnitPrefab: {fileID: 2308730758283776138, guid: cdd9b3085a90c7d499a792828106d980, type: 3}
   - Id: c41396a31e788de498a740ae6480eb3a
     Content: {fileID: 11400000, guid: c41396a31e788de498a740ae6480eb3a, type: 2}
     UnitPrefab: {fileID: 0}

@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86ab2ddd49f3b30409500291ade8d6b0, type: 3}
+  m_Name: Herbalist Data
+  m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Unit.UnitData
+  unitName: Herbalist
+  description: "H\u1ED7 tr\u1EE3 gi\xE1 th\u1EA5p, h\u1ED3i ph\u1EE5c v\xE0 gi\u1EA3i
+    debuff cho m\u1ED9t m\u1EE5c ti\xEAu quan tr\u1ECDng."
+  Health: 55
+  BaseDamage: 8
+  spawnCost: 2
+  moveRange: 5
+  icon: {fileID: 0}
+  startingSkills:
+  - {fileID: 11400000, guid: f2d0396e530d7fc40984f2dc4333541f, type: 2}
+  - {fileID: 11400000, guid: 09c4aa02d8a4dd945bbbfa7ef185e7c7, type: 2}
+  - {fileID: 11400000, guid: 706c7b4dbd31c704aa3c257ef1c5b215, type: 2}
