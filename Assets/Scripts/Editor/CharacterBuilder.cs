@@ -100,6 +100,9 @@ public class CharacterBuilder : IUCPScript
         if (p.action == "set-weapon-transform")
             return SetWeaponTransform(p);
 
+        if (p.action == "setup-animation-events")
+            return SetupAnimationEvents(p);
+
         return BuildUnitPrefab(p);
     }
 
@@ -849,10 +852,10 @@ public class CharacterBuilder : IUCPScript
 
             foreach (var clip in clips)
             {
-                if (!clip.name.Contains("Idle") && !clip.name.Contains("Attack3") && !clip.name.Contains("Cast") && !clip.name.Contains("Run"))
+                if (!clip.name.Contains("Idle") && !clip.name.Contains("Attack") && !clip.name.Contains("Hammer") && !clip.name.Contains("Cast") && !clip.name.Contains("Run"))
                     continue;
 
-                float sampleTime = clip.name.Contains("Attack") ? clip.length * 0.4f : (clip.length > 0 ? clip.length * 0.2f : 0f);
+                float sampleTime = (clip.name.Contains("Attack") || clip.name.Contains("Hammer")) ? clip.length * 0.4f : (clip.length > 0 ? clip.length * 0.2f : 0f);
                 AnimationMode.SampleAnimationClip(body.gameObject, clip, sampleTime);
 
                 Vector3 palmGrip = propR != null ? propR.position : handR.position;
@@ -909,9 +912,15 @@ public class CharacterBuilder : IUCPScript
                     logs.Add($"FullBody shot captured. Focus: {fullBodyFocus}, Cam: {fullBodyCamPos}, Body pos: {body.position}");
                 }
 
+                var eventList = clip.events != null
+                    ? clip.events.Select(e => $"{e.functionName}@{e.time:F3}s({(clip.length > 0 ? (e.time / clip.length * 100f).ToString("F1") + "%" : "0%")})").ToArray()
+                    : new string[0];
+
                 clipReports.Add(new
                 {
                     clip = clip.name,
+                    length = clip.length,
+                    events = eventList,
                     sampleTime = sampleTime,
                     palmInProp = palmInProp.ToString("F4"),
                     radialDistanceToStaff = radialDist,
@@ -1061,6 +1070,147 @@ public class CharacterBuilder : IUCPScript
             if (found != null) return found;
         }
         return null;
+    }
+
+    private object SetupAnimationEvents(BuildParams p)
+    {
+        string path = string.IsNullOrEmpty(p.outputPrefabPath)
+            ? $"Assets/MyGame/Resource/Unit/{p.className}.prefab"
+            : p.outputPrefabPath;
+
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+        if (prefab == null)
+            return new { success = false, error = $"Prefab not found: {path}" };
+
+        Transform body = prefab.transform.Find("Body");
+        var anim = body != null ? body.GetComponent<Animator>() : null;
+        if (anim == null || anim.runtimeAnimatorController == null)
+            return new { success = false, error = "Animator or Controller missing on Body" };
+
+        var logs = new List<string>();
+        var updatedClips = new List<object>();
+
+        // 1. Configure Animation Events on each clip in AnimatorController
+        foreach (var clip in anim.runtimeAnimatorController.animationClips)
+        {
+            string clipAssetPath = AssetDatabase.GetAssetPath(clip);
+            if (string.IsNullOrEmpty(clipAssetPath) || !clipAssetPath.EndsWith(".fbx", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            ModelImporter importer = AssetImporter.GetAtPath(clipAssetPath) as ModelImporter;
+            if (importer == null) continue;
+
+            ModelImporterClipAnimation[] clipAnimations = importer.clipAnimations;
+            if (clipAnimations == null || clipAnimations.Length == 0)
+                clipAnimations = importer.defaultClipAnimations;
+
+            bool modified = false;
+            foreach (var ca in clipAnimations)
+            {
+                if (ca.name != clip.name) continue;
+
+                var eventsList = new List<AnimationEvent>();
+
+                if (ca.name.Contains("Attack") || ca.name.Contains("Hammer"))
+                {
+                    // Detect impact normalized time from previous events or default
+                    float impactTime = 0.5f;
+                    if (ca.events != null)
+                    {
+                        foreach (var ev in ca.events)
+                        {
+                            if (ev.functionName == "Hit" || ev.functionName == "AnimEvent_Impact" || ev.functionName == "AnimEvent_SkillCue")
+                            {
+                                impactTime = ev.time;
+                                break;
+                            }
+                        }
+                    }
+
+                    // Add AnimEvent_Impact
+                    eventsList.Add(new AnimationEvent
+                    {
+                        time = impactTime,
+                        functionName = "AnimEvent_Impact"
+                    });
+
+                    // Add AnimEvent_AttackComplete near end (0.95f)
+                    eventsList.Add(new AnimationEvent
+                    {
+                        time = 0.95f,
+                        functionName = "AnimEvent_AttackComplete"
+                    });
+
+                    ca.events = eventsList.ToArray();
+                    modified = true;
+                    logs.Add($"Updated '{ca.name}' in '{clipAssetPath}': Impact at {impactTime:F3}, Complete at 0.950");
+                }
+                else if (ca.name.Contains("Run"))
+                {
+                    // Remove FootR and FootL to avoid 'has no receiver' warning on UnitAnimator
+                    if (ca.events != null && ca.events.Length > 0)
+                    {
+                        ca.events = new AnimationEvent[0];
+                        modified = true;
+                        logs.Add($"Cleared footstep events from '{ca.name}' in '{clipAssetPath}'");
+                    }
+                }
+            }
+
+            if (modified)
+            {
+                importer.clipAnimations = clipAnimations;
+                importer.SaveAndReimport();
+                updatedClips.Add(new { clip = clip.name, assetPath = clipAssetPath });
+            }
+        }
+
+        // 2. Link UnitAnimator._effectSpawnPoint if null
+        GameObject root = PrefabUtility.LoadPrefabContents(path);
+        try
+        {
+            var unitAnim = root.GetComponentInChildren<UnitAnimator>(true);
+            if (unitAnim != null)
+            {
+                var soAnim = new SerializedObject(unitAnim);
+                var prop = soAnim.FindProperty("_effectSpawnPoint");
+                if (prop != null && prop.objectReferenceValue == null)
+                {
+                    Transform weaponTransform = null;
+                    foreach (var mf in root.GetComponentsInChildren<MeshFilter>(true))
+                    {
+                        if (mf.name.StartsWith("Weapon_") || mf.name.Contains("Staff") || mf.name.Contains("Axe") || mf.name.Contains("Hammer") || mf.name.Contains(p.className))
+                        {
+                            weaponTransform = mf.transform;
+                            break;
+                        }
+                    }
+
+                    if (weaponTransform != null)
+                    {
+                        prop.objectReferenceValue = weaponTransform;
+                        soAnim.ApplyModifiedPropertiesWithoutUndo();
+                        logs.Add($"Linked UnitAnimator._effectSpawnPoint to {weaponTransform.name}");
+                        PrefabUtility.SaveAsPrefabAsset(root, path);
+                    }
+                }
+            }
+        }
+        finally
+        {
+            PrefabUtility.UnloadPrefabContents(root);
+        }
+
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+
+        return new
+        {
+            success = true,
+            className = p.className,
+            updatedClips,
+            logs
+        };
     }
 }
 #endif
