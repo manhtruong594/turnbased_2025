@@ -33,7 +33,7 @@ namespace TurnBasedGame.SpellCard
             obj.transform.position = worldPosition;
         }
 
-        public BuffEffect GetBuffEffect(StatusEffectType type)
+        public Entry GetBuffEffect(StatusEffectType type)
         {
             if (type == StatusEffectType.None) return null;
             var src = _entries.Find(e => e.type == type);
@@ -42,7 +42,7 @@ namespace TurnBasedGame.SpellCard
                 Debug.LogWarning($"[EffectManager] No entry found for effect type {type}");
                 return null;
             }
-            return src.vfxPrefab;
+            return src;
         }
          
         private void RegisterPools()
@@ -68,6 +68,7 @@ namespace TurnBasedGame.SpellCard
         {
             public StatusEffectType type;
             public BuffEffect vfxPrefab;
+            public Vector3 SpawnOffet;
         }
     }
 }

@@ -244,7 +244,7 @@ namespace TurnBasedGame.SpellCard
             {
                 activeVFX.Add(vfx);
                 vfx.effectType = effect.Type;
-                vfx.transform.localPosition = Vector3.zero;
+                vfx.transform.localPosition = Vector3.zero + vfxSrc.SpawnOffet;
             }
         }
 

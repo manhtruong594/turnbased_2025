@@ -135,9 +135,7 @@ namespace TurnBasedGame.UI
             stats = new Label();
             stats.style.whiteSpace = WhiteSpace.Normal;
             panel.Add(stats);
-            var skillGuide = new Label("SKILLS — chọn rồi bấm tile. Scene test bỏ qua action, MP, cooldown; vùng tô chỉ tham khảo đường đi.");
-            skillGuide.style.whiteSpace = WhiteSpace.Normal;
-            panel.Add(skillGuide);
+            
             skills = new VisualElement();
             panel.Add(skills);
             foreach (var item in caster.AttackComponent.ActiveSkills)
@@ -146,13 +144,16 @@ namespace TurnBasedGame.UI
                 AddButton(skills, $"{skill.SkillName} | MP {skill.MPCost} | Range {skill.Range} | {DescribeTargets(skill)}", () => SelectSkill(skill));
             }
             panel.Add(new Label("ANIMATION — không áp dụng effect"));
-            AddButton(panel, "Idle", () => Preview(AnimationHashLib.Idle));
-            AddButton(panel, "Move (tại chỗ)", () => { Preview(AnimationHashLib.Idle); if (animator != null) animator.StartMoving(); });
-            AddButton(panel, "Hit", () => Preview(AnimationHashLib.Hit));
-            AddButton(panel, "Death", () => Preview(AnimationHashLib.Death));
+            AddAnimationRow(panel, "Idle", () => Preview(AnimationHashLib.Idle), AnimationHashLib.Idle, false);
+            AddAnimationRow(panel, "Move (tại chỗ)", () => { Preview(AnimationHashLib.Idle); if (animator != null) animator.StartMoving(); }, AnimationHashLib.Idle, true);
+            AddAnimationRow(panel, "Hit", () => Preview(AnimationHashLib.Hit), AnimationHashLib.Hit, false);
+            AddAnimationRow(panel, "Death", () => Preview(AnimationHashLib.Death), AnimationHashLib.Death, false);
             foreach (var item in caster.AttackComponent.ActiveSkills)
                 if (item is SkillBase skill && skill.Type != SkillType.Passive)
-                    AddButton(panel, "Animation: " + skill.SkillName, () => Preview(AnimationHashLib.GetHashAnimByAttackType(skill.Type)));
+                {
+                    int hash = AnimationHashLib.GetHashAnimByAttackType(skill.Type);
+                    AddAnimationRow(panel, "Animation: " + skill.SkillName, () => Preview(hash), hash, false);
+                }
             // panel.schedule.Execute(UpdateStats).Every(500);
             UpdateStats();
         }
@@ -165,6 +166,25 @@ namespace TurnBasedGame.UI
             parent.Add(button);
         }
 
+        private void AddAnimationRow(VisualElement parent, string text, System.Action previewAction, int stateHash, bool isMove)
+        {
+            var row = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Stretch } };
+            var previewButton = new Button(previewAction) { text = text };
+            previewButton.style.flexGrow = 1;
+            previewButton.style.flexShrink = 1;
+            previewButton.style.minHeight = 28;
+            previewButton.style.whiteSpace = WhiteSpace.Normal;
+
+            var pingButton = new Button(() => PingAnimation(text, stateHash, isMove)) { text = "Ping" };
+            pingButton.style.minHeight = 28;
+            pingButton.style.minWidth = 48;
+            pingButton.style.flexShrink = 0;
+
+            row.Add(previewButton);
+            row.Add(pingButton);
+            parent.Add(row);
+        }
+
         private void UpdateStats()
         {
             if (stats == null || MPManager.Instance == null) return;
@@ -173,7 +193,6 @@ namespace TurnBasedGame.UI
             if (caster != null)
             {
                 statsBuilder.Append(" | HP: ").Append(caster.GetCurrentHealth()).Append('/').Append(caster.GetMaxHealth());
-                statsBuilder.Append("\nHành động: ").Append(caster.CanAct() ? "sẵn sàng" : "đã dùng / bị khóa — scene test vẫn cho dùng skill");
                 if (caster.BuffHandler != null && caster.BuffHandler.HasEffect(StatusEffectType.Slow))
                     statsBuilder.Append(" | Debuff: Slow");
                 foreach (var skill in caster.AttackComponent.ActiveSkills)
@@ -263,6 +282,157 @@ namespace TurnBasedGame.UI
             CancelSelection();
             if (animator != null) animator.PreviewAnimation(hash);
         }
+
+        private void PingAnimation(string label, int stateHash, bool isMove)
+        {
+#if UNITY_EDITOR
+            var clip = ResolveAnimationClip(stateHash, isMove);
+            if (clip == null)
+            {
+                status.text = "Không tìm thấy animation asset cho " + label + ".";
+                return;
+            }
+
+            string assetPath = UnityEditor.AssetDatabase.GetAssetPath(clip);
+            UnityEditor.EditorUtility.FocusProjectWindow();
+            UnityEditor.Selection.activeObject = clip;
+            UnityEditor.EditorGUIUtility.PingObject(clip);
+            status.text = string.IsNullOrEmpty(assetPath)
+                ? "Đã ping animation: " + clip.name
+                : "Đã ping animation: " + clip.name + " (" + assetPath + ")";
+#else
+            status.text = "Chức năng ping chỉ dùng trong Unity Editor.";
+#endif
+        }
+
+#if UNITY_EDITOR
+        private AnimationClip ResolveAnimationClip(int stateHash, bool isMove)
+        {
+            var unityAnimator = animator != null ? animator.Animator : null;
+            var runtimeController = unityAnimator != null ? unityAnimator.runtimeAnimatorController : null;
+            if (runtimeController == null) return null;
+
+            var overrideController = runtimeController as AnimatorOverrideController;
+            var baseController = (overrideController != null
+                ? overrideController.runtimeAnimatorController
+                : runtimeController) as UnityEditor.Animations.AnimatorController;
+            if (baseController == null) return null;
+
+            var state = isMove
+                ? FindMoveState(baseController)
+                : FindState(baseController, stateHash);
+            if (state == null) return null;
+
+            var clip = ExtractClip(state.motion);
+            if (clip != null && overrideController != null)
+            {
+                var overridden = overrideController[clip];
+                if (overridden != null) clip = overridden;
+            }
+            return clip;
+        }
+
+        private static UnityEditor.Animations.AnimatorState FindState(UnityEditor.Animations.AnimatorController controller, int stateHash)
+        {
+            foreach (var layer in controller.layers)
+            {
+                var match = FindStateByHash(layer.stateMachine, stateHash);
+                if (match != null) return match;
+            }
+
+            if (stateHash == AnimationHashLib.Idle && controller.layers.Length > 0 && controller.layers[0].stateMachine.defaultState != null)
+                return controller.layers[0].stateMachine.defaultState;
+
+            string fallbackKeyword = stateHash == AnimationHashLib.Idle ? "Idle"
+                : stateHash == AnimationHashLib.Hit ? "Hit"
+                : stateHash == AnimationHashLib.Death ? "Death"
+                : null;
+            if (fallbackKeyword != null)
+            {
+                foreach (var layer in controller.layers)
+                {
+                    var match = FindStateByKeyword(layer.stateMachine, fallbackKeyword);
+                    if (match != null) return match;
+                }
+            }
+
+            return null;
+        }
+
+        private static UnityEditor.Animations.AnimatorState FindMoveState(UnityEditor.Animations.AnimatorController controller)
+        {
+            var idleState = FindState(controller, AnimationHashLib.Idle);
+            if (idleState != null && idleState.transitions != null)
+            {
+                foreach (var transition in idleState.transitions)
+                {
+                    if (transition.destinationState == null || transition.conditions == null) continue;
+                    foreach (var cond in transition.conditions)
+                    {
+                        if (Animator.StringToHash(cond.parameter) == AnimationHashLib.IsMoving)
+                            return transition.destinationState;
+                    }
+                }
+            }
+
+            string[] keywords = { "Run", "Walk", "Move" };
+            foreach (var keyword in keywords)
+            {
+                foreach (var layer in controller.layers)
+                {
+                    var match = FindStateByKeyword(layer.stateMachine, keyword);
+                    if (match != null) return match;
+                }
+            }
+            return null;
+        }
+
+        private static UnityEditor.Animations.AnimatorState FindStateByHash(UnityEditor.Animations.AnimatorStateMachine stateMachine, int stateHash)
+        {
+            if (stateMachine == null) return null;
+            foreach (var child in stateMachine.states)
+            {
+                if (child.state != null && Animator.StringToHash(child.state.name) == stateHash)
+                    return child.state;
+            }
+            foreach (var sub in stateMachine.stateMachines)
+            {
+                var found = FindStateByHash(sub.stateMachine, stateHash);
+                if (found != null) return found;
+            }
+            return null;
+        }
+
+        private static UnityEditor.Animations.AnimatorState FindStateByKeyword(UnityEditor.Animations.AnimatorStateMachine stateMachine, string keyword)
+        {
+            if (stateMachine == null) return null;
+            foreach (var child in stateMachine.states)
+            {
+                if (child.state != null && child.state.name.IndexOf(keyword, System.StringComparison.OrdinalIgnoreCase) >= 0)
+                    return child.state;
+            }
+            foreach (var sub in stateMachine.stateMachines)
+            {
+                var found = FindStateByKeyword(sub.stateMachine, keyword);
+                if (found != null) return found;
+            }
+            return null;
+        }
+
+        private static AnimationClip ExtractClip(Motion motion)
+        {
+            if (motion is AnimationClip clip) return clip;
+            if (motion is UnityEditor.Animations.BlendTree blendTree)
+            {
+                foreach (var child in blendTree.children)
+                {
+                    var childClip = ExtractClip(child.motion);
+                    if (childClip != null) return childClip;
+                }
+            }
+            return null;
+        }
+#endif
 
         private void Update()
         {

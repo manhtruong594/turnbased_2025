@@ -757,7 +757,7 @@ ModelImporter:
       bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
       curves: []
       events:
-      - time: 0.43409422
+      - time: 0.44725695
         functionName: AnimEvent_SkillCue
         data: Impact
         objectReferenceParameter: {instanceID: 0}

@@ -2963,8 +2963,10 @@ MonoBehaviour:
   _entries:
   - type: 2
     vfxPrefab: {fileID: 7899832412643707467, guid: 89426c5491b896146a59a2bba4727bc0, type: 3}
+    SpawnOffet: {x: 0, y: 0, z: 0}
   - type: 105
     vfxPrefab: {fileID: 6241863644373235347, guid: aea3827d5538da042b7e06b01ce60f37, type: 3}
+    SpawnOffet: {x: 0, y: 2.5, z: 0}
 --- !u!1 &1776684899
 GameObject:
   m_ObjectHideFlags: 0
