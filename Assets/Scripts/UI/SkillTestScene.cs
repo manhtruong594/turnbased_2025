@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
@@ -20,13 +21,31 @@ namespace TurnBasedGame.UI
     public sealed class SkillTestScene : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/SkillTest.unity";
+        private const string StyleSheetResourcePath = "UI/SkillTest";
+
+        private enum TestTab
+        {
+            Combat = 0,
+            Animation = 1,
+            Sandbox = 2
+        }
+
+        private enum StatusType
+        {
+            Info,
+            Success,
+            Warning,
+            Error
+        }
 
         private static int characterIndex;
         private static int targetIndex;
+        private static bool ignoreSkillLimits = true;
 
         private readonly List<MatchContentCatalog.Entry> characters = new();
         private readonly List<SkillBase> ownedSkills = new();
-        private readonly Dictionary<SkillBase, VisualElement> skillItemMap = new();
+        private readonly List<string> eventLogs = new();
+        private readonly StringBuilder statsBuilder = new(128);
 
         private UnitController caster;
         private UnitAnimator animator;
@@ -35,39 +54,54 @@ namespace TurnBasedGame.UI
         private bool placingTarget;
         private bool reloading;
         private bool isCollapsed;
+        private TestTab currentTab = TestTab.Combat;
 
+        // UI Toolkit Elements
         private VisualElement panel;
-        private ScrollView scrollContainer;
-        private VisualElement footerContainer;
-        private Label status;
-        private Label stats;
-        private VisualElement skillsContainer;
+        private VisualElement headerContainer;
+        private VisualElement bodyContainer;
+        private Label titleLabel;
         private Button collapseBtn;
+        private Label statusLabel;
+        private VisualElement statusBanner;
+        private Button tabCombatBtn;
+        private Button tabAnimBtn;
+        private Button tabSandboxBtn;
+        private ScrollView contentScroll;
+        private ProgressBar hpBar;
+        private ProgressBar mpBar;
+        private Label debuffBadge;
+        private Label footerCoordLabel;
+        private VisualElement eventLogContainer;
 
-        private readonly StringBuilder statsBuilder = new(256);
+        private string validationMessage;
+        private int lastRecordedHp = -1;
+        private int lastRecordedMp = -1;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetSelection()
         {
             characterIndex = 0;
             targetIndex = 0;
+            ignoreSkillLimits = true;
         }
 
         private void Awake()
         {
             BattleLaunchContext.Clear();
             MatchContext.ConfigureLocalPvP();
-            // The manager survives scene reloads, while its pooled objects do not.
             TurnBasedGame.ObjectPool.ObjectPoolManager.Instance?.ClearAllPools();
         }
 
         private IEnumerator Start()
         {
             BuildPanel();
+            SetStatus("Đang tải danh mục nhân vật...", StatusType.Info);
+
             var catalog = UnityEngine.Resources.Load<MatchContentCatalog>(MatchContentCatalog.ResourceName);
             if (catalog == null)
             {
-                SetStatus("Thiếu MatchContentCatalog.");
+                SetStatus("Thiếu MatchContentCatalog trong Resources.", StatusType.Error);
                 yield break;
             }
 
@@ -79,35 +113,641 @@ namespace TurnBasedGame.UI
 
             if (characters.Count == 0)
             {
-                SetStatus("Catalog chưa có character prefab.");
+                SetStatus("MatchContentCatalog chưa có character prefab hợp lệ.", StatusType.Error);
                 yield break;
             }
 
             float deadline = Time.realtimeSinceStartup + 10f;
             while (GameMediator.Instance == null || !GameMediator.Instance.IsInitialized ||
-                   TurnManager.Instance == null || TurnManager.Instance.CurrentState == TurnState.Initialization)
+                   TurnManager.Instance.CurrentState == TurnState.Initialization)
             {
                 if (Time.realtimeSinceStartup > deadline)
                 {
-                    SetStatus("Khởi tạo thất bại: Timeout sau 10s (GameMediator/TurnManager chưa sẵn sàng). Kiểm tra Unity Console.");
+                    SetStatus("Khởi tạo trận đấu thất bại. Kiểm tra Unity Console.", StatusType.Error);
                     yield break;
                 }
                 yield return null;
             }
 
-            // Keep the real turn state, but stop automatic timeout in this isolated test scene.
             TurnManager.Instance.enabled = false;
             AreaPathManager.Instance.enabled = false;
             worldCamera = Camera.main;
+
             characterIndex = Mathf.Clamp(characterIndex, 0, characters.Count - 1);
             targetIndex = Mathf.Clamp(targetIndex, 0, characters.Count - 1);
 
-            caster = Spawn(characterIndex, PlayerID.Player1, new Vector3Int(-1, 0, 0));
-            caster.IgnoreSkillUseLimitsForTest = true;
-            animator = caster.GetComponentInChildren<UnitAnimator>();
+            SpawnCaster(characterIndex);
 
-            BuildControls();
-            SetStatus("Chọn loại target, bấm [Đặt target] rồi click ô trống trên sàn.");
+            // Xây dựng nội dung Tab ban đầu
+            RefreshCurrentTab();
+            SetStatus("Sẵn sàng. Chọn kỹ năng hoặc đặt target lên bàn cờ.", StatusType.Info);
+
+            // Bắt đầu nhịp polling cập nhật HP/MP và trạng thái mượt mà
+            panel.schedule.Execute(UpdateStats).Every(200);
+        }
+
+        #region UI Construction & Styling
+
+        private void BuildPanel()
+        {
+            var uiDoc = GetComponent<UIDocument>();
+            var root = uiDoc.rootVisualElement;
+            root.Clear();
+            root.pickingMode = PickingMode.Ignore;
+
+            // Nạp StyleSheet UI Toolkit
+            var styleSheet = UnityEngine.Resources.Load<StyleSheet>(StyleSheetResourcePath);
+            if (styleSheet != null)
+            {
+                root.styleSheets.Add(styleSheet);
+            }
+
+            panel = new VisualElement { name = "skill-test-root" };
+            panel.AddToClassList("st-root");
+            root.Add(panel);
+
+            // ── Header Bar ──
+            headerContainer = new VisualElement();
+            headerContainer.AddToClassList("st-header");
+
+            titleLabel = new Label("SKILL TEST BENCH");
+            titleLabel.AddToClassList("st-title");
+            headerContainer.Add(titleLabel);
+
+            var headerActions = new VisualElement();
+            headerActions.AddToClassList("st-header-actions");
+
+            var healFullBtn = new Button(QuickFullHealAndMP) { text = "Heal" };
+            healFullBtn.AddToClassList("st-mini-btn");
+            healFullBtn.tooltip = "Hồi đầy HP và MP cho Caster";
+            headerActions.Add(healFullBtn);
+
+            var resetCdBtn = new Button(QuickResetCooldowns) { text = "CD" };
+            resetCdBtn.AddToClassList("st-mini-btn");
+            resetCdBtn.tooltip = "Xóa toàn bộ Cooldown skill của Caster";
+            headerActions.Add(resetCdBtn);
+
+            var reloadBtn = new Button(Reload) { text = "Reload" };
+            reloadBtn.AddToClassList("st-mini-btn");
+            reloadBtn.AddToClassList("st-mini-btn--danger");
+            reloadBtn.tooltip = "Tải lại toàn bộ scene";
+            headerActions.Add(reloadBtn);
+
+            collapseBtn = new Button(ToggleCollapse) { text = "—" };
+            collapseBtn.AddToClassList("st-mini-btn");
+            collapseBtn.tooltip = "Thu gọn / Mở rộng panel";
+            headerActions.Add(collapseBtn);
+
+            headerContainer.Add(headerActions);
+            panel.Add(headerContainer);
+
+            // ── Body Container (ẩn khi collapse) ──
+            bodyContainer = new VisualElement { style = { flexGrow = 1, flexDirection = FlexDirection.Column } };
+            panel.Add(bodyContainer);
+
+            // ── Status Banner ──
+            statusBanner = new VisualElement();
+            statusBanner.AddToClassList("st-status-banner");
+            statusBanner.AddToClassList("st-status--info");
+
+            statusLabel = new Label("Đang khởi tạo...");
+            statusLabel.style.whiteSpace = WhiteSpace.Normal;
+            statusBanner.Add(statusLabel);
+            bodyContainer.Add(statusBanner);
+
+            // ── Caster Quick Status (HP & MP Bars) ──
+            var statusSection = new VisualElement();
+            statusSection.AddToClassList("st-section");
+
+            var hpRow = new VisualElement();
+            hpRow.AddToClassList("st-bar-container");
+            var hpLabelRow = new VisualElement();
+            hpLabelRow.AddToClassList("st-bar-label-row");
+            hpLabelRow.Add(new Label("HP"));
+            debuffBadge = new Label("SLOW") { style = { display = DisplayStyle.None, color = new Color(1f, 0.6f, 0.2f), unityFontStyleAndWeight = FontStyle.Bold } };
+            hpLabelRow.Add(debuffBadge);
+            hpRow.Add(hpLabelRow);
+
+            hpBar = new ProgressBar();
+            hpBar.AddToClassList("st-progress-bar");
+            hpBar.AddToClassList("st-hp-bar");
+            hpRow.Add(hpBar);
+            statusSection.Add(hpRow);
+
+            var mpRow = new VisualElement();
+            mpRow.AddToClassList("st-bar-container");
+            var mpLabelRow = new VisualElement();
+            mpLabelRow.AddToClassList("st-bar-label-row");
+            mpLabelRow.Add(new Label("MP"));
+            mpRow.Add(mpLabelRow);
+
+            mpBar = new ProgressBar();
+            mpBar.AddToClassList("st-progress-bar");
+            mpBar.AddToClassList("st-mp-bar");
+            mpRow.Add(mpBar);
+            statusSection.Add(mpRow);
+
+            bodyContainer.Add(statusSection);
+
+            // ── Tab Bar ──
+            var tabBar = new VisualElement();
+            tabBar.AddToClassList("st-tab-bar");
+
+            tabCombatBtn = new Button(() => SwitchTab(TestTab.Combat)) { text = "⚔ Combat" };
+            tabCombatBtn.AddToClassList("st-tab-btn");
+            tabBar.Add(tabCombatBtn);
+
+            tabAnimBtn = new Button(() => SwitchTab(TestTab.Animation)) { text = "🎬 Animation" };
+            tabAnimBtn.AddToClassList("st-tab-btn");
+            tabBar.Add(tabAnimBtn);
+
+            tabSandboxBtn = new Button(() => SwitchTab(TestTab.Sandbox)) { text = "🛠 Sandbox" };
+            tabSandboxBtn.AddToClassList("st-tab-btn");
+            tabBar.Add(tabSandboxBtn);
+
+            bodyContainer.Add(tabBar);
+
+            // ── Content ScrollView ──
+            contentScroll = new ScrollView { name = "st-content-scroll" };
+            contentScroll.AddToClassList("st-scroll");
+            bodyContainer.Add(contentScroll);
+
+            // ── Footer ──
+            var footer = new VisualElement();
+            footer.AddToClassList("st-footer");
+            footerCoordLabel = new Label("Tile: —");
+            footer.Add(footerCoordLabel);
+            footer.Add(new Label("Esc: Hủy chọn"));
+            bodyContainer.Add(footer);
+        }
+
+        private void ToggleCollapse()
+        {
+            isCollapsed = !isCollapsed;
+            if (isCollapsed)
+            {
+                panel.AddToClassList("st-root--collapsed");
+                bodyContainer.style.display = DisplayStyle.None;
+                collapseBtn.text = "+";
+            }
+            else
+            {
+                panel.RemoveFromClassList("st-root--collapsed");
+                bodyContainer.style.display = DisplayStyle.Flex;
+                collapseBtn.text = "—";
+            }
+        }
+
+        private void SwitchTab(TestTab tab)
+        {
+            currentTab = tab;
+            tabCombatBtn.RemoveFromClassList("st-tab-btn--active");
+            tabAnimBtn.RemoveFromClassList("st-tab-btn--active");
+            tabSandboxBtn.RemoveFromClassList("st-tab-btn--active");
+
+            switch (tab)
+            {
+                case TestTab.Combat:
+                    tabCombatBtn.AddToClassList("st-tab-btn--active");
+                    break;
+                case TestTab.Animation:
+                    tabAnimBtn.AddToClassList("st-tab-btn--active");
+                    break;
+                case TestTab.Sandbox:
+                    tabSandboxBtn.AddToClassList("st-tab-btn--active");
+                    break;
+            }
+
+            RefreshCurrentTab();
+        }
+
+        private void RefreshCurrentTab()
+        {
+            if (contentScroll == null) return;
+            contentScroll.Clear();
+
+            switch (currentTab)
+            {
+                case TestTab.Combat:
+                    BuildCombatTab(contentScroll);
+                    break;
+                case TestTab.Animation:
+                    BuildAnimationTab(contentScroll);
+                    break;
+                case TestTab.Sandbox:
+                    BuildSandboxTab(contentScroll);
+                    break;
+            }
+        }
+
+        private void SetStatus(string message, StatusType type = StatusType.Info)
+        {
+            if (statusLabel == null || statusBanner == null) return;
+
+            statusBanner.RemoveFromClassList("st-status--info");
+            statusBanner.RemoveFromClassList("st-status--success");
+            statusBanner.RemoveFromClassList("st-status--warning");
+            statusBanner.RemoveFromClassList("st-status--error");
+
+            switch (type)
+            {
+                case StatusType.Info:
+                    statusBanner.AddToClassList("st-status--info");
+                    break;
+                case StatusType.Success:
+                    statusBanner.AddToClassList("st-status--success");
+                    break;
+                case StatusType.Warning:
+                    statusBanner.AddToClassList("st-status--warning");
+                    break;
+                case StatusType.Error:
+                    statusBanner.AddToClassList("st-status--error");
+                    break;
+            }
+
+            statusLabel.text = message;
+        }
+
+        #endregion
+
+        #region Tab 1: Combat & Skills
+
+        private void BuildCombatTab(VisualElement container)
+        {
+            var names = new List<string>(characters.Count);
+            foreach (var entry in characters)
+                names.Add(entry.UnitPrefab.UnitData.unitName + " [" + entry.UnitPrefab.name + "]");
+
+            // ── Caster & Target Dropdowns ──
+            var setupSection = new VisualElement();
+            setupSection.AddToClassList("st-section");
+
+            var characterField = new DropdownField("Caster (P1)", names, characterIndex);
+            characterField.AddToClassList("st-field");
+            characterField.RegisterValueChangedCallback(_ => SwitchCaster(characterField.index));
+            setupSection.Add(characterField);
+
+            var targetField = new DropdownField("Target (P2)", names, targetIndex);
+            targetField.AddToClassList("st-field");
+            targetField.RegisterValueChangedCallback(_ => targetIndex = targetField.index);
+            setupSection.Add(targetField);
+
+            // ── Target Action Buttons ──
+            var targetBtnRow = new VisualElement();
+            targetBtnRow.AddToClassList("st-btn-row");
+
+            var placeTargetBtn = new Button(BeginPlacement) { text = "Đặt Target (Tile)" };
+            placeTargetBtn.AddToClassList("st-btn");
+            targetBtnRow.Add(placeTargetBtn);
+
+            var spawnAdjBtn = new Button(SpawnTargetAdjacent) { text = "Spawn Cạnh Caster" };
+            spawnAdjBtn.AddToClassList("st-btn");
+            spawnAdjBtn.tooltip = "Spawn 1 target Player 2 ngay ô trống liền kề Caster";
+            targetBtnRow.Add(spawnAdjBtn);
+
+            setupSection.Add(targetBtnRow);
+
+            var clearTargetsBtn = new Button(ClearAllTargets) { text = "Xóa Tất Cả Targets (P2)" };
+            clearTargetsBtn.AddToClassList("st-btn");
+            setupSection.Add(clearTargetsBtn);
+
+            container.Add(setupSection);
+
+            // ── Active Skills List ──
+            var skillsSection = new VisualElement();
+            skillsSection.AddToClassList("st-section");
+
+            var skillsHeader = new Label("ACTIVE SKILLS");
+            skillsHeader.AddToClassList("st-section-title");
+            skillsSection.Add(skillsHeader);
+
+            if (caster != null && caster.AttackComponent != null)
+            {
+                bool hasSkill = false;
+                foreach (var item in caster.AttackComponent.ActiveSkills)
+                {
+                    if (item is not SkillBase skill || skill.Type == SkillType.Passive) continue;
+                    hasSkill = true;
+                    skillsSection.Add(CreateSkillCard(skill));
+                }
+
+                if (!hasSkill)
+                {
+                    skillsSection.Add(new Label("Nhân vật không có active skill nào.") { style = { opacity = 0.6f } });
+                }
+            }
+            else
+            {
+                skillsSection.Add(new Label("Chưa có Caster trên bàn cờ.") { style = { opacity = 0.6f } });
+            }
+
+            container.Add(skillsSection);
+        }
+
+        private VisualElement CreateSkillCard(SkillBase skill)
+        {
+            var card = new Button(() => SelectSkill(skill));
+            card.AddToClassList("st-skill-card");
+
+            if (selectedSkill == skill)
+            {
+                card.AddToClassList("st-skill-card--selected");
+            }
+
+            if (skill.CurrentCooldown > 0)
+            {
+                card.AddToClassList("st-skill-card--cooldown");
+            }
+
+            var cardHeader = new VisualElement();
+            cardHeader.AddToClassList("st-skill-header");
+
+            var nameLabel = new Label(skill.SkillName);
+            nameLabel.AddToClassList("st-skill-name");
+            cardHeader.Add(nameLabel);
+            card.Add(cardHeader);
+
+            var badgeRow = new VisualElement();
+            badgeRow.AddToClassList("st-badge-row");
+
+            var mpBadge = new Label($"MP {skill.MPCost}");
+            mpBadge.AddToClassList("st-badge");
+            mpBadge.AddToClassList("st-badge--mp");
+            badgeRow.Add(mpBadge);
+
+            var rangeBadge = new Label($"Range {skill.Range}");
+            rangeBadge.AddToClassList("st-badge");
+            rangeBadge.AddToClassList("st-badge--range");
+            badgeRow.Add(rangeBadge);
+
+            var targetBadge = new Label(DescribeTargets(skill));
+            targetBadge.AddToClassList("st-badge");
+            targetBadge.AddToClassList("st-badge--target");
+            badgeRow.Add(targetBadge);
+
+            if (skill.CurrentCooldown > 0)
+            {
+                var cdBadge = new Label($"CD {skill.CurrentCooldown}");
+                cdBadge.AddToClassList("st-badge");
+                cdBadge.AddToClassList("st-badge--cd");
+                badgeRow.Add(cdBadge);
+            }
+
+            card.Add(badgeRow);
+
+            string condition = DescribeCondition(skill);
+            if (!string.IsNullOrEmpty(condition))
+            {
+                var hintLabel = new Label(condition.Trim());
+                hintLabel.AddToClassList("st-skill-hint");
+                card.Add(hintLabel);
+            }
+
+            return card;
+        }
+
+        #endregion
+
+        #region Tab 2: Animation & Events
+
+        private void BuildAnimationTab(VisualElement container)
+        {
+            var animSection = new VisualElement();
+            animSection.AddToClassList("st-section");
+
+            var animTitle = new Label("ANIMATION PREVIEW");
+            animTitle.AddToClassList("st-section-title");
+            animSection.Add(animTitle);
+
+            AddAnimationRow(animSection, "Idle", () => Preview(AnimationHashLib.Idle), AnimationHashLib.Idle, false);
+            AddAnimationRow(animSection, "Move (tại chỗ)", () =>
+            {
+                Preview(AnimationHashLib.Idle);
+                if (animator != null) animator.StartMoving();
+            }, AnimationHashLib.Idle, true);
+            AddAnimationRow(animSection, "Hit", () => Preview(AnimationHashLib.Hit), AnimationHashLib.Hit, false);
+            AddAnimationRow(animSection, "Death", () => Preview(AnimationHashLib.Death), AnimationHashLib.Death, false);
+
+            if (caster != null && caster.AttackComponent != null)
+            {
+                foreach (var item in caster.AttackComponent.ActiveSkills)
+                {
+                    if (item is SkillBase skill && skill.Type != SkillType.Passive)
+                    {
+                        int hash = AnimationHashLib.GetHashAnimByAttackType(skill.Type);
+                        AddAnimationRow(animSection, skill.SkillName, () => Preview(hash), hash, false);
+                    }
+                }
+            }
+
+            container.Add(animSection);
+
+            // ── Animation Event Monitor ──
+            var monitorSection = new VisualElement();
+            monitorSection.AddToClassList("st-section");
+
+            var monitorHeader = new VisualElement { style = { flexDirection = FlexDirection.Row, justifyContent = Justify.SpaceBetween, alignItems = Align.Center } };
+            var monitorTitle = new Label("ANIMATION CUE MONITOR");
+            monitorTitle.AddToClassList("st-section-title");
+            monitorHeader.Add(monitorTitle);
+
+            var clearLogBtn = new Button(ClearEventLogs) { text = "Clear" };
+            clearLogBtn.AddToClassList("st-mini-btn");
+            monitorHeader.Add(clearLogBtn);
+            monitorSection.Add(monitorHeader);
+
+            eventLogContainer = new ScrollView();
+            eventLogContainer.AddToClassList("st-event-box");
+            RefreshEventLogView();
+            monitorSection.Add(eventLogContainer);
+
+            container.Add(monitorSection);
+        }
+
+        private void AddAnimationRow(VisualElement parent, string text, Action previewAction, int stateHash, bool isMove)
+        {
+            var row = new VisualElement();
+            row.AddToClassList("st-anim-row");
+
+            var previewBtn = new Button(previewAction) { text = text };
+            previewBtn.AddToClassList("st-btn");
+            previewBtn.AddToClassList("st-anim-preview-btn");
+            row.Add(previewBtn);
+
+            var pingBtn = new Button(() => PingAnimation(text, stateHash, isMove)) { text = "Ping" };
+            pingBtn.AddToClassList("st-btn");
+            pingBtn.AddToClassList("st-anim-ping-btn");
+            pingBtn.tooltip = "Highlight file clip animation trong Project Window";
+            row.Add(pingBtn);
+
+            parent.Add(row);
+        }
+
+        private void OnAnimationEventRaised(string cueName)
+        {
+            string time = DateTime.Now.ToString("HH:mm:ss.fff");
+            eventLogs.Insert(0, $"[{time}] {cueName}");
+            if (eventLogs.Count > 30) eventLogs.RemoveAt(eventLogs.Count - 1);
+            RefreshEventLogView();
+        }
+
+        private void ClearEventLogs()
+        {
+            eventLogs.Clear();
+            RefreshEventLogView();
+        }
+
+        private void RefreshEventLogView()
+        {
+            if (eventLogContainer == null) return;
+            eventLogContainer.Clear();
+
+            if (eventLogs.Count == 0)
+            {
+                eventLogContainer.Add(new Label("Chưa có cue nào được phát sinh...") { style = { opacity = 0.5f, fontSize = 10 } });
+                return;
+            }
+
+            foreach (var log in eventLogs)
+            {
+                var label = new Label(log);
+                label.AddToClassList("st-event-item");
+                eventLogContainer.Add(label);
+            }
+        }
+
+        #endregion
+
+        #region Tab 3: Sandbox & Cheats
+
+        private void BuildSandboxTab(VisualElement container)
+        {
+            // ── Caster Tweaks ──
+            var casterSection = new VisualElement();
+            casterSection.AddToClassList("st-section");
+            var casterTitle = new Label("CASTER MODIFIERS");
+            casterTitle.AddToClassList("st-section-title");
+            casterSection.Add(casterTitle);
+
+            var woundBtn = new Button(PrepareWoundedCaster) { text = "Làm Caster Mất 50% HP (thử Heal)" };
+            woundBtn.AddToClassList("st-btn");
+            casterSection.Add(woundBtn);
+
+            var slowBtn = new Button(PrepareDebuffedCaster) { text = "Gắn Slow Lên Caster (thử Cleanse)" };
+            slowBtn.AddToClassList("st-btn");
+            casterSection.Add(slowBtn);
+
+            var clearBuffsBtn = new Button(ClearCasterBuffs) { text = "Xóa Sạch Buff/Debuff Caster" };
+            clearBuffsBtn.AddToClassList("st-btn");
+            casterSection.Add(clearBuffsBtn);
+
+            var healMpBtn = new Button(QuickFullHealAndMP) { text = "Hồi Đầy HP & MP" };
+            healMpBtn.AddToClassList("st-btn");
+            healMpBtn.AddToClassList("st-btn--primary");
+            casterSection.Add(healMpBtn);
+
+            var resetCdBtn = new Button(QuickResetCooldowns) { text = "Reset Cooldown Toàn Bộ Skill" };
+            resetCdBtn.AddToClassList("st-btn");
+            casterSection.Add(resetCdBtn);
+
+            container.Add(casterSection);
+
+            // ── Target Tweaks ──
+            var targetSection = new VisualElement();
+            targetSection.AddToClassList("st-section");
+            var targetTitle = new Label("TARGET (P2) MODIFIERS");
+            targetTitle.AddToClassList("st-section-title");
+            targetSection.Add(targetTitle);
+
+            var targetBtnRow = new VisualElement();
+            targetBtnRow.AddToClassList("st-btn-row");
+
+            var dmg20Btn = new Button(() => DamageAllTargets(20)) { text = "Gây 20 DMG" };
+            dmg20Btn.AddToClassList("st-btn");
+            targetBtnRow.Add(dmg20Btn);
+
+            var dmg50Btn = new Button(() => DamageAllTargets(50)) { text = "Gây 50 DMG" };
+            dmg50Btn.AddToClassList("st-btn");
+            targetBtnRow.Add(dmg50Btn);
+
+            targetSection.Add(targetBtnRow);
+
+            var killTargetBtn = new Button(KillAllTargets) { text = "Tiêu Diệt Tất Cả Target (Kill)" };
+            killTargetBtn.AddToClassList("st-btn");
+            killTargetBtn.AddToClassList("st-btn--danger");
+            targetSection.Add(killTargetBtn);
+
+            container.Add(targetSection);
+
+            // ── Sandbox Options ──
+            var optionsSection = new VisualElement();
+            optionsSection.AddToClassList("st-section");
+            var optionsTitle = new Label("SANDBOX TOGGLES");
+            optionsTitle.AddToClassList("st-section-title");
+            optionsSection.Add(optionsTitle);
+
+            var ignoreLimitsToggle = new Toggle("Bỏ qua Cooldown/MP khi test") { value = ignoreSkillLimits };
+            ignoreLimitsToggle.RegisterValueChangedCallback(evt =>
+            {
+                ignoreSkillLimits = evt.newValue;
+                if (caster != null) caster.IgnoreSkillUseLimitsForTest = ignoreSkillLimits;
+                SetStatus(ignoreSkillLimits ? "Đã bật chế độ test tự do (bỏ qua Cooldown/MP)." : "Đã bật kiểm tra Cooldown/MP nghiêm ngặt.", StatusType.Info);
+            });
+            optionsSection.Add(ignoreLimitsToggle);
+
+            container.Add(optionsSection);
+        }
+
+        #endregion
+
+        #region Caster & Target Management (Hot-Swap)
+
+        private void SpawnCaster(int index)
+        {
+            caster = Spawn(index, PlayerID.Player1, new Vector3Int(-1, 0, 0));
+            caster.IgnoreSkillUseLimitsForTest = ignoreSkillLimits;
+            animator = caster.GetComponentInChildren<UnitAnimator>();
+            if (animator != null)
+            {
+                animator.AnimationEventRaised += OnAnimationEventRaised;
+            }
+        }
+
+        private void SwitchCaster(int newIndex)
+        {
+            if (newIndex == characterIndex && caster != null) return;
+
+            characterIndex = Mathf.Clamp(newIndex, 0, characters.Count - 1);
+            DespawnCaster();
+            SpawnCaster(characterIndex);
+
+            RefreshCurrentTab();
+            SetStatus("Đã đổi Caster sang: " + characters[characterIndex].UnitPrefab.UnitData.unitName, StatusType.Success);
+            UpdateStats();
+        }
+
+        private void DespawnCaster()
+        {
+            CancelSelection();
+            if (animator != null)
+            {
+                animator.AnimationEventRaised -= OnAnimationEventRaised;
+                animator = null;
+            }
+
+            if (caster != null)
+            {
+                MapManager.Instance?.UnregisterUnit(caster.currentGridPosition);
+                UnitSpawner.Instance?.GetPlayerUnits(PlayerID.Player1)?.Remove(caster);
+                Destroy(caster.gameObject);
+                caster = null;
+            }
+
+            foreach (var skill in ownedSkills)
+            {
+                if (skill != null) Destroy(skill);
+            }
+            ownedSkills.Clear();
         }
 
         private UnitController Spawn(int index, PlayerID owner, Vector3Int tile)
@@ -120,8 +760,7 @@ namespace TurnBasedGame.UI
 
             foreach (var skill in unit.AttackComponent.ActiveSkills)
             {
-                if (skill is SkillBase clone)
-                    ownedSkills.Add(clone);
+                if (skill is SkillBase clone) ownedSkills.Add(clone);
             }
 
             UnitSpawner.Instance.GetPlayerUnits(owner).Add(unit);
@@ -129,577 +768,275 @@ namespace TurnBasedGame.UI
             return unit;
         }
 
-        #region UI Construction
-        private void BuildPanel()
+        private void SpawnTargetAdjacent()
         {
-            var root = GetComponent<UIDocument>().rootVisualElement;
-            root.Clear();
-            root.pickingMode = PickingMode.Ignore;
-
-            // Outer Shell
-            panel = new VisualElement { name = "skill-test-panel" };
-            panel.style.position = Position.Absolute;
-            panel.style.left = 12;
-            panel.style.top = 12;
-            panel.style.bottom = 12;
-            panel.style.width = 330;
-            panel.style.backgroundColor = new Color(0.09f, 0.11f, 0.15f, 0.96f);
-            panel.style.borderTopWidth = panel.style.borderBottomWidth = panel.style.borderLeftWidth = panel.style.borderRightWidth = 1;
-            panel.style.borderTopColor = panel.style.borderBottomColor = panel.style.borderLeftColor = panel.style.borderRightColor = new Color(1f, 1f, 1f, 0.12f);
-            panel.style.borderTopLeftRadius = panel.style.borderTopRightRadius = panel.style.borderBottomLeftRadius = panel.style.borderBottomRightRadius = 8;
-            panel.style.flexDirection = FlexDirection.Column;
-            panel.style.overflow = Overflow.Hidden;
-            root.Add(panel);
-
-            // 1. Header Toolbar
-            var header = new VisualElement { name = "header-toolbar" };
-            header.style.flexDirection = FlexDirection.Row;
-            header.style.justifyContent = Justify.SpaceBetween;
-            header.style.alignItems = Align.Center;
-            header.style.paddingLeft = header.style.paddingRight = 10;
-            header.style.paddingTop = header.style.paddingBottom = 8;
-            header.style.borderBottomWidth = 1;
-            header.style.borderBottomColor = new Color(1f, 1f, 1f, 0.08f);
-
-            var titleLabel = new Label("SKILL & ACTOR TEST")
+            if (caster == null || caster.IsDead())
             {
-                style =
-                {
-                    unityFontStyleAndWeight = FontStyle.Bold,
-                    fontSize = 12,
-                    color = Color.white
-                }
-            };
-            header.Add(titleLabel);
-
-            var headerActions = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center } };
-
-            var resetBtn = CreateStyledButton("↺ Reset", Reload, new Color(0.55f, 0.15f, 0.15f, 0.85f), Color.white);
-            resetBtn.style.fontSize = 10;
-            resetBtn.style.minHeight = 22;
-            resetBtn.style.marginBottom = 0;
-            resetBtn.style.marginRight = 6;
-            resetBtn.style.paddingLeft = resetBtn.style.paddingRight = 6;
-            headerActions.Add(resetBtn);
-
-            collapseBtn = CreateStyledButton("—", ToggleCollapse, new Color(1f, 1f, 1f, 0.1f), Color.white);
-            collapseBtn.style.fontSize = 12;
-            collapseBtn.style.unityFontStyleAndWeight = FontStyle.Bold;
-            collapseBtn.style.minHeight = 22;
-            collapseBtn.style.minWidth = 24;
-            collapseBtn.style.marginBottom = 0;
-            collapseBtn.style.paddingLeft = collapseBtn.style.paddingRight = 4;
-            headerActions.Add(collapseBtn);
-
-            header.Add(headerActions);
-            panel.Add(header);
-
-            // 2. Scrollable Body
-            scrollContainer = new ScrollView { name = "body-scroll" };
-            scrollContainer.style.flexGrow = 1;
-            scrollContainer.style.flexShrink = 1;
-            scrollContainer.style.paddingLeft = scrollContainer.style.paddingRight = 10;
-            scrollContainer.style.paddingTop = scrollContainer.style.paddingBottom = 8;
-            panel.Add(scrollContainer);
-
-            // 3. Sticky Footer Status Bar
-            footerContainer = new VisualElement { name = "footer-status" };
-            footerContainer.style.backgroundColor = new Color(0.06f, 0.08f, 0.1f, 0.98f);
-            footerContainer.style.borderTopWidth = 1;
-            footerContainer.style.borderTopColor = new Color(1f, 1f, 1f, 0.08f);
-            footerContainer.style.paddingLeft = footerContainer.style.paddingRight = 10;
-            footerContainer.style.paddingTop = footerContainer.style.paddingBottom = 8;
-            footerContainer.style.minHeight = 34;
-            footerContainer.style.justifyContent = Justify.Center;
-
-            status = new Label("Đang khởi tạo...")
-            {
-                style =
-                {
-                    fontSize = 11,
-                    whiteSpace = WhiteSpace.Normal,
-                    color = new Color(0.85f, 0.88f, 0.92f, 1f)
-                }
-            };
-            footerContainer.Add(status);
-            panel.Add(footerContainer);
-        }
-
-        private void ToggleCollapse()
-        {
-            isCollapsed = !isCollapsed;
-            scrollContainer.style.display = isCollapsed ? DisplayStyle.None : DisplayStyle.Flex;
-            footerContainer.style.display = isCollapsed ? DisplayStyle.None : DisplayStyle.Flex;
-            collapseBtn.text = isCollapsed ? "+" : "—";
-            panel.style.bottom = isCollapsed ? StyleKeyword.Auto : 12;
-        }
-
-        private string GetCharacterDisplayName(int index)
-        {
-            if (characters.Count == 0 || index < 0 || index >= characters.Count) return "Trống";
-            var entry = characters[index];
-            var dataName = entry.UnitPrefab != null && entry.UnitPrefab.UnitData != null
-                ? entry.UnitPrefab.UnitData.unitName
-                : "Unit";
-            var prefabName = entry.UnitPrefab != null ? entry.UnitPrefab.name : entry.Id;
-            return $"{dataName} [{prefabName}]";
-        }
-
-        private VisualElement CreateActorSelector(string roleLabel, int currentIndex, System.Action<int> onDeltaChanged, out System.Action<string> updateLabelAction)
-        {
-            var container = new VisualElement { style = { marginBottom = 6 } };
-
-            var label = new Label(roleLabel)
-            {
-                style =
-                {
-                    fontSize = 11,
-                    unityFontStyleAndWeight = FontStyle.Bold,
-                    color = new Color(0.75f, 0.8f, 0.88f, 1f),
-                    marginBottom = 2
-                }
-            };
-            container.Add(label);
-
-            var row = new VisualElement
-            {
-                style =
-                {
-                    flexDirection = FlexDirection.Row,
-                    alignItems = Align.Center
-                }
-            };
-
-            var nameLabel = new Label(GetCharacterDisplayName(currentIndex))
-            {
-                style =
-                {
-                    flexGrow = 1,
-                    flexShrink = 1,
-                    fontSize = 11,
-                    color = Color.white,
-                    backgroundColor = new Color(1f, 1f, 1f, 0.05f),
-                    borderTopWidth = 1, borderBottomWidth = 1, borderLeftWidth = 1, borderRightWidth = 1,
-                    borderTopColor = new Color(1f, 1f, 1f, 0.12f), borderBottomColor = new Color(1f, 1f, 1f, 0.12f),
-                    borderLeftColor = new Color(1f, 1f, 1f, 0.12f), borderRightColor = new Color(1f, 1f, 1f, 0.12f),
-                    borderTopLeftRadius = 4, borderTopRightRadius = 4, borderBottomLeftRadius = 4, borderBottomRightRadius = 4,
-                    paddingLeft = 6, paddingRight = 6, paddingTop = 4, paddingBottom = 4,
-                    unityTextAlign = TextAnchor.MiddleCenter,
-                    whiteSpace = WhiteSpace.NoWrap,
-                    overflow = Overflow.Hidden
-                }
-            };
-
-            var prevBtn = CreateStyledButton("◀", () => onDeltaChanged(-1), new Color(1f, 1f, 1f, 0.08f), Color.white);
-            prevBtn.style.minWidth = 26;
-            prevBtn.style.minHeight = 24;
-            prevBtn.style.marginBottom = 0;
-            prevBtn.style.marginRight = 4;
-            prevBtn.style.paddingLeft = prevBtn.style.paddingRight = 0;
-
-            var nextBtn = CreateStyledButton("▶", () => onDeltaChanged(1), new Color(1f, 1f, 1f, 0.08f), Color.white);
-            nextBtn.style.minWidth = 26;
-            nextBtn.style.minHeight = 24;
-            nextBtn.style.marginBottom = 0;
-            nextBtn.style.marginLeft = 4;
-            nextBtn.style.paddingLeft = nextBtn.style.paddingRight = 0;
-
-            row.Add(prevBtn);
-            row.Add(nameLabel);
-            row.Add(nextBtn);
-            container.Add(row);
-
-            updateLabelAction = text => nameLabel.text = text;
-            return container;
-        }
-
-        private void BuildControls()
-        {
-            // Card 1: Actor Setup
-            var setupCard = CreateCard("ACTOR SETUP");
-
-            var casterSelector = CreateActorSelector("Caster (P1)", characterIndex, delta =>
-            {
-                if (characters.Count == 0) return;
-                characterIndex = (characterIndex + delta + characters.Count) % characters.Count;
-                Reload();
-            }, out _);
-            setupCard.Add(casterSelector);
-
-            System.Action<string> updateTargetLabel = null;
-            var targetSelector = CreateActorSelector("Target (P2)", targetIndex, delta =>
-            {
-                if (characters.Count == 0) return;
-                targetIndex = (targetIndex + delta + characters.Count) % characters.Count;
-                updateTargetLabel?.Invoke(GetCharacterDisplayName(targetIndex));
-            }, out updateTargetLabel);
-            targetSelector.style.marginBottom = 8;
-            setupCard.Add(targetSelector);
-
-            var actionRow = new VisualElement { style = { flexDirection = FlexDirection.Row, justifyContent = Justify.SpaceBetween } };
-            var placeTargetBtn = CreateStyledButton("Đặt target", BeginPlacement, new Color(0.16f, 0.38f, 0.65f, 1f), Color.white);
-            placeTargetBtn.style.flexGrow = 1;
-            placeTargetBtn.style.marginRight = 4;
-            actionRow.Add(placeTargetBtn);
-
-            var woundBtn = CreateStyledButton("-50% HP", PrepareWoundedCaster, new Color(1f, 1f, 1f, 0.08f), Color.white);
-            woundBtn.style.flexGrow = 1;
-            woundBtn.style.marginRight = 4;
-            actionRow.Add(woundBtn);
-
-            var slowBtn = CreateStyledButton("+Slow", PrepareDebuffedCaster, new Color(1f, 1f, 1f, 0.08f), Color.white);
-            slowBtn.style.flexGrow = 1;
-            actionRow.Add(slowBtn);
-
-            setupCard.Add(actionRow);
-            scrollContainer.Add(setupCard);
-
-            // Card 2: Live Monitor
-            var monitorCard = CreateCard("LIVE MONITOR (STATS)");
-            stats = new Label
-            {
-                style =
-                {
-                    fontSize = 11,
-                    whiteSpace = WhiteSpace.Normal,
-                    color = new Color(0.8f, 0.85f, 0.9f, 1f)
-                }
-            };
-            monitorCard.Add(stats);
-            scrollContainer.Add(monitorCard);
-
-            // Card 3: Active Skills
-            var skillsCard = CreateCard("ACTIVE SKILLS");
-            skillsContainer = new VisualElement();
-            skillsCard.Add(skillsContainer);
-
-            skillItemMap.Clear();
-            foreach (var item in caster.AttackComponent.ActiveSkills)
-            {
-                if (item is not SkillBase skill || skill.Type == SkillType.Passive) continue;
-                var skillItem = CreateSkillItem(skill);
-                skillItemMap[skill] = skillItem;
-                skillsContainer.Add(skillItem);
+                SetStatus("Caster không tồn tại hoặc đã chết.", StatusType.Warning);
+                return;
             }
-            scrollContainer.Add(skillsCard);
 
-            // Card 4: Animation Inspection
-            var animCard = CreateCard("ANIMATION INSPECTION");
-            var animFoldout = new Foldout { text = "Danh sách động tác", value = false };
-            animFoldout.style.unityFontStyleAndWeight = FontStyle.Bold;
-            animFoldout.style.fontSize = 11;
-            animFoldout.style.color = new Color(0.75f, 0.8f, 0.88f, 1f);
+            var center = caster.currentGridPosition;
+            var directions = MapManager.Instance?.MapEntity?.NeighboursDirection;
+            Vector3Int? freeTile = null;
 
-            AddAnimationRow(animFoldout, "Idle", () => Preview(AnimationHashLib.Idle), AnimationHashLib.Idle, false);
-            AddAnimationRow(animFoldout, "Move (tại chỗ)", () => { Preview(AnimationHashLib.Idle); if (animator != null) animator.StartMoving(); }, AnimationHashLib.Idle, true);
-            AddAnimationRow(animFoldout, "Hit", () => Preview(AnimationHashLib.Hit), AnimationHashLib.Hit, false);
-            AddAnimationRow(animFoldout, "Death", () => Preview(AnimationHashLib.Death), AnimationHashLib.Death, false);
-
-            foreach (var item in caster.AttackComponent.ActiveSkills)
+            if (directions != null)
             {
-                if (item is SkillBase skill && skill.Type != SkillType.Passive)
+                foreach (var dir in directions)
                 {
-                    int hash = AnimationHashLib.GetHashAnimByAttackType(skill.Type);
-                    AddAnimationRow(animFoldout, "Skill: " + skill.SkillName, () => Preview(hash), hash, false);
+                    var neighborPos = center + dir;
+                    if (MapManager.Instance.IsTileAvailable(neighborPos))
+                    {
+                        freeTile = neighborPos;
+                        break;
+                    }
                 }
             }
-            animCard.Add(animFoldout);
-            scrollContainer.Add(animCard);
 
-            // Auto-refresh stats smoothly
-            panel.schedule.Execute(UpdateStats).Every(250);
+            if (!freeTile.HasValue && MapManager.Instance != null && MapManager.Instance.MapEntity != null)
+            {
+                var areaTiles = MapManager.Instance.MapEntity.Area(center, 1f);
+                foreach (var pos in areaTiles)
+                {
+                    if (pos != center && MapManager.Instance.IsTileAvailable(pos))
+                    {
+                        freeTile = pos;
+                        break;
+                    }
+                }
+            }
+
+            if (freeTile.HasValue)
+            {
+                Spawn(targetIndex, PlayerID.Player2, freeTile.Value);
+                SetStatus("Đã spawn target Player 2 tại " + freeTile.Value, StatusType.Success);
+                UpdateStats();
+            }
+            else
+            {
+                SetStatus("Không tìm thấy ô trống liền kề Caster để đặt target.", StatusType.Warning);
+            }
+        }
+
+        private void ClearAllTargets()
+        {
+            CancelSelection();
+            var p2Units = UnitSpawner.Instance?.GetPlayerUnits(PlayerID.Player2);
+            if (p2Units != null)
+            {
+                var list = new List<UnitController>(p2Units);
+                foreach (var unit in list)
+                {
+                    if (unit == null) continue;
+                    MapManager.Instance?.UnregisterUnit(unit.currentGridPosition);
+                    p2Units.Remove(unit);
+                    Destroy(unit.gameObject);
+                }
+            }
+
+            SetStatus("Đã xóa tất cả target Player 2 trên bàn cờ.", StatusType.Info);
             UpdateStats();
         }
 
-        private VisualElement CreateSkillItem(SkillBase skill)
+        private void DamageAllTargets(int amount)
         {
-            var itemBtn = new Button(() => SelectSkill(skill));
-            itemBtn.style.paddingLeft = itemBtn.style.paddingRight = 8;
-            itemBtn.style.paddingTop = itemBtn.style.paddingBottom = 6;
-            itemBtn.style.marginBottom = 6;
-            itemBtn.style.backgroundColor = new Color(1f, 1f, 1f, 0.05f);
-            itemBtn.style.borderTopLeftRadius = itemBtn.style.borderTopRightRadius =
-                itemBtn.style.borderBottomLeftRadius = itemBtn.style.borderBottomRightRadius = 4;
-            itemBtn.style.borderTopWidth = itemBtn.style.borderBottomWidth = itemBtn.style.borderLeftWidth = itemBtn.style.borderRightWidth = 1;
-            itemBtn.style.borderTopColor = itemBtn.style.borderBottomColor = itemBtn.style.borderLeftColor = itemBtn.style.borderRightColor = new Color(1f, 1f, 1f, 0.12f);
-            itemBtn.style.flexDirection = FlexDirection.Column;
-            itemBtn.style.alignItems = Align.Stretch;
-
-            // Row 1: Skill Name + MP/Range Badges
-            var topRow = new VisualElement { style = { flexDirection = FlexDirection.Row, justifyContent = Justify.SpaceBetween, alignItems = Align.Center } };
-            var nameLabel = new Label(skill.SkillName)
+            var p2Units = UnitSpawner.Instance?.GetPlayerUnits(PlayerID.Player2);
+            if (p2Units == null || p2Units.Count == 0)
             {
-                style = { unityFontStyleAndWeight = FontStyle.Bold, fontSize = 12, color = Color.white }
-            };
-            topRow.Add(nameLabel);
-
-            var badgeRow = new VisualElement { style = { flexDirection = FlexDirection.Row } };
-            var mpBadge = new Label($"MP {skill.MPCost}")
-            {
-                style =
-                {
-                    fontSize = 10,
-                    color = new Color(0.4f, 0.8f, 1f),
-                    backgroundColor = new Color(0.1f, 0.3f, 0.5f, 0.5f),
-                    paddingLeft = 4, paddingRight = 4, paddingTop = 1, paddingBottom = 1,
-                    marginRight = 4,
-                    borderTopLeftRadius = 3, borderTopRightRadius = 3, borderBottomLeftRadius = 3, borderBottomRightRadius = 3
-                }
-            };
-            var rangeBadge = new Label($"R {skill.Range}")
-            {
-                style =
-                {
-                    fontSize = 10,
-                    color = new Color(0.9f, 0.8f, 0.4f),
-                    backgroundColor = new Color(0.4f, 0.35f, 0.1f, 0.5f),
-                    paddingLeft = 4, paddingRight = 4, paddingTop = 1, paddingBottom = 1,
-                    borderTopLeftRadius = 3, borderTopRightRadius = 3, borderBottomLeftRadius = 3, borderBottomRightRadius = 3
-                }
-            };
-            badgeRow.Add(mpBadge);
-            badgeRow.Add(rangeBadge);
-            topRow.Add(badgeRow);
-            itemBtn.Add(topRow);
-
-            // Row 2: Target description & Condition
-            string desc = DescribeTargets(skill) + DescribeCondition(skill);
-            var subLabel = new Label(desc)
-            {
-                style =
-                {
-                    fontSize = 10,
-                    color = new Color(0.7f, 0.72f, 0.75f, 0.9f),
-                    marginTop = 3,
-                    whiteSpace = WhiteSpace.Normal
-                }
-            };
-            itemBtn.Add(subLabel);
-
-            return itemBtn;
-        }
-
-        private static VisualElement CreateCard(string title = null)
-        {
-            var card = new VisualElement();
-            card.style.backgroundColor = new Color(1f, 1f, 1f, 0.04f);
-            card.style.borderTopWidth = card.style.borderBottomWidth = card.style.borderLeftWidth = card.style.borderRightWidth = 1;
-            card.style.borderTopColor = card.style.borderBottomColor = card.style.borderLeftColor = card.style.borderRightColor = new Color(1f, 1f, 1f, 0.08f);
-            card.style.borderTopLeftRadius = card.style.borderTopRightRadius = card.style.borderBottomLeftRadius = card.style.borderBottomRightRadius = 6;
-            card.style.paddingLeft = card.style.paddingRight = 8;
-            card.style.paddingTop = card.style.paddingBottom = 8;
-            card.style.marginBottom = 8;
-
-            if (!string.IsNullOrEmpty(title))
-            {
-                var titleLabel = new Label(title)
-                {
-                    style =
-                    {
-                        unityFontStyleAndWeight = FontStyle.Bold,
-                        fontSize = 11,
-                        color = new Color(0.75f, 0.8f, 0.88f, 1f),
-                        marginBottom = 6
-                    }
-                };
-                card.Add(titleLabel);
+                SetStatus("Chưa có target nào trên bàn cờ để gây sát thương.", StatusType.Warning);
+                return;
             }
-            return card;
+
+            int count = 0;
+            foreach (var target in p2Units)
+            {
+                if (target == null || target.IsDead()) continue;
+                target.TakeNonLethalDamage(amount);
+                count++;
+            }
+
+            SetStatus($"Đã gây {amount} sát thương lên {count} target.", StatusType.Success);
+            UpdateStats();
         }
 
-        private static Button CreateStyledButton(string text, System.Action action, Color? bgColor = null, Color? textColor = null)
+        private void KillAllTargets()
         {
-            var button = new Button(action) { text = text };
-            button.style.minHeight = 26;
-            button.style.marginBottom = 4;
-            button.style.whiteSpace = WhiteSpace.Normal;
-            button.style.borderTopLeftRadius = button.style.borderTopRightRadius =
-                button.style.borderBottomLeftRadius = button.style.borderBottomRightRadius = 4;
-            button.style.borderTopWidth = button.style.borderBottomWidth = button.style.borderLeftWidth = button.style.borderRightWidth = 1;
-            button.style.borderTopColor = button.style.borderBottomColor = button.style.borderLeftColor = button.style.borderRightColor = new Color(1f, 1f, 1f, 0.12f);
+            var p2Units = UnitSpawner.Instance?.GetPlayerUnits(PlayerID.Player2);
+            if (p2Units == null || p2Units.Count == 0)
+            {
+                SetStatus("Chưa có target nào trên bàn cờ để tiêu diệt.", StatusType.Warning);
+                return;
+            }
 
-            if (bgColor.HasValue)
-                button.style.backgroundColor = bgColor.Value;
-            if (textColor.HasValue)
-                button.style.color = textColor.Value;
+            int count = 0;
+            foreach (var target in p2Units)
+            {
+                if (target == null || target.IsDead()) continue;
+                target.TakeDamage(target.GetMaxHealth(), true);
+                count++;
+            }
 
-            return button;
+            SetStatus($"Đã tiêu diệt {count} target.", StatusType.Success);
+            UpdateStats();
         }
 
-        private void AddAnimationRow(VisualElement parent, string text, System.Action previewAction, int stateHash, bool isMove)
-        {
-            var row = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Stretch, marginBottom = 4 } };
-            var previewButton = CreateStyledButton(text, previewAction, new Color(1f, 1f, 1f, 0.06f), Color.white);
-            previewButton.style.flexGrow = 1;
-            previewButton.style.flexShrink = 1;
-            previewButton.style.marginBottom = 0;
-            previewButton.style.marginRight = 4;
-            previewButton.style.fontSize = 11;
-
-            var pingButton = CreateStyledButton("Ping", () => PingAnimation(text, stateHash, isMove), new Color(1f, 1f, 1f, 0.1f), Color.white);
-            pingButton.style.minWidth = 44;
-            pingButton.style.flexShrink = 0;
-            pingButton.style.marginBottom = 0;
-            pingButton.style.fontSize = 10;
-
-            row.Add(previewButton);
-            row.Add(pingButton);
-            parent.Add(row);
-        }
-
-        private void SetStatus(string message)
-        {
-            if (status != null)
-                status.text = message;
-        }
         #endregion
 
-        #region State & Logic
+        #region Stats & Realtime Polling
+
         private void UpdateStats()
         {
-            if (stats == null || MPManager.Instance == null) return;
-            statsBuilder.Clear();
+            if (hpBar == null || mpBar == null) return;
 
-            // 1. Caster stats
-            if (caster != null && !caster.IsDead())
+            // 1. Cập nhật MP
+            if (MPManager.Instance != null)
             {
-                statsBuilder.Append("• Caster: ").Append(caster.UnitData != null ? caster.UnitData.unitName : "Hero");
-                statsBuilder.Append(" | HP: ").Append(caster.GetCurrentHealth()).Append('/').Append(caster.GetMaxHealth());
-                statsBuilder.Append(" | MP: ").Append(MPManager.Instance.GetCurrentMP(PlayerID.Player1)).Append('/').Append(MPManager.Instance.MaxMP);
-                if (caster.BuffHandler != null && caster.BuffHandler.HasEffect(StatusEffectType.Slow))
-                    statsBuilder.Append(" [SLOW]");
-
-                bool hasCooldown = false;
-                foreach (var skill in caster.AttackComponent.ActiveSkills)
+                int currentMP = MPManager.Instance.GetCurrentMP(PlayerID.Player1);
+                int maxMP = MPManager.Instance.MaxMP;
+                if (lastRecordedMp != currentMP)
                 {
-                    if (skill.CurrentCooldown > 0)
-                    {
-                        if (!hasCooldown) { statsBuilder.Append("\n  Cooldown: "); hasCooldown = true; }
-                        else statsBuilder.Append(", ");
-                        statsBuilder.Append(skill.SkillName).Append('(').Append(skill.CurrentCooldown).Append(')');
-                    }
+                    lastRecordedMp = currentMP;
+                    mpBar.value = maxMP > 0 ? (float)currentMP / maxMP * 100f : 0f;
+                    mpBar.title = $"{currentMP}/{maxMP}";
+                }
+            }
+
+            // 2. Cập nhật HP & Debuff Caster
+            if (caster != null)
+            {
+                int hp = caster.GetCurrentHealth();
+                int maxHp = caster.GetMaxHealth();
+                if (lastRecordedHp != hp)
+                {
+                    lastRecordedHp = hp;
+                    hpBar.value = maxHp > 0 ? (float)hp / maxHp * 100f : 0f;
+                    hpBar.title = $"{hp}/{maxHp}";
+                }
+
+                bool hasSlow = caster.BuffHandler != null && caster.BuffHandler.HasEffect(StatusEffectType.Slow);
+                if (debuffBadge != null)
+                {
+                    debuffBadge.style.display = hasSlow ? DisplayStyle.Flex : DisplayStyle.None;
                 }
             }
             else
             {
-                statsBuilder.Append("• Caster: Đã chết hoặc chưa khởi tạo.");
+                hpBar.value = 0;
+                hpBar.title = "0/0";
             }
-
-            // 2. Target units stats
-            statsBuilder.Append("\n• Targets (Player 2):");
-            if (UnitSpawner.Instance != null)
-            {
-                var targets = UnitSpawner.Instance.GetPlayerUnits(PlayerID.Player2);
-                if (targets.Count == 0)
-                {
-                    statsBuilder.Append(" Chưa có (bấm Đặt target)");
-                }
-                else
-                {
-                    foreach (var target in targets)
-                    {
-                        if (target != null && !target.IsDead())
-                        {
-                            statsBuilder.Append("\n  - ").Append(target.UnitData.unitName)
-                                .Append(" @").Append(target.currentGridPosition)
-                                .Append(" | HP: ").Append(target.GetCurrentHealth()).Append('/').Append(target.GetMaxHealth());
-                        }
-                    }
-                }
-            }
-
-            string newText = statsBuilder.ToString();
-            if (stats.text != newText)
-                stats.text = newText;
         }
 
-        private void BeginPlacement()
+        private void QuickFullHealAndMP()
         {
-            CancelSelection();
-            placingTarget = true;
-            SetStatus("Click tile trống trên sàn để đặt target Player 2. Nhấn Esc để hủy.");
+            if (caster != null && !caster.IsDead())
+            {
+                caster.Heal(caster.GetMaxHealth());
+            }
+
+            if (MPManager.Instance != null)
+            {
+                MPManager.Instance.AddMP(PlayerID.Player1, MPManager.Instance.MaxMP);
+            }
+
+            SetStatus("Đã hồi đầy HP và MP cho Caster.", StatusType.Success);
+            UpdateStats();
+        }
+
+        private void QuickResetCooldowns()
+        {
+            if (caster != null && caster.AttackComponent != null)
+            {
+                foreach (var skill in caster.AttackComponent.ActiveSkills)
+                {
+                    if (skill is SkillBase sb) sb.ResetCooldown();
+                }
+
+                SetStatus("Đã xóa toàn bộ Cooldown skill.", StatusType.Success);
+                if (currentTab == TestTab.Combat) RefreshCurrentTab();
+            }
         }
 
         private void PrepareWoundedCaster()
         {
             CancelSelection();
-            if (caster == null || caster.IsDead()) { SetStatus("Caster đã chết. Nhấn Reset."); return; }
-            if (caster.GetCurrentHealth() <= 1) { SetStatus("Caster không thể mất thêm HP."); return; }
+            if (caster == null || caster.IsDead()) { SetStatus("Caster đã chết. Nhấn Heal hoặc Reset test.", StatusType.Warning); return; }
+            if (caster.GetCurrentHealth() <= 1) { SetStatus("Caster không thể mất thêm HP.", StatusType.Warning); return; }
+
             caster.TakeNonLethalDamage(Mathf.Max(1, caster.GetMaxHealth() / 2));
-            SetStatus("Caster đã mất HP. Chọn skill hồi máu rồi click tile (-1, 0, 0).");
+            SetStatus("Caster đã mất 50% HP. Chọn skill hồi máu rồi bấm tile của caster.", StatusType.Info);
             UpdateStats();
         }
 
         private void PrepareDebuffedCaster()
         {
             CancelSelection();
-            if (caster == null || caster.IsDead()) { SetStatus("Caster đã chết. Nhấn Reset."); return; }
-            if (caster.BuffHandler == null) { SetStatus("Caster không có BuffDebuffHandler."); return; }
+            if (caster == null || caster.IsDead()) { SetStatus("Caster đã chết. Nhấn Heal hoặc Reset test.", StatusType.Warning); return; }
+            if (caster.BuffHandler == null) { SetStatus("Caster không có BuffDebuffHandler.", StatusType.Warning); return; }
+
             caster.BuffHandler.AddEffect(new ActiveStatusEffect(StatusEffectType.Slow, 25, 2, PlayerID.Player2));
-            SetStatus("Caster đã có Slow. Chọn skill giải debuff rồi click tile (-1, 0, 0).");
+            SetStatus("Caster đã dính Slow. Chọn skill giải debuff rồi bấm tile của caster.", StatusType.Info);
             UpdateStats();
+        }
+
+        private void ClearCasterBuffs()
+        {
+            if (caster != null && caster.BuffHandler != null)
+            {
+                caster.BuffHandler.ClearAll();
+                SetStatus("Đã xóa toàn bộ Buff/Debuff trên Caster.", StatusType.Success);
+                UpdateStats();
+            }
+        }
+
+        #endregion
+
+        #region Skill Execution & Interaction
+
+        private void BeginPlacement()
+        {
+            CancelSelection();
+            placingTarget = true;
+            SetStatus("Bấm vào tile trống trên bàn cờ để đặt Target Player 2. [Esc] để hủy.", StatusType.Warning);
         }
 
         private static string DescribeTargets(SkillBase skill)
         {
-            if (skill is FireballSkill) return "ô trong range (kể cả ô trống)";
+            if (skill is FireballSkill) return "ô bất kỳ trong range";
             var targets = new List<string>(4);
             if (skill.CanTargetEnemies) targets.Add("địch");
             if (skill.CanTargetAllies) targets.Add("đồng minh");
             if (skill.CanTargetSelf) targets.Add("bản thân");
             if (skill.CanTargetEmptyTile) targets.Add("ô trống");
-            return targets.Count > 0 ? string.Join(", ", targets) : "điều kiện riêng";
+            return targets.Count > 0 ? string.Join(", ", targets) : "riêng";
         }
 
         private static string DescribeCondition(SkillBase skill)
         {
-            if (skill is HealSkill) return " • Mục tiêu phải mất HP.";
-            if (skill is HerbalistCleanseSkill) return " • Mục tiêu phải có debuff.";
-            if (skill is AssassinShadowDualStrikeSkill) return " • Cần target địch & ô trống cạnh bên.";
-            if (skill is AdjudicatorForbiddenSealSkill) return " • Cần địch trong vùng ảnh hưởng.";
-            if (!string.IsNullOrEmpty(skill.Description) && skill.Description != "Không có mô tả")
-                return " • " + skill.Description;
+            if (skill is HealSkill) return "Mục tiêu phải mất HP.";
+            if (skill is HerbalistCleanseSkill) return "Mục tiêu phải có debuff.";
+            if (skill is AssassinShadowDualStrikeSkill) return "Cần target địch và ô trống cạnh target để dịch chuyển.";
+            if (skill is AdjudicatorForbiddenSealSkill) return "Cần ít nhất một địch trong vùng ảnh hưởng.";
             return string.Empty;
         }
 
         private void SelectSkill(SkillBase skill)
         {
             CancelSelection();
-            if (caster == null || caster.IsDead()) { SetStatus("Caster đã chết. Nhấn Reset."); return; }
+            if (caster == null || caster.IsDead()) { SetStatus("Caster đã chết. Nhấn Heal hoặc đổi nhân vật.", StatusType.Warning); return; }
 
             selectedSkill = skill;
-            HighlightSelectedSkill(skill);
-
             AreaPathManager.Instance.ShowAttackArea(MapManager.Instance.MapEntity.WalkableBorder(caster.currentGridPosition, skill.Range));
-            SetStatus(skill.SkillName + ": chọn " + DescribeTargets(skill) + "." + DescribeCondition(skill) + " Vùng tô chỉ tham khảo; Esc để hủy.");
-        }
 
-        private void HighlightSelectedSkill(SkillBase skill)
-        {
-            foreach (var kvp in skillItemMap)
-            {
-                if (kvp.Key == skill)
-                {
-                    kvp.Value.style.borderTopColor = kvp.Value.style.borderBottomColor =
-                        kvp.Value.style.borderLeftColor = kvp.Value.style.borderRightColor = new Color(0.23f, 0.51f, 0.96f, 1f);
-                    kvp.Value.style.borderTopWidth = kvp.Value.style.borderBottomWidth =
-                        kvp.Value.style.borderLeftWidth = kvp.Value.style.borderRightWidth = 2;
-                }
-                else
-                {
-                    kvp.Value.style.borderTopColor = kvp.Value.style.borderBottomColor =
-                        kvp.Value.style.borderLeftColor = kvp.Value.style.borderRightColor = new Color(1f, 1f, 1f, 0.12f);
-                    kvp.Value.style.borderTopWidth = kvp.Value.style.borderBottomWidth =
-                        kvp.Value.style.borderLeftWidth = kvp.Value.style.borderRightWidth = 1;
-                }
-            }
+            string cond = DescribeCondition(skill);
+            SetStatus($"[{skill.SkillName}] Chọn: {DescribeTargets(skill)}. {(string.IsNullOrEmpty(cond) ? "" : cond + " ")}[Esc] để hủy.", StatusType.Warning);
+
+            if (currentTab == TestTab.Combat) RefreshCurrentTab();
         }
 
         private void CancelSelection()
         {
             selectedSkill = null;
             placingTarget = false;
-            HighlightSelectedSkill(null);
             AreaPathManager.Instance?.HideAttackArea();
         }
 
@@ -715,7 +1052,7 @@ namespace TurnBasedGame.UI
             var clip = ResolveAnimationClip(stateHash, isMove);
             if (clip == null)
             {
-                SetStatus("Không tìm thấy animation asset cho " + label + ".");
+                SetStatus("Không tìm thấy animation clip cho " + label + ".", StatusType.Warning);
                 return;
             }
 
@@ -723,13 +1060,15 @@ namespace TurnBasedGame.UI
             UnityEditor.EditorUtility.FocusProjectWindow();
             UnityEditor.Selection.activeObject = clip;
             UnityEditor.EditorGUIUtility.PingObject(clip);
-            SetStatus(string.IsNullOrEmpty(assetPath)
-                ? "Đã ping animation: " + clip.name
-                : "Đã ping animation: " + clip.name + " (" + assetPath + ")");
+            SetStatus("Đã ping clip: " + clip.name, StatusType.Success);
 #else
-            SetStatus("Chức năng ping chỉ dùng trong Unity Editor.");
+            SetStatus("Chức năng ping asset chỉ dùng trong Unity Editor.", StatusType.Warning);
 #endif
         }
+
+        #endregion
+
+        #region Animation Resolver (Editor Only)
 
 #if UNITY_EDITOR
         private AnimationClip ResolveAnimationClip(int stateHash, bool isMove)
@@ -834,7 +1173,7 @@ namespace TurnBasedGame.UI
             if (stateMachine == null) return null;
             foreach (var child in stateMachine.states)
             {
-                if (child.state != null && child.state.name.IndexOf(keyword, System.StringComparison.OrdinalIgnoreCase) >= 0)
+                if (child.state != null && child.state.name.IndexOf(keyword, StringComparison.OrdinalIgnoreCase) >= 0)
                     return child.state;
             }
             foreach (var sub in stateMachine.stateMachines)
@@ -859,110 +1198,111 @@ namespace TurnBasedGame.UI
             return null;
         }
 #endif
+
         #endregion
 
-        #region Input & Frame Loop
-        private static Vector2 GetPointerScreenPosition()
-        {
-#if ENABLE_INPUT_SYSTEM
-            if (UnityEngine.InputSystem.Mouse.current != null)
-                return UnityEngine.InputSystem.Mouse.current.position.ReadValue();
-#endif
-#if ENABLE_LEGACY_INPUT_MANAGER
-            return Input.mousePosition;
-#else
-            return Vector2.zero;
-#endif
-        }
-
-        private static bool WasPointerActionReleased()
-        {
-#if ENABLE_INPUT_SYSTEM
-            if (UnityEngine.InputSystem.Mouse.current != null && UnityEngine.InputSystem.Mouse.current.leftButton.wasReleasedThisFrame)
-                return true;
-#endif
-#if ENABLE_LEGACY_INPUT_MANAGER
-            return Input.GetMouseButtonUp(0);
-#else
-            return false;
-#endif
-        }
-
-        private static bool WasCancelPressed()
-        {
-#if ENABLE_INPUT_SYSTEM
-            if (UnityEngine.InputSystem.Keyboard.current != null && UnityEngine.InputSystem.Keyboard.current.escapeKey.wasPressedThisFrame)
-                return true;
-#endif
-#if ENABLE_LEGACY_INPUT_MANAGER
-            return Input.GetKeyDown(KeyCode.Escape);
-#else
-            return false;
-#endif
-        }
+        #region Game Loop & Input
 
         private void Update()
         {
-            if (WasCancelPressed())
+            if (Input.GetKeyDown(KeyCode.Escape))
             {
                 CancelSelection();
-                SetStatus("Đã hủy chọn.");
+                SetStatus("Đã hủy chọn.", StatusType.Info);
+                if (currentTab == TestTab.Combat) RefreshCurrentTab();
             }
 
-            if (reloading || worldCamera == null || (!placingTarget && selectedSkill == null) || !WasPointerActionReleased())
-                return;
+            if (reloading || worldCamera == null) return;
 
-            var mousePos = GetPointerScreenPosition();
-            if (panel != null && panel.panel != null)
+            // Kiểm tra con trỏ chuột trên giao diện UI Toolkit
+            var pointer = RuntimePanelUtils.ScreenToPanel(panel.panel, new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y));
+            bool isOverUI = panel.worldBound.Contains(pointer);
+
+            // Update footer hover coordinate
+            if (!isOverUI)
             {
-                var panelPointer = RuntimePanelUtils.ScreenToPanel(panel.panel, new Vector2(mousePos.x, Screen.height - mousePos.y));
-                if (panel.panel.Pick(panelPointer) != null)
-                    return;
+                var map = MapManager.Instance?.MapEntity;
+                if (map != null)
+                {
+                    var plane = map.Settings.Plane();
+                    var ray = worldCamera.ScreenPointToRay(Input.mousePosition);
+                    if (plane.Raycast(ray, out var distance))
+                    {
+                        var hoverTile = map.Tile(ray.GetPoint(distance));
+                        if (hoverTile != null && footerCoordLabel != null)
+                        {
+                            footerCoordLabel.text = $"Tile: {hoverTile.Position}";
+                        }
+                    }
+                }
             }
 
-            var map = MapManager.Instance.MapEntity;
-            var plane = map.Settings.Plane();
-            var ray = worldCamera.ScreenPointToRay(mousePos);
-            if (!plane.Raycast(ray, out var distance)) return;
+            if (isOverUI || (!placingTarget && selectedSkill == null) || !Input.GetMouseButtonUp(0)) return;
 
-            var tile = map.Tile(ray.GetPoint(distance));
-            if (tile == null)
+            var activeMap = MapManager.Instance.MapEntity;
+            var activePlane = activeMap.Settings.Plane();
+            var activeRay = worldCamera.ScreenPointToRay(Input.mousePosition);
+            if (!activePlane.Raycast(activeRay, out var hitDistance)) return;
+
+            var targetTile = activeMap.Tile(activeRay.GetPoint(hitDistance));
+            if (targetTile == null)
             {
-                SetStatus("Vị trí click ngoài map.");
+                SetStatus("Vị trí click nằm ngoài phạm vi bản đồ.", StatusType.Warning);
                 return;
             }
 
+            // Đặt Target
             if (placingTarget)
             {
-                if (!MapManager.Instance.IsTileAvailable(tile.Position))
+                if (!MapManager.Instance.IsTileAvailable(targetTile.Position))
                 {
-                    SetStatus("Tile " + tile.Position + " đã bị chiếm hoặc không khả dụng.");
+                    SetStatus("Tile đã bị chiếm hoặc không khả dụng.", StatusType.Warning);
                     return;
                 }
-
-                Spawn(targetIndex, PlayerID.Player2, tile.Position);
+                Spawn(targetIndex, PlayerID.Player2, targetTile.Position);
                 CancelSelection();
-                SetStatus("Đã đặt target tại " + tile.Position);
+                SetStatus("Đã đặt target Player 2 tại " + targetTile.Position, StatusType.Success);
                 UpdateStats();
                 return;
             }
 
+            // Thi triển Skill
             if (caster == null)
             {
-                SetStatus("Caster không còn tồn tại. Nhấn Reset.");
+                SetStatus("Caster không còn tồn tại trên bàn cờ. Đổi nhân vật hoặc reload.", StatusType.Error);
                 CancelSelection();
                 return;
             }
 
-            var result = LocalMatchAuthority.SubmitHumanSkill(caster, selectedSkill, tile.Position);
-            SetStatus(result.Succeeded
-                ? $"Đã dùng {selectedSkill.SkillName} thành công. Bấm tiếp để dùng lại hoặc chọn skill khác."
-                : (!string.IsNullOrEmpty(result.FailureReason) ? result.FailureReason : "Không thể thực thi kỹ năng."));
-
-            if (result.Succeeded)
-                CancelSelection();
+            validationMessage = null;
+            Application.logMessageReceived += CaptureValidation;
+            try
+            {
+                var result = LocalMatchAuthority.SubmitHumanSkill(caster, selectedSkill, targetTile.Position);
+                if (result.Succeeded)
+                {
+                    SetStatus($"Đã dùng thành công: {selectedSkill.SkillName}.", StatusType.Success);
+                    CancelSelection();
+                }
+                else
+                {
+                    string err = validationMessage ?? result.FailureReason ?? "Thi triển kỹ năng thất bại.";
+                    SetStatus(err, StatusType.Error);
+                }
+            }
+            finally
+            {
+                Application.logMessageReceived -= CaptureValidation;
+            }
 
             UpdateStats();
+            if (currentTab == TestTab.Combat) RefreshCurrentTab();
+        }
+
+        private void CaptureValidation(string message, string trace, LogType type)
+        {
+            if (type == LogType.Warning || type == LogType.Error || type == LogType.Exception)
+                validationMessage = message;
         }
 
         private void Reload()
@@ -973,21 +1313,25 @@ namespace TurnBasedGame.UI
             reloading = true;
             UnityEditor.SceneManagement.EditorSceneManager.LoadSceneInPlayMode(ScenePath, new LoadSceneParameters(LoadSceneMode.Single));
 #else
-            SetStatus("Scene test chỉ dùng trong Unity Editor.");
+            SetStatus("Scene test chỉ hỗ trợ trong Unity Editor Play Mode.", StatusType.Warning);
 #endif
         }
 
         private void OnDestroy()
         {
-            // Runtime skill clones belong to this fixture, including units already destroyed by death.
+            Application.logMessageReceived -= CaptureValidation;
+            if (animator != null)
+            {
+                animator.AnimationEventRaised -= OnAnimationEventRaised;
+            }
+
             foreach (var skill in ownedSkills)
             {
-                if (skill != null)
-                    Destroy(skill);
+                if (skill != null) Destroy(skill);
             }
             ownedSkills.Clear();
-            skillItemMap.Clear();
         }
+
         #endregion
     }
 }
