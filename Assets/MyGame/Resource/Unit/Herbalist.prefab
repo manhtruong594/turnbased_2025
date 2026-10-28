@@ -376,7 +376,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   animator: {fileID: 150459942234550184}
   defaultAttackSpeed: 1
-  _effectSpawnPoint: {fileID: 5961441863823123863}
   _transitionDuration: 0.1
   _skillEffectRunner: {fileID: 938947508369673327}
 --- !u!114 &938947508369673327
@@ -391,6 +390,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c5be59f52d466040bb851f632131800, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Unit.SkillEffectRunner
+  _effectSpawnPoint: {fileID: 5961441863823123863}
 --- !u!1001 &512488270006532275
 PrefabInstance:
   m_ObjectHideFlags: 0

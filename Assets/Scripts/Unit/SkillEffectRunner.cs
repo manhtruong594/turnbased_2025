@@ -14,12 +14,12 @@ namespace TurnBasedGame.Unit
         private static readonly System.Collections.Generic.HashSet<int> PreparedVfxInstances = new();
 
         private Transform _casterRoot;
-        private Transform _effectSpawnPoint;
+        [SerializeField] private Transform _effectSpawnPoint;
+        [SerializeField] private Vector3 _casterOffset = new Vector3(0, 1.5f, 0);
 
-        public void Initialize(Transform casterRoot, Transform effectSpawnPoint)
+        void Awake()
         {
-            _casterRoot = casterRoot;
-            _effectSpawnPoint = effectSpawnPoint;
+            _casterRoot = transform;
         }
 
         public void HandleCue(SkillBase skill, SkillAnimationCue cue)
@@ -163,14 +163,14 @@ namespace TurnBasedGame.Unit
             if (_effectSpawnPoint != null)
                 return _effectSpawnPoint;
 
-            return _casterRoot != null ? _casterRoot : transform;
+            return _casterRoot;
         }
 
         private SpawnPoint ResolveSpawnPoint(SkillVfxSpawnPoint spawnPointType, SkillBase skill)
         {
             return spawnPointType switch
             {
-                SkillVfxSpawnPoint.Caster => new SpawnPoint(GetCasterPosition(), GetCasterRotation()),
+                SkillVfxSpawnPoint.Caster => new SpawnPoint(GetCasterPosition(), _casterRoot.rotation),
                 SkillVfxSpawnPoint.Target => new SpawnPoint(skill.GetCurrentTargetWorldPosition(), Quaternion.identity),
                 _ => new SpawnPoint(GetEffectSpawnPoint().position, GetEffectSpawnPoint().rotation)
             };
@@ -178,12 +178,7 @@ namespace TurnBasedGame.Unit
 
         private Vector3 GetCasterPosition()
         {
-            return _casterRoot != null ? _casterRoot.position : transform.position;
-        }
-
-        private Quaternion GetCasterRotation()
-        {
-            return _casterRoot != null ? _casterRoot.rotation : transform.rotation;
+            return _casterRoot.position + _casterOffset;
         }
 
         private readonly struct SpawnPoint

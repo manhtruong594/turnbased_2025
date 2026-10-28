@@ -197,7 +197,7 @@ PrefabInstance:
       propertyPath: m_ConstrainProportionsScale
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 4399936470503347770, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}
+    - target: {fileID: 7573672835556224312, guid: 7531855eccaf4ff4985ced0de6006055, type: 3}
       propertyPath: _effectSpawnPoint
       value: 
       objectReference: {fileID: 6863756796467797398}

@@ -307,23 +307,30 @@ public class CharacterBuilder : IUCPScript
                 soCtrl.ApplyModifiedPropertiesWithoutUndo();
             }
 
-            // 8. Cap nhat UnitAnimator references (nam tren Body hoac Root)
+            // 8. Cap nhat UnitAnimator va SkillEffectRunner references (nam tren Body hoac Root)
             var unitAnimator = root.GetComponentInChildren<UnitAnimator>(true);
             if (unitAnimator != null)
             {
                 var soAnim = new SerializedObject(unitAnimator);
                 var animProp = soAnim.FindProperty("animator");
                 if (animProp != null) animProp.objectReferenceValue = bodyAnimator;
+                soAnim.ApplyModifiedPropertiesWithoutUndo();
+                logs.Add("Updated UnitAnimator references");
+            }
 
-                var spawnProp = soAnim.FindProperty("_effectSpawnPoint");
+            var skillEffectRunner = root.GetComponentInChildren<SkillEffectRunner>(true);
+            if (skillEffectRunner != null)
+            {
+                var soRunner = new SerializedObject(skillEffectRunner);
+                var spawnProp = soRunner.FindProperty("_effectSpawnPoint");
                 if (spawnProp != null)
                 {
                     if (effectSpawnTarget == null)
                         effectSpawnTarget = root.transform.Find("EffectSpawnPoint") ?? body;
                     spawnProp.objectReferenceValue = effectSpawnTarget;
                 }
-                soAnim.ApplyModifiedPropertiesWithoutUndo();
-                logs.Add("Updated UnitAnimator references");
+                soRunner.ApplyModifiedPropertiesWithoutUndo();
+                logs.Add("Updated SkillEffectRunner references");
             }
 
             // 9. Save Unit Prefab
@@ -752,11 +759,15 @@ public class CharacterBuilder : IUCPScript
         var unitAnim = prefab.GetComponentInChildren<UnitAnimator>(true);
         if (unitAnim == null)
             errors.Add("UnitAnimator is missing");
+
+        var runner = prefab.GetComponentInChildren<SkillEffectRunner>(true);
+        if (runner == null)
+            errors.Add("SkillEffectRunner is missing");
         else
         {
-            var soAnim = new SerializedObject(unitAnim);
-            if (soAnim.FindProperty("_effectSpawnPoint")?.objectReferenceValue == null)
-                errors.Add("UnitAnimator._effectSpawnPoint is null");
+            var soRunner = new SerializedObject(runner);
+            if (soRunner.FindProperty("_effectSpawnPoint")?.objectReferenceValue == null)
+                errors.Add("SkillEffectRunner._effectSpawnPoint is null");
         }
 
         return new { valid = errors.Count == 0, prefabPath = path, errors };
@@ -1005,16 +1016,16 @@ public class CharacterBuilder : IUCPScript
             if (p.weaponLocalScale != Vector3.zero)
                 weaponTransform.localScale = p.weaponLocalScale;
 
-            // Ensure UnitAnimator._effectSpawnPoint is linked to weapon
-            var unitAnim = root.GetComponentInChildren<UnitAnimator>(true);
-            if (unitAnim != null)
+            // Ensure SkillEffectRunner._effectSpawnPoint is linked to weapon
+            var runner = root.GetComponentInChildren<SkillEffectRunner>(true);
+            if (runner != null)
             {
-                var soAnim = new SerializedObject(unitAnim);
-                var prop = soAnim.FindProperty("_effectSpawnPoint");
+                var soRunner = new SerializedObject(runner);
+                var prop = soRunner.FindProperty("_effectSpawnPoint");
                 if (prop != null)
                 {
                     prop.objectReferenceValue = weaponTransform;
-                    soAnim.ApplyModifiedPropertiesWithoutUndo();
+                    soRunner.ApplyModifiedPropertiesWithoutUndo();
                 }
             }
 
@@ -1165,15 +1176,15 @@ public class CharacterBuilder : IUCPScript
             }
         }
 
-        // 2. Link UnitAnimator._effectSpawnPoint if null
+        // 2. Link SkillEffectRunner._effectSpawnPoint if null
         GameObject root = PrefabUtility.LoadPrefabContents(path);
         try
         {
-            var unitAnim = root.GetComponentInChildren<UnitAnimator>(true);
-            if (unitAnim != null)
+            var runner = root.GetComponentInChildren<SkillEffectRunner>(true);
+            if (runner != null)
             {
-                var soAnim = new SerializedObject(unitAnim);
-                var prop = soAnim.FindProperty("_effectSpawnPoint");
+                var soRunner = new SerializedObject(runner);
+                var prop = soRunner.FindProperty("_effectSpawnPoint");
                 if (prop != null && prop.objectReferenceValue == null)
                 {
                     Transform weaponTransform = null;
@@ -1189,8 +1200,8 @@ public class CharacterBuilder : IUCPScript
                     if (weaponTransform != null)
                     {
                         prop.objectReferenceValue = weaponTransform;
-                        soAnim.ApplyModifiedPropertiesWithoutUndo();
-                        logs.Add($"Linked UnitAnimator._effectSpawnPoint to {weaponTransform.name}");
+                        soRunner.ApplyModifiedPropertiesWithoutUndo();
+                        logs.Add($"Linked SkillEffectRunner._effectSpawnPoint to {weaponTransform.name}");
                         PrefabUtility.SaveAsPrefabAsset(root, path);
                     }
                 }

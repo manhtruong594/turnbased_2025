@@ -41,6 +41,7 @@ public sealed class MultiplayerGameplayTestWindow : EditorWindow
     private LogCategory selectedCategory = LogCategory.All;
     private string searchQuery = string.Empty;
     private bool autoScroll = true;
+    private bool shouldScrollToBottom;
     private Vector2 logScrollPosition;
     private Vector2 windowScrollPosition;
 
@@ -329,7 +330,12 @@ public sealed class MultiplayerGameplayTestWindow : EditorWindow
         searchQuery = EditorGUILayout.TextField(searchQuery, EditorStyles.toolbarSearchField, GUILayout.Width(200));
         if (GUILayout.Button("Clear", EditorStyles.toolbarButton, GUILayout.Width(45))) searchQuery = string.Empty;
 
+        bool prevAutoScroll = autoScroll;
         autoScroll = GUILayout.Toggle(autoScroll, "Auto-scroll", EditorStyles.toolbarButton, GUILayout.Width(75));
+        if (!prevAutoScroll && autoScroll)
+        {
+            shouldScrollToBottom = true;
+        }
 
         if (GUILayout.Button("Copy Report", EditorStyles.toolbarButton, GUILayout.Width(80)))
         {
@@ -344,6 +350,11 @@ public sealed class MultiplayerGameplayTestWindow : EditorWindow
 
         // Log Content ScrollView
         EditorGUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.Height(240));
+        if (shouldScrollToBottom && Event.current.type == EventType.Layout)
+        {
+            logScrollPosition.y = float.MaxValue;
+            shouldScrollToBottom = false;
+        }
         logScrollPosition = EditorGUILayout.BeginScrollView(logScrollPosition);
 
         int shownCount = 0;
@@ -360,11 +371,6 @@ public sealed class MultiplayerGameplayTestWindow : EditorWindow
         if (shownCount == 0)
         {
             EditorGUILayout.LabelField("<color=#888888>Chưa có log phù hợp với bộ lọc.</color>", richLabelStyle);
-        }
-
-        if (autoScroll && Event.current.type == EventType.Repaint)
-        {
-            logScrollPosition.y = float.MaxValue;
         }
 
         EditorGUILayout.EndScrollView();
@@ -512,6 +518,8 @@ public sealed class MultiplayerGameplayTestWindow : EditorWindow
                 clientProcess.Kill();
                 allLogs.Add(new MultiplayerLogEntry(DateTime.Now, false, LogCategory.Warning,
                     "[FAULT-INJECTION] Client process killed manually to test Host peer disconnect response.", string.Empty));
+                TrimLogs();
+                if (autoScroll) shouldScrollToBottom = true;
             }
             catch (Exception ex)
             {
@@ -533,6 +541,8 @@ public sealed class MultiplayerGameplayTestWindow : EditorWindow
             MultiplayerPrototypeBuild.BuildWindowsGameplayTest();
             allLogs.Add(new MultiplayerLogEntry(DateTime.Now, true, LogCategory.Milestone,
                 "Gameplay Build Succeeded: Builds/MultiplayerGameplay/MultiplayerGameplay.exe", string.Empty));
+            TrimLogs();
+            if (autoScroll) shouldScrollToBottom = true;
             currentStage = PipelineStage.Unstarted;
         }
         catch (Exception error)
@@ -644,10 +654,19 @@ public sealed class MultiplayerGameplayTestWindow : EditorWindow
     {
         ReadStreamLogs(HostLogPath, hostLogReader, true);
         ReadStreamLogs(ClientLogPath, clientLogReader, false);
+        TrimLogs();
 
         UpdateParticipantStatus(hostProcess, hostState);
         UpdateParticipantStatus(clientProcess, clientState);
         UpdatePipelineAndSyncHealth();
+    }
+
+    private void TrimLogs()
+    {
+        if (allLogs.Count > MaxLogEntries)
+        {
+            allLogs.RemoveRange(0, allLogs.Count - MaxLogEntries);
+        }
     }
 
     private void ReadStreamLogs(string path, LogTailReader reader, bool isHost)
@@ -707,7 +726,7 @@ public sealed class MultiplayerGameplayTestWindow : EditorWindow
 
         var entry = new MultiplayerLogEntry(now, isHost, category, line, line, audit);
         allLogs.Add(entry);
-        if (allLogs.Count > MaxLogEntries) allLogs.RemoveAt(0);
+        if (autoScroll) shouldScrollToBottom = true;
     }
 
     private void UpdateParticipantStatus(Process process, ParticipantState state)
@@ -847,6 +866,7 @@ public sealed class MultiplayerGameplayTestWindow : EditorWindow
     private sealed class LogTailReader
     {
         private readonly StringBuilder partialLine = new StringBuilder();
+        private readonly byte[] byteBuffer = new byte[16 * 1024];
         private readonly char[] characterBuffer = new char[16 * 1024];
         private Decoder decoder = Encoding.UTF8.GetDecoder();
 
@@ -891,13 +911,12 @@ public sealed class MultiplayerGameplayTestWindow : EditorWindow
                 }
 
                 stream.Position = Position;
-                var buffer = new byte[16 * 1024];
                 int bytesRead;
 
-                while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
+                while ((bytesRead = stream.Read(byteBuffer, 0, byteBuffer.Length)) > 0)
                 {
                     Position += bytesRead;
-                    int charCount = decoder.GetChars(buffer, 0, bytesRead, characterBuffer, 0, false);
+                    int charCount = decoder.GetChars(byteBuffer, 0, bytesRead, characterBuffer, 0, false);
                     for (int i = 0; i < charCount; i++)
                     {
                         char c = characterBuffer[i];

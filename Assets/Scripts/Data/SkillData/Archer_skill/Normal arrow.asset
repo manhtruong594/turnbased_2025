@@ -20,15 +20,15 @@ MonoBehaviour:
   icon: {fileID: 991932427, guid: f68897359cc923e40bb35d6f5c5e3bc1, type: 3}
   cooldown: 0
   mpCost: 0
-  range: 1
+  range: 3
   vfxConfig:
     castVfxPrefab: {fileID: 0}
     releaseVfxPrefab: {fileID: 5945405619913867380, guid: f6d8b5702cd70aa46bb99f21d649446c, type: 3}
-    projectilePrefab: {fileID: 2321878401571871764, guid: f3faad9f95b1b8b44b913c7852b35e56, type: 3}
+    projectilePrefab: {fileID: 8648856290539926017, guid: 4bb6ce7e4c2be7a498cea91acef54664, type: 3}
     impactVfxPrefab: {fileID: 6130567110401474471, guid: 84792df3c12b96f4897c0a0b2ae3309d, type: 3}
     effectApplyTiming: 2
     castSpawnPoint: 0
     releaseSpawnPoint: 1
     impactSpawnPoint: 2
-  targetTypes: 10
+  targetTypes: 2
   multipleDmg: 1.25

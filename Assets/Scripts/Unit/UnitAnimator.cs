@@ -13,22 +13,11 @@ namespace TurnBasedGame.Unit
         [SerializeField] private Animator animator;
 
         [Header("Animation Settings")]
-        [SerializeField] private float defaultAttackSpeed = 1f;
-        [SerializeField] private Transform _effectSpawnPoint;
         [SerializeField] private float _transitionDuration = 0.1f;
         [SerializeField] private SkillEffectRunner _skillEffectRunner;
 
+
         private SkillBase _currentSkill;
-
-        private void Awake()
-        {
-            if (_skillEffectRunner == null && !TryGetComponent(out _skillEffectRunner))
-            {
-                _skillEffectRunner = gameObject.AddComponent<SkillEffectRunner>();
-            }
-
-            _skillEffectRunner.Initialize(transform, _effectSpawnPoint);
-        }
 
         #region Animation Control
 
@@ -46,12 +35,9 @@ namespace TurnBasedGame.Unit
 
         private Coroutine _safetyFlushCoroutine;
 
-        public void PlayAttack(SkillBase skill, float attackSpeed = -1f)
+        public void PlayAttack(SkillBase skill)
         {
             if (animator == null) return;
-
-            if (attackSpeed < 0)
-                attackSpeed = defaultAttackSpeed;
 
             _currentSkill = skill;
             animator.CrossFadeInFixedTime(AnimationHashLib.GetHashAnimByAttackType(skill.Type), _transitionDuration);
