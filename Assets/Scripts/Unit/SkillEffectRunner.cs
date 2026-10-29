@@ -92,7 +92,15 @@ namespace TurnBasedGame.Unit
                 return;
 
             var startPosition = spawnPoint.position;
-            projectile.transform.SetPositionAndRotation(startPosition, spawnPoint.rotation);
+            var casterUnit = GetComponentInParent<UnitController>() ?? GetComponent<UnitController>();
+            Vector3 targetWorld = skill.GetVisualTargetWorldPosition(casterUnit);
+            Vector3 toTarget = targetWorld - startPosition;
+            toTarget.y = 0f;
+            Quaternion initialRotation = toTarget.sqrMagnitude > 0.001f
+                ? Quaternion.LookRotation(toTarget.normalized, Vector3.up)
+                : GetCasterFacingRotation();
+
+            projectile.transform.SetPositionAndRotation(startPosition, initialRotation);
             projectile.OnReachTarget = () =>
             {
                 SpawnImpactVfx(skill);
@@ -100,7 +108,7 @@ namespace TurnBasedGame.Unit
                 if (timing == SkillEffectApplyTiming.OnProjectileImpact)
                     skill.ApplyEffect();
             };
-            projectile.Launch(startPosition, skill.GetCurrentTargetWorldPosition());
+            projectile.Launch(startPosition, targetWorld);
         }
 
         private void SpawnImpactVfx(SkillBase skill)
@@ -166,13 +174,31 @@ namespace TurnBasedGame.Unit
             return _casterRoot;
         }
 
+        private Quaternion GetCasterFacingRotation()
+        {
+            var unit = GetComponentInParent<UnitController>() ?? GetComponent<UnitController>();
+            if (unit != null && unit.RotationNode != null)
+            {
+                Vector3 forward = unit.RotationNode.forward;
+                forward.y = 0f;
+                if (forward.sqrMagnitude > 0.001f)
+                    return Quaternion.LookRotation(forward.normalized, Vector3.up);
+            }
+
+            Vector3 rootFwd = _casterRoot != null ? _casterRoot.forward : Vector3.forward;
+            rootFwd.y = 0f;
+            return rootFwd.sqrMagnitude > 0.001f ? Quaternion.LookRotation(rootFwd.normalized, Vector3.up) : Quaternion.identity;
+        }
+
         private SpawnPoint ResolveSpawnPoint(SkillVfxSpawnPoint spawnPointType, SkillBase skill)
         {
+            Quaternion casterRot = GetCasterFacingRotation();
+
             return spawnPointType switch
             {
-                SkillVfxSpawnPoint.Caster => new SpawnPoint(GetCasterPosition(), _casterRoot.rotation),
-                SkillVfxSpawnPoint.Target => new SpawnPoint(skill.GetCurrentTargetWorldPosition(), Quaternion.identity),
-                _ => new SpawnPoint(GetEffectSpawnPoint().position, GetEffectSpawnPoint().rotation)
+                SkillVfxSpawnPoint.Caster => new SpawnPoint(GetCasterPosition(), casterRot),
+                SkillVfxSpawnPoint.Target => new SpawnPoint(skill.GetCurrentTargetWorldPosition(), casterRot),
+                _ => new SpawnPoint(GetEffectSpawnPoint().position, casterRot)
             };
         }
 

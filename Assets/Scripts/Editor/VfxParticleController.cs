@@ -42,7 +42,10 @@ public class VfxParticleController : IUCPScript
                 "recolor-vfx" => HandleRecolorVfx(p),
                 "preview" => HandlePreview(p),
                 "validate" => HandleValidate(p),
-                _ => Error($"Unknown action '{action}'. Supported actions: inspect, modify, manage-hierarchy, scale-vfx, recolor-vfx, preview, validate.")
+                "inspect-skill" => HandleInspectSkill(p),
+                "assign-skill-vfx" => HandleAssignSkillVfx(p),
+                "preview-skill" => HandlePreviewSkill(p),
+                _ => Error($"Unknown action '{action}'. Supported actions: inspect, modify, manage-hierarchy, scale-vfx, recolor-vfx, preview, validate, inspect-skill, assign-skill-vfx, preview-skill, run-skill-test.")
             };
         }
         catch (Exception ex)
@@ -811,6 +814,49 @@ public class VfxParticleController : IUCPScript
                     logs.Add($"Created child emitter '{GetRelativePath(root.transform, go.transform)}'");
                     break;
                 }
+                case "add-trail":
+                {
+                    Transform parent = FindTransformByNodePath(root.transform, parentPath) ?? root.transform;
+                    var go = new GameObject(newName);
+                    if (!isPrefab) Undo.RegisterCreatedObjectUndo(go, "UCP Add TrailRenderer");
+                    go.transform.SetParent(parent, false);
+                    go.transform.localPosition = Vector3.zero;
+                    go.transform.localRotation = Quaternion.identity;
+                    go.transform.localScale = Vector3.one;
+
+                    var tr = go.AddComponent<TrailRenderer>();
+                    tr.time = 0.35f;
+                    tr.minVertexDistance = 0.1f;
+                    tr.autodestruct = false;
+                    tr.emitting = true;
+                    tr.shadowCastingMode = ShadowCastingMode.Off;
+                    tr.receiveShadows = false;
+
+                    if (p.TryGetValue("config", out var cfgObj) && cfgObj is Dictionary<string, object> cfg)
+                    {
+                        if (cfg.TryGetValue("time", out var tVal)) tr.time = Convert.ToSingle(tVal);
+                        if (cfg.TryGetValue("minVertexDistance", out var mvd)) tr.minVertexDistance = Convert.ToSingle(mvd);
+                        if (cfg.TryGetValue("startWidth", out var sw) && cfg.TryGetValue("endWidth", out var ew))
+                            tr.widthCurve = AnimationCurve.Linear(0f, Convert.ToSingle(sw), 1f, Convert.ToSingle(ew));
+                        else if (cfg.TryGetValue("widthMultiplier", out var wm))
+                            tr.widthMultiplier = Convert.ToSingle(wm);
+
+                        if (cfg.TryGetValue("material", out var mPath) && mPath != null)
+                        {
+                            var mat = AssetDatabase.LoadAssetAtPath<Material>(mPath.ToString());
+                            if (mat != null) tr.sharedMaterial = mat;
+                        }
+
+                        if (cfg.TryGetValue("colorGradient", out var gradObj) && gradObj is Dictionary<string, object> gd)
+                            tr.colorGradient = ParseGradient(gd, tr.colorGradient);
+
+                        if (cfg.TryGetValue("localPosition", out var posObj))
+                            go.transform.localPosition = ParseVec3(posObj, Vector3.zero);
+                    }
+
+                    logs.Add($"Created TrailRenderer '{GetRelativePath(root.transform, go.transform)}'");
+                    break;
+                }
                 case "duplicate-emitter":
                 {
                     ParticleSystem source = FindParticleSystemByNodePath(root, nodePath);
@@ -1055,7 +1101,7 @@ public class VfxParticleController : IUCPScript
             return Error("Target not found for preview. Provide 'prefabPath' or 'instanceId'.");
 
         Vector3 stageOrigin = new Vector3(500f, 500f, 500f);
-        GameObject tempInstance = isPrefabAsset
+        GameObject tempInstance = (isPrefabAsset && EditorUtility.IsPersistent(sourceObj))
             ? (GameObject)PrefabUtility.InstantiatePrefab(sourceObj)
             : Object.Instantiate(sourceObj);
 
@@ -1094,6 +1140,8 @@ public class VfxParticleController : IUCPScript
                 ? SanitizeFileName(sourceObj.name)
                 : SanitizeFileName(outputPrefix);
 
+            Vector3 flightVelocity = p.TryGetValue("flightVelocity", out var fvObj) ? ParseVec3(fvObj, Vector3.zero) : Vector3.zero;
+
             camObj = new GameObject("__UCP_VFX_Camera");
             Camera cam = camObj.AddComponent<Camera>();
             cam.clearFlags = CameraClearFlags.SolidColor;
@@ -1103,7 +1151,8 @@ public class VfxParticleController : IUCPScript
             cam.fieldOfView = 45f;
 
             Quaternion camRot = Quaternion.Euler(cameraElevation, cameraAzimuth + 180f, 0f);
-            Vector3 focusCenter = stageOrigin + Vector3.up * GetFloat(p, "focusHeightOffset", 0.5f);
+            float maxSampleTime = sampleTimes[sampleTimes.Count - 1];
+            Vector3 focusCenter = stageOrigin + (flightVelocity * maxSampleTime * 0.5f) + Vector3.up * GetFloat(p, "focusHeightOffset", 0.5f);
             camObj.transform.position = focusCenter - (camRot * Vector3.forward) * cameraDistance;
             camObj.transform.LookAt(focusCenter);
 
@@ -1123,7 +1172,7 @@ public class VfxParticleController : IUCPScript
                 // Reset and simulate from 0 -> t using fixed steps so Velocity/Noise/Trails evaluate accurately
                 rootPs.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
                 rootPs.Clear(true);
-                SimulateDeterministically(rootPs, t);
+                SimulateDeterministically(rootPs, t, tempInstance.transform, stageOrigin, flightVelocity);
 
                 int totalParticles = 0;
                 var emitterCounts = new Dictionary<string, object>();
@@ -1167,19 +1216,32 @@ public class VfxParticleController : IUCPScript
         }
     }
 
-    private static void SimulateDeterministically(ParticleSystem rootPs, float targetTime)
+    private static void SimulateDeterministically(ParticleSystem rootPs, float targetTime, Transform mover = null, Vector3 origin = default, Vector3 velocity = default)
     {
         const float step = 1f / 60f;
+        TrailRenderer[] trails = mover != null ? mover.GetComponentsInChildren<TrailRenderer>(true) : Array.Empty<TrailRenderer>();
+        foreach (var tr in trails) tr.Clear();
+
+        if (mover != null) mover.position = origin;
         rootPs.Simulate(0f, true, true, true);
+        foreach (var tr in trails) if (tr.emitting) tr.AddPosition(tr.transform.position);
+
         float elapsed = 0f;
         while (elapsed + step < targetTime)
         {
-            rootPs.Simulate(step, true, false, true);
             elapsed += step;
+            if (mover != null) mover.position = origin + velocity * elapsed;
+            rootPs.Simulate(step, true, false, true);
+            foreach (var tr in trails) if (tr.emitting) tr.AddPosition(tr.transform.position);
         }
         float remainder = targetTime - elapsed;
         if (remainder > 0.0001f)
+        {
+            elapsed += remainder;
+            if (mover != null) mover.position = origin + velocity * elapsed;
             rootPs.Simulate(remainder, true, false, true);
+            foreach (var tr in trails) if (tr.emitting) tr.AddPosition(tr.transform.position);
+        }
     }
 
     private static float EstimateTotalEffectDuration(ParticleSystem[] systems)
@@ -1727,6 +1789,16 @@ public class VfxParticleController : IUCPScript
 
     private static object ExecuteOnTarget(string prefabPath, long instanceId, TargetAction action)
     {
+        var currentStage = PrefabStageUtility.GetCurrentPrefabStage();
+        if (currentStage != null && (string.IsNullOrEmpty(prefabPath) || currentStage.assetPath == prefabPath))
+        {
+            var res = action(currentStage.prefabContentsRoot, true);
+            EditorUtility.SetDirty(currentStage.prefabContentsRoot);
+            PrefabUtility.SaveAsPrefabAsset(currentStage.prefabContentsRoot, currentStage.assetPath);
+            AssetDatabase.SaveAssets();
+            return res;
+        }
+
         if (!string.IsNullOrEmpty(prefabPath))
         {
             if (!File.Exists(prefabPath) && AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath) == null)
@@ -1768,6 +1840,14 @@ public class VfxParticleController : IUCPScript
     {
         isPrefabAsset = false;
         resolvedPath = prefabPath;
+
+        var currentStage = PrefabStageUtility.GetCurrentPrefabStage();
+        if (currentStage != null && (string.IsNullOrEmpty(prefabPath) || currentStage.assetPath == prefabPath))
+        {
+            isPrefabAsset = true;
+            resolvedPath = currentStage.assetPath;
+            return currentStage.prefabContentsRoot;
+        }
 
         if (!string.IsNullOrEmpty(prefabPath))
         {
@@ -2030,6 +2110,356 @@ public class VfxParticleController : IUCPScript
         return name.Replace(' ', '_');
     }
 
+    #endregion
+
+    #region 8. SKILL & VFX INTEGRATION (WORKFLOW ACTIONS)
+
+    private object HandleInspectSkill(Dictionary<string, object> p)
+    {
+        string skillPath = GetString(p, "skillPath", GetString(p, "path", null));
+        string className = GetString(p, "className", null);
+
+        var results = new List<object>();
+
+        if (!string.IsNullOrEmpty(skillPath))
+        {
+            var skill = AssetDatabase.LoadAssetAtPath<TurnBasedGame.Skills.SkillBase>(skillPath);
+            if (skill == null)
+                return Error($"Skill asset not found at '{skillPath}'");
+
+            results.Add(SerializeSkillInfo(skill, skillPath));
+        }
+        else if (!string.IsNullOrEmpty(className))
+        {
+            string unitDataPath = $"Assets/Scripts/Data/{className} Data.asset";
+            var unitData = AssetDatabase.LoadAssetAtPath<TurnBasedGame.Unit.UnitData>(unitDataPath);
+            if (unitData != null && unitData.StartingSkills != null)
+            {
+                foreach (var sk in unitData.StartingSkills)
+                {
+                    if (sk == null) continue;
+                    string pth = AssetDatabase.GetAssetPath(sk);
+                    results.Add(SerializeSkillInfo(sk, pth, className));
+                }
+            }
+            else
+            {
+                string[] guids = AssetDatabase.FindAssets("t:SkillBase", new[] { "Assets/Scripts/Data/SkillData" });
+                foreach (var g in guids)
+                {
+                    string pth = AssetDatabase.GUIDToAssetPath(g);
+                    if (pth.IndexOf(className, StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        var sk = AssetDatabase.LoadAssetAtPath<TurnBasedGame.Skills.SkillBase>(pth);
+                        if (sk != null) results.Add(SerializeSkillInfo(sk, pth, className));
+                    }
+                }
+            }
+        }
+        else
+        {
+            return Error("Provide either 'skillPath' or 'className' to inspect.");
+        }
+
+        return new Dictionary<string, object>
+        {
+            ["success"] = true,
+            ["action"] = "inspect-skill",
+            ["count"] = results.Count,
+            ["skills"] = results
+        };
+    }
+
+    private static Dictionary<string, object> SerializeSkillInfo(TurnBasedGame.Skills.SkillBase skill, string assetPath, string className = null)
+    {
+        var cfg = skill.VfxConfig;
+        var info = new Dictionary<string, object>
+        {
+            ["skillName"] = skill.SkillName,
+            ["assetPath"] = assetPath,
+            ["className"] = className,
+            ["skillType"] = skill.Type.ToString(),
+            ["description"] = skill.Description,
+            ["cooldown"] = skill.Cooldown,
+            ["mpCost"] = skill.MPCost,
+            ["range"] = skill.Range,
+            ["targetTypes"] = new Dictionary<string, object>
+            {
+                ["allies"] = skill.CanTargetAllies,
+                ["enemies"] = skill.CanTargetEnemies,
+                ["self"] = skill.CanTargetSelf,
+                ["emptyTile"] = skill.CanTargetEmptyTile
+            },
+            ["vfxConfig"] = new Dictionary<string, object>
+            {
+                ["castVfxPrefab"] = cfg.CastVfxPrefab != null ? AssetDatabase.GetAssetPath(cfg.CastVfxPrefab) : null,
+                ["releaseVfxPrefab"] = cfg.ReleaseVfxPrefab != null ? AssetDatabase.GetAssetPath(cfg.ReleaseVfxPrefab) : null,
+                ["projectilePrefab"] = cfg.ProjectilePrefab != null ? AssetDatabase.GetAssetPath(cfg.ProjectilePrefab) : null,
+                ["impactVfxPrefab"] = cfg.ImpactVfxPrefab != null ? AssetDatabase.GetAssetPath(cfg.ImpactVfxPrefab) : null,
+                ["effectApplyTiming"] = cfg.EffectApplyTiming.ToString(),
+                ["castSpawnPoint"] = cfg.CastSpawnPoint.ToString(),
+                ["releaseSpawnPoint"] = cfg.ReleaseSpawnPoint.ToString(),
+                ["impactSpawnPoint"] = cfg.ImpactSpawnPoint.ToString()
+            }
+        };
+
+        // Specific fields
+        if (skill is TurnBasedGame.Skills.KnightHolySwordStanceSkill)
+        {
+            var so = new SerializedObject(skill);
+            info["lineLength"] = so.FindProperty("lineLength")?.intValue ?? 3;
+            info["damageMultiplier"] = so.FindProperty("damageMultiplier")?.floatValue ?? 1.6f;
+        }
+        else if (skill is TurnBasedGame.Skills.HalberdierCrescentSlashSkill)
+        {
+            var so = new SerializedObject(skill);
+            info["lineLength"] = so.FindProperty("lineLength")?.intValue ?? 2;
+        }
+
+        return info;
+    }
+
+    private object HandleAssignSkillVfx(Dictionary<string, object> p)
+    {
+        string skillPath = GetString(p, "skillPath", GetString(p, "path", null));
+        if (string.IsNullOrEmpty(skillPath))
+            return Error("Provide 'skillPath'.");
+
+        var skill = AssetDatabase.LoadAssetAtPath<TurnBasedGame.Skills.SkillBase>(skillPath);
+        if (skill == null)
+            return Error($"Skill asset not found at '{skillPath}'.");
+
+        var so = new SerializedObject(skill);
+        var vfxProp = so.FindProperty("vfxConfig");
+        if (vfxProp == null)
+            return Error("Field 'vfxConfig' not found on skill.");
+
+        void AssignPrefab(string paramKey, string fieldName)
+        {
+            if (p.TryGetValue(paramKey, out var val))
+            {
+                var targetProp = vfxProp.FindPropertyRelative(fieldName);
+                if (targetProp == null) return;
+
+                if (val == null || string.IsNullOrEmpty(val.ToString()))
+                {
+                    targetProp.objectReferenceValue = null;
+                }
+                else
+                {
+                    string prefabPath = val.ToString();
+                    var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+                    if (prefab != null) targetProp.objectReferenceValue = prefab;
+                }
+            }
+        }
+
+        AssignPrefab("castVfxPrefab", "castVfxPrefab");
+        AssignPrefab("releaseVfxPrefab", "releaseVfxPrefab");
+        AssignPrefab("projectilePrefab", "projectilePrefab");
+        AssignPrefab("impactVfxPrefab", "impactVfxPrefab");
+
+        if (p.TryGetValue("effectApplyTiming", out var timingVal) && timingVal != null)
+        {
+            if (Enum.TryParse<TurnBasedGame.Skills.SkillEffectApplyTiming>(timingVal.ToString(), true, out var timing))
+            {
+                var timingProp = vfxProp.FindPropertyRelative("effectApplyTiming");
+                if (timingProp != null) timingProp.enumValueIndex = (int)timing;
+            }
+        }
+
+        void AssignEnum(string paramKey, string fieldName)
+        {
+            if (p.TryGetValue(paramKey, out var val) && val != null)
+            {
+                if (Enum.TryParse<TurnBasedGame.Skills.SkillVfxSpawnPoint>(val.ToString(), true, out var sp))
+                {
+                    var prop = vfxProp.FindPropertyRelative(fieldName);
+                    if (prop != null) prop.enumValueIndex = (int)sp;
+                }
+            }
+        }
+
+        AssignEnum("castSpawnPoint", "castSpawnPoint");
+        AssignEnum("releaseSpawnPoint", "releaseSpawnPoint");
+        AssignEnum("impactSpawnPoint", "impactSpawnPoint");
+
+        so.ApplyModifiedProperties();
+        EditorUtility.SetDirty(skill);
+        AssetDatabase.SaveAssets();
+
+        return new Dictionary<string, object>
+        {
+            ["success"] = true,
+            ["action"] = "assign-skill-vfx",
+            ["skillPath"] = skillPath,
+            ["updatedVfxConfig"] = SerializeSkillInfo(skill, skillPath)["vfxConfig"]
+        };
+    }
+
+    private object HandlePreviewSkill(Dictionary<string, object> p)
+    {
+        string skillPath = GetString(p, "skillPath", GetString(p, "path", null));
+        string className = GetString(p, "className", "Knight");
+
+        if (string.IsNullOrEmpty(skillPath))
+        {
+            skillPath = $"Assets/Scripts/Data/SkillData/{className.ToLowerInvariant()} skill/{className} Holy Sword Stance.asset";
+            if (!File.Exists(skillPath))
+            {
+                string[] guids = AssetDatabase.FindAssets("t:SkillBase", new[] { "Assets/Scripts/Data/SkillData" });
+                foreach (var g in guids)
+                {
+                    string pth = AssetDatabase.GUIDToAssetPath(g);
+                    if (pth.IndexOf(className, StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        skillPath = pth;
+                        break;
+                    }
+                }
+            }
+        }
+
+        var skill = AssetDatabase.LoadAssetAtPath<TurnBasedGame.Skills.SkillBase>(skillPath);
+        if (skill == null)
+            return Error($"Skill asset not found at '{skillPath}'");
+
+        string unitPrefabPath = $"Assets/MyGame/Resource/Unit/{className}.prefab";
+        var unitPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(unitPrefabPath);
+        if (unitPrefab == null)
+            return Error($"Unit prefab not found at '{unitPrefabPath}'");
+
+        Vector3 stageOrigin = new Vector3(800f, 500f, 800f);
+        GameObject stageRoot = new GameObject("__UCP_Skill_Stage_Temp");
+        stageRoot.transform.position = stageOrigin;
+
+        GameObject camObj = null;
+        GameObject lightObj = null;
+
+        try
+        {
+            // 1. Spawn Caster
+            var casterInst = (GameObject)PrefabUtility.InstantiatePrefab(unitPrefab, stageRoot.transform);
+            casterInst.transform.position = stageOrigin;
+            casterInst.transform.rotation = Quaternion.LookRotation(Vector3.right, Vector3.up);
+
+            // 2. Tao cac marker tile grid (Edge = 2m tren truc X)
+            for (int i = 0; i <= 3; i++)
+            {
+                var marker = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                marker.name = $"TileMarker_{i}";
+                marker.transform.SetParent(stageRoot.transform);
+                marker.transform.position = stageOrigin + new Vector3(i * 2f, 0.02f, 0f);
+                marker.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+                marker.transform.localScale = new Vector3(1.9f, 1.9f, 1f);
+                var mr = marker.GetComponent<MeshRenderer>();
+                if (mr != null)
+                {
+                    mr.material = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
+                    mr.material.color = i == 0 ? new Color(0.2f, 0.5f, 1f, 0.4f) : new Color(1f, 0.8f, 0.2f, 0.3f);
+                }
+            }
+
+            // 3. Camera bao quat grid 3 o
+            camObj = new GameObject("__UCP_Skill_Camera");
+            Camera cam = camObj.AddComponent<Camera>();
+            cam.clearFlags = CameraClearFlags.SolidColor;
+            cam.backgroundColor = ParseColor(GetString(p, "backgroundColor", "#14161D"), new Color(0.08f, 0.09f, 0.11f, 1f));
+            cam.nearClipPlane = 0.05f;
+            cam.farClipPlane = 200f;
+            cam.fieldOfView = 38f;
+
+            Vector3 focusCenter = stageOrigin + new Vector3(3f, 1.2f, 0f);
+            Quaternion camRot = Quaternion.Euler(22f, -120f, 0f);
+            camObj.transform.position = focusCenter - (camRot * Vector3.forward) * 11f;
+            camObj.transform.LookAt(focusCenter);
+
+            lightObj = new GameObject("__UCP_Skill_Light");
+            Light light = lightObj.AddComponent<Light>();
+            light.type = LightType.Directional;
+            light.intensity = 1.3f;
+            lightObj.transform.rotation = Quaternion.Euler(50f, -40f, 0f);
+
+            // 4. Samples va Chup chuoi anh
+            var sampleTimes = new List<float> { 0.06f, 0.22f, 0.45f, 0.80f };
+            if (p.TryGetValue("sampleTimes", out var stObj) && stObj is IList stList && stList.Count > 0)
+            {
+                sampleTimes.Clear();
+                foreach (var item in stList) sampleTimes.Add(Mathf.Max(0.001f, Convert.ToSingle(item)));
+            }
+
+            // Lay cac vfx prefab tu skill
+            var vfxCfg = skill.VfxConfig;
+            GameObject castVfxInst = vfxCfg.CastVfxPrefab != null ? (GameObject)PrefabUtility.InstantiatePrefab(vfxCfg.CastVfxPrefab, stageRoot.transform) : null;
+            GameObject slashVfxInst = (vfxCfg.ProjectilePrefab != null ? vfxCfg.ProjectilePrefab : vfxCfg.ReleaseVfxPrefab) != null
+                ? (GameObject)PrefabUtility.InstantiatePrefab(vfxCfg.ProjectilePrefab != null ? vfxCfg.ProjectilePrefab : vfxCfg.ReleaseVfxPrefab, stageRoot.transform)
+                : null;
+            GameObject impactVfxInst = vfxCfg.ImpactVfxPrefab != null ? (GameObject)PrefabUtility.InstantiatePrefab(vfxCfg.ImpactVfxPrefab, stageRoot.transform) : null;
+
+            if (castVfxInst != null) castVfxInst.transform.position = stageOrigin + Vector3.up * 1f;
+            if (slashVfxInst != null) slashVfxInst.transform.position = stageOrigin + Vector3.right * 0.8f + Vector3.up * 1.1f;
+            if (impactVfxInst != null) impactVfxInst.transform.position = stageOrigin + Vector3.right * 4f + Vector3.up * 1f;
+
+            Directory.CreateDirectory("Artifacts");
+            string safeName = SanitizeFileName($"{className}_{skill.SkillName}");
+            var frames = new List<object>();
+
+            for (int i = 0; i < sampleTimes.Count; i++)
+            {
+                float t = sampleTimes[i];
+
+                if (slashVfxInst != null)
+                {
+                    // Mo phong tien do bay doc truc X (0 -> 6m trong 0.6s)
+                    float progress = Mathf.Clamp01(t / 0.6f);
+                    slashVfxInst.transform.position = stageOrigin + new Vector3(0.8f + progress * 5.2f, 1.1f, 0f);
+                    slashVfxInst.transform.rotation = Quaternion.LookRotation(Vector3.right, Vector3.up);
+
+                    var psList = slashVfxInst.GetComponentsInChildren<ParticleSystem>(true);
+                    foreach (var ps in psList) ps.Simulate(t, true, true, true);
+                }
+
+                if (castVfxInst != null)
+                {
+                    var psList = castVfxInst.GetComponentsInChildren<ParticleSystem>(true);
+                    foreach (var ps in psList) ps.Simulate(t, true, true, true);
+                }
+
+                if (impactVfxInst != null && t >= 0.35f)
+                {
+                    var psList = impactVfxInst.GetComponentsInChildren<ParticleSystem>(true);
+                    foreach (var ps in psList) ps.Simulate(t - 0.35f, true, true, true);
+                }
+
+                string filePath = $"Artifacts/skill_{safeName}_f{i + 1}_{t:F2}s.png";
+                CaptureCameraToPng(cam, filePath, 1024, 768);
+
+                frames.Add(new Dictionary<string, object>
+                {
+                    ["frameIndex"] = i + 1,
+                    ["time"] = (double)t,
+                    ["imagePath"] = filePath,
+                    ["absoluteImagePath"] = Path.GetFullPath(filePath).Replace("\\", "/")
+                });
+            }
+
+            return new Dictionary<string, object>
+            {
+                ["success"] = true,
+                ["action"] = "preview-skill",
+                ["skillName"] = skill.SkillName,
+                ["className"] = className,
+                ["frames"] = frames
+            };
+        }
+        finally
+        {
+            if (camObj != null) Object.DestroyImmediate(camObj);
+            if (lightObj != null) Object.DestroyImmediate(lightObj);
+            if (stageRoot != null) Object.DestroyImmediate(stageRoot);
+        }
+    }
+ 
     #endregion
 }
 #endif

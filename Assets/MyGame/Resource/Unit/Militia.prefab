@@ -70,7 +70,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   animator: {fileID: 425762017368986527}
-  defaultAttackSpeed: 1
   _transitionDuration: 0.1
   _skillEffectRunner: {fileID: 2840001280625488967}
 --- !u!114 &2840001280625488967
@@ -86,6 +85,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Unit.SkillEffectRunner
   _effectSpawnPoint: {fileID: 7533957865581638171}
+  _casterOffset: {x: 0, y: 1.5, z: 0}
 --- !u!1 &2955876611484581975
 GameObject:
   m_ObjectHideFlags: 0
@@ -405,15 +405,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9101906662757142954, guid: 7a4f200bfad8b644488571221e3ade91, type: 3}
       propertyPath: m_LocalScale.x
-      value: 2.85
+      value: 1.9
       objectReference: {fileID: 0}
     - target: {fileID: 9101906662757142954, guid: 7a4f200bfad8b644488571221e3ade91, type: 3}
       propertyPath: m_LocalScale.y
-      value: 0.3257143
+      value: 0.2
       objectReference: {fileID: 0}
     - target: {fileID: 9101906662757142954, guid: 7a4f200bfad8b644488571221e3ade91, type: 3}
       propertyPath: m_LocalScale.z
-      value: 8.142858
+      value: 5.5
       objectReference: {fileID: 0}
     - target: {fileID: 9101906662757142954, guid: 7a4f200bfad8b644488571221e3ade91, type: 3}
       propertyPath: m_LocalPosition.x
@@ -421,7 +421,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9101906662757142954, guid: 7a4f200bfad8b644488571221e3ade91, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 5
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 9101906662757142954, guid: 7a4f200bfad8b644488571221e3ade91, type: 3}
       propertyPath: m_LocalPosition.z
@@ -453,6 +453,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9101906662757142954, guid: 7a4f200bfad8b644488571221e3ade91, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9101906662757142954, guid: 7a4f200bfad8b644488571221e3ade91, type: 3}
+      propertyPath: m_ConstrainProportionsScale
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []

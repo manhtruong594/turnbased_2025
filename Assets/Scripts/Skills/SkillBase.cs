@@ -425,6 +425,11 @@ namespace TurnBasedGame.Skills
             return GetMap().WorldPosition(targetPos);
         }
 
+        public virtual Vector3 GetVisualTargetWorldPosition(UnitController caster)
+        {
+            return GetCurrentTargetWorldPosition();
+        }
+
         #endregion
     }
 }
