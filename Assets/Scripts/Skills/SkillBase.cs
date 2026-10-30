@@ -378,10 +378,6 @@ namespace TurnBasedGame.Skills
             clone.SkillContentId = TurnBasedGame.Command.LocalMatchAuthority.Content?.GetId(this);
             return clone;
         }
-        public GameObject GetCastVfxPrefab()
-        {
-            return GetVfxConfig().CastVfxPrefab;
-        }
 
         public GameObject GetReleaseVfxPrefab()
         {

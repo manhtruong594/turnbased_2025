@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 56a7464fb5a87c146b1c91793d9f6b44, type: 3}
   m_Name: MatchContentCatalog
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Multiplayer.MatchContentCatalog
-  ContentCatalogHash: 1e494290f0ea93874800a4cc5d278f7214c43ea42625a12c66e59f78e74c2e81
+  ContentCatalogHash: 04ff759105f3bdc2bd6fdf52af9a2d3771342111b3ef7c014a6a1e74ead06d12
   Entries:
   - Id: 05c17095b200410b9466fe345b145015
     Content: {fileID: 11400000, guid: 05c17095b200410b9466fe345b145015, type: 2}
@@ -55,9 +55,6 @@ MonoBehaviour:
     UnitPrefab: {fileID: 3103596494495824874, guid: 36490551fc4a64a4c9cb21da0b731152, type: 3}
   - Id: 5b267e267f77829499bfde3f3f1fea17
     Content: {fileID: 11400000, guid: 5b267e267f77829499bfde3f3f1fea17, type: 2}
-    UnitPrefab: {fileID: 0}
-  - Id: 64bfd3f4c65b4364099d94b37bc06815
-    Content: {fileID: 11400000, guid: 64bfd3f4c65b4364099d94b37bc06815, type: 2}
     UnitPrefab: {fileID: 0}
   - Id: 6bb3bb848a5b9834ebc1daf7a5e8a74d
     Content: {fileID: 11400000, guid: 6bb3bb848a5b9834ebc1daf7a5e8a74d, type: 2}

@@ -22,6 +22,6 @@ MonoBehaviour:
   moveRange: 4
   icon: {fileID: 0}
   startingSkills:
-  - {fileID: 11400000, guid: 64bfd3f4c65b4364099d94b37bc06815, type: 2}
   - {fileID: 11400000, guid: 99561fc9eb670c7459fb8136271ce055, type: 2}
   - {fileID: 11400000, guid: a7f4aee9f1a4f924888efe724d3f3b9f, type: 2}
+  - {fileID: 11400000, guid: 17cbaea1db222d24db000283a3f68aab, type: 2}

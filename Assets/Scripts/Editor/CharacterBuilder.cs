@@ -103,6 +103,16 @@ public class CharacterBuilder : IUCPScript
         if (p.action == "setup-animation-events")
             return SetupAnimationEvents(p);
 
+        if (p.action == "unpack-animations")
+        {
+            var unpacker = new AnimationUnpackerTool();
+            return unpacker.Execute(JsonUtility.ToJson(new AnimationUnpackerTool.UnpackParams
+            {
+                action = "unpack",
+                className = p.className
+            }));
+        }
+
         return BuildUnitPrefab(p);
     }
 

@@ -13,22 +13,21 @@ MonoBehaviour:
   m_Name: Adjudicator Accusation
   m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.Skills.AdjudicatorAccusationSkill
   skillName: "C\xE1o Tr\u1EA1ng"
-  description: "B\u0103\u0301n m\xF4\u0323t chu\u0300m n\u0103ng l\u01B0\u01A1\u0323ng
-    bo\u0301ng t\xF4\u0301i, g\xE2y 100% s\xE1t th\u01B0\u01A1ng hi\u1EC7n t\u1EA1i.
-    N\u1EBFu m\u1EE5c ti\xEAu c\xF2n s\u1ED1ng, \xE1p d\u1EE5ng GuardBreak 20% trong
-    2 l\u01B0\u1EE3t."
+  description: "Vung g\xE2\u0323y phe\u0301p ta\u0323o ra m\xF4\u0323t lu\xF4\u0300ng
+    n\u0103ng l\u01B0\u01A1\u0323ng bo\u0301ng t\xF4\u0301i g\xE2y 100% s\xE1t th\u01B0\u01A1ng
+    hi\u1EC7n t\u1EA1i l\xEAn m\u1ED9t k\u1EBB \u0111\u1ECBch trong t\u1EA7m 2. N\u1EBFu
+    m\u1EE5c ti\xEAu c\xF2n s\u1ED1ng, \xE1p d\u1EE5ng GuardBreak 20% trong 2 l\u01B0\u1EE3t."
   skillType: 4
-  icon: {fileID: 357934949, guid: f68897359cc923e40bb35d6f5c5e3bc1, type: 3}
+  icon: {fileID: -157058897, guid: f68897359cc923e40bb35d6f5c5e3bc1, type: 3}
   cooldown: 3
   mpCost: 1
-  range: 3
+  range: 2
   vfxConfig:
-    castVfxPrefab: {fileID: 3628913460639372172, guid: e65c0f111af181b4eadf1b7a48866b3a, type: 3}
     releaseVfxPrefab: {fileID: 0}
     projectilePrefab: {fileID: 0}
     impactVfxPrefab: {fileID: 6628276393031643956, guid: ed3820cdf6d26f742b346dc0ac9509ce, type: 3}
     effectApplyTiming: 1
-    castSpawnPoint: 0
+    afterReleaseDelay: 0.5
     releaseSpawnPoint: 1
     impactSpawnPoint: 2
   targetTypes: 2

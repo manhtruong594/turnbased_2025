@@ -5,7 +5,7 @@ namespace TurnBasedGame.Skills
 {
     public enum SkillAnimationCue
     {
-        Cast,
+        None,
         Release,
         Impact,
         Complete
@@ -13,10 +13,11 @@ namespace TurnBasedGame.Skills
 
     public enum SkillEffectApplyTiming
     {
-        Automatic,
+        AfterRelease,
         OnAnimationImpact,
         OnProjectileImpact,
-        OnRelease
+        OnRelease,
+        Automatic
     }
 
     public enum SkillVfxSpawnPoint
@@ -29,21 +30,19 @@ namespace TurnBasedGame.Skills
     [Serializable]
     public class SkillVfxConfig
     {
-        [SerializeField] private GameObject castVfxPrefab;
         [SerializeField] private GameObject releaseVfxPrefab;
         [SerializeField] private GameObject projectilePrefab;
         [SerializeField] private GameObject impactVfxPrefab;
         [SerializeField] private SkillEffectApplyTiming effectApplyTiming = SkillEffectApplyTiming.Automatic;           // khi nào thì apply effect 
-        [SerializeField] private SkillVfxSpawnPoint castSpawnPoint = SkillVfxSpawnPoint.EffectSpawnPoint;
+        [SerializeField, Min(0f)] private float afterReleaseDelay = 0.5f;
         [SerializeField] private SkillVfxSpawnPoint releaseSpawnPoint = SkillVfxSpawnPoint.EffectSpawnPoint;
         [SerializeField] private SkillVfxSpawnPoint impactSpawnPoint = SkillVfxSpawnPoint.Target;
 
-        public GameObject CastVfxPrefab => castVfxPrefab;
         public GameObject ReleaseVfxPrefab => releaseVfxPrefab;
         public GameObject ProjectilePrefab => projectilePrefab;
         public GameObject ImpactVfxPrefab => impactVfxPrefab;
         public SkillEffectApplyTiming EffectApplyTiming => effectApplyTiming;
-        public SkillVfxSpawnPoint CastSpawnPoint => castSpawnPoint;
+        public float AfterReleaseDelay => afterReleaseDelay;
         public SkillVfxSpawnPoint ReleaseSpawnPoint => releaseSpawnPoint;
         public SkillVfxSpawnPoint ImpactSpawnPoint => impactSpawnPoint;
     }

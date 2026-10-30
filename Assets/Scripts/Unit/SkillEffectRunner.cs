@@ -16,10 +16,19 @@ namespace TurnBasedGame.Unit
         private Transform _casterRoot;
         [SerializeField] private Transform _effectSpawnPoint;
         [SerializeField] private Vector3 _casterOffset = new Vector3(0, 1.5f, 0);
+        [SerializeField] private ParticleSystem[] _effectList;
+        private Coroutine _afterReleaseCoroutine;
 
         void Awake()
         {
             _casterRoot = transform;
+        }
+
+        public void PlaySkillEffect(int index)
+        {
+            if (_effectList == null || index < 0 || index >= _effectList.Length) return;
+
+            _effectList[index].Play();
         }
 
         public void HandleCue(SkillBase skill, SkillAnimationCue cue)
@@ -28,8 +37,7 @@ namespace TurnBasedGame.Unit
 
             switch (cue)
             {
-                case SkillAnimationCue.Cast:
-                    SpawnVfx(skill.GetCastVfxPrefab(), skill.VfxConfig.CastSpawnPoint, skill);
+                case SkillAnimationCue.None:
                     break;
                 case SkillAnimationCue.Release:
                     HandleReleaseCue(skill);
@@ -38,6 +46,7 @@ namespace TurnBasedGame.Unit
                     HandleImpactCue(skill);
                     break;
                 case SkillAnimationCue.Complete:
+                    CancelAfterReleaseTimer();
                     break;
             }
         }
@@ -56,7 +65,13 @@ namespace TurnBasedGame.Unit
                 LaunchProjectile(skill, projectilePrefab, timing);
 
             if (timing == SkillEffectApplyTiming.OnRelease)
+            {
                 skill.ApplyEffect();
+            }
+            else if (timing == SkillEffectApplyTiming.AfterRelease)
+            {
+                StartAfterReleaseTimer(skill);
+            }
         }
 
         private void HandleImpactCue(SkillBase skill)
@@ -64,7 +79,7 @@ namespace TurnBasedGame.Unit
             bool hasProjectile = ResolveProjectilePrefab(skill, skill.GetReleaseVfxPrefab()) != null;
             var timing = skill.ResolveEffectApplyTiming(hasProjectile);
 
-            if (timing == SkillEffectApplyTiming.OnProjectileImpact)
+            if (timing == SkillEffectApplyTiming.OnProjectileImpact || timing == SkillEffectApplyTiming.AfterRelease)
                 return;
 
             SpawnImpactVfx(skill);
@@ -205,6 +220,39 @@ namespace TurnBasedGame.Unit
         private Vector3 GetCasterPosition()
         {
             return _casterRoot.position + _casterOffset;
+        }
+
+        private void StartAfterReleaseTimer(SkillBase skill)
+        {
+            CancelAfterReleaseTimer();
+            _afterReleaseCoroutine = StartCoroutine(ApplyEffectAfterDelayRoutine(skill, skill.VfxConfig.AfterReleaseDelay));
+        }
+
+        private void CancelAfterReleaseTimer()
+        {
+            if (_afterReleaseCoroutine != null)
+            {
+                StopCoroutine(_afterReleaseCoroutine);
+                _afterReleaseCoroutine = null;
+            }
+        }
+
+        private IEnumerator ApplyEffectAfterDelayRoutine(SkillBase skill, float delay)
+        {
+            if (delay > 0f)
+                yield return new WaitForSeconds(delay);
+
+            _afterReleaseCoroutine = null;
+
+            if (skill == null) yield break;
+
+            SpawnImpactVfx(skill);
+            skill.ApplyEffect();
+        }
+
+        private void OnDisable()
+        {
+            CancelAfterReleaseTimer();
         }
 
         private readonly struct SpawnPoint

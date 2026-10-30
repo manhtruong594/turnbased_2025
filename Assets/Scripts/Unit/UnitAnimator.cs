@@ -65,6 +65,12 @@ namespace TurnBasedGame.Unit
             animator.CrossFadeInFixedTime(AnimationHashLib.Death, _transitionDuration);
         }
 
+        public void PlayStunned()
+        {
+            if (animator == null) return;
+            animator.CrossFadeInFixedTime(AnimationHashLib.Stunned, _transitionDuration);
+        }
+
         public void PreviewAnimation(int stateHash)
         {
             if (animator == null) return;
@@ -93,43 +99,7 @@ namespace TurnBasedGame.Unit
 
             _skillEffectRunner.HandleCue(_currentSkill, cue);
         }
-
-        public void AnimEvent_Cast()
-        {
-            LogAnimationEvent("Cast");
-            _skillEffectRunner.HandleCue(_currentSkill, SkillAnimationCue.Cast);
-        }
-
-        public void AnimEvent_Release()
-        {
-            LogAnimationEvent("Release");
-            _skillEffectRunner.HandleCue(_currentSkill, SkillAnimationCue.Release);
-        }
-
-        public void AnimEvent_Impact()
-        {
-            LogAnimationEvent("Impact");
-            _skillEffectRunner.HandleCue(_currentSkill, SkillAnimationCue.Impact);
-        }
-
-        public void AnimEvent_AttackHit()
-        {
-            LogAnimationEvent("AttackHit (legacy)");
-            AnimEvent_Impact();
-        }
-
-        public void AnimEvent_AttackStart()
-        {
-            LogAnimationEvent("AttackStart (legacy)");
-            AnimEvent_Release();
-        }
-
-        public void AnimEvent_StartEffect()
-        {
-            LogAnimationEvent("StartEffect (legacy)");
-            AnimEvent_Impact();
-        }
-
+        
         public void AnimEvent_AttackComplete()
         {
             LogAnimationEvent("AttackComplete");

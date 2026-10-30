@@ -123,7 +123,6 @@ public class GameMediator : MonoBehaviour
                     var skill = skills[i];
                     if (skill == null) continue;
 
-                    poolManager.PrewarmVfx(skill.GetCastVfxPrefab());
                     poolManager.PrewarmVfx(skill.GetReleaseVfxPrefab());
                     poolManager.PrewarmVfx(skill.GetProjectilePrefab());
                     poolManager.PrewarmVfx(skill.GetImpactVfxPrefab());

@@ -15,6 +15,7 @@ public class AnimationHashLib
     public static readonly int AttackSpeed = Animator.StringToHash("AttackSpeed");
     public static readonly int AttackType = Animator.StringToHash("SkillType");
     public static readonly int Idle = Animator.StringToHash("Idle");
+    public static readonly int Stunned = Animator.StringToHash("Stunned");
 
     public static int GetHashAnimByAttackType(SkillType parameterName)
     {

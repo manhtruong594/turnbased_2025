@@ -66,9 +66,14 @@ CanUse
                           └── cooldown + action complete
 ```
 
-`SkillEffectApplyTiming` quyết định effect áp ngay, tại release/impact hoặc sau projectile. Mỗi đường
-thực thi phải có fallback hoàn tất khi animation event/VFX không tồn tại; đồng thời tránh áp effect hai
-lần nếu cả fallback và event cùng chạy.
+`SkillEffectApplyTiming` quyết định thời điểm áp effect (`ApplyEffect`) và Impact VFX:
+- `OnRelease`: áp dụng ngay tại animation cue `Release`.
+- `OnAnimationImpact`: áp dụng tại animation cue `Impact`.
+- `OnProjectileImpact`: áp dụng khi projectile chạm mục tiêu.
+- `AfterRelease`: áp dụng sau animation cue `Release` một khoảng thời gian trễ `afterReleaseDelay` (giây).
+- `Automatic`: tự động phân giải thành `OnProjectileImpact` nếu có projectile, ngược lại thành `OnAnimationImpact`.
+
+Mỗi đường thực thi phải có fallback hoàn tất khi animation event/VFX không tồn tại; đồng thời tránh áp effect hai lần nếu cả fallback và event cùng chạy.
 
 ## 5. Skill code hiện có
 

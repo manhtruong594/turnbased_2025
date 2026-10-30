@@ -2192,12 +2192,10 @@ public class VfxParticleController : IUCPScript
             },
             ["vfxConfig"] = new Dictionary<string, object>
             {
-                ["castVfxPrefab"] = cfg.CastVfxPrefab != null ? AssetDatabase.GetAssetPath(cfg.CastVfxPrefab) : null,
                 ["releaseVfxPrefab"] = cfg.ReleaseVfxPrefab != null ? AssetDatabase.GetAssetPath(cfg.ReleaseVfxPrefab) : null,
                 ["projectilePrefab"] = cfg.ProjectilePrefab != null ? AssetDatabase.GetAssetPath(cfg.ProjectilePrefab) : null,
                 ["impactVfxPrefab"] = cfg.ImpactVfxPrefab != null ? AssetDatabase.GetAssetPath(cfg.ImpactVfxPrefab) : null,
                 ["effectApplyTiming"] = cfg.EffectApplyTiming.ToString(),
-                ["castSpawnPoint"] = cfg.CastSpawnPoint.ToString(),
                 ["releaseSpawnPoint"] = cfg.ReleaseSpawnPoint.ToString(),
                 ["impactSpawnPoint"] = cfg.ImpactSpawnPoint.ToString()
             }
@@ -2390,13 +2388,11 @@ public class VfxParticleController : IUCPScript
 
             // Lay cac vfx prefab tu skill
             var vfxCfg = skill.VfxConfig;
-            GameObject castVfxInst = vfxCfg.CastVfxPrefab != null ? (GameObject)PrefabUtility.InstantiatePrefab(vfxCfg.CastVfxPrefab, stageRoot.transform) : null;
             GameObject slashVfxInst = (vfxCfg.ProjectilePrefab != null ? vfxCfg.ProjectilePrefab : vfxCfg.ReleaseVfxPrefab) != null
                 ? (GameObject)PrefabUtility.InstantiatePrefab(vfxCfg.ProjectilePrefab != null ? vfxCfg.ProjectilePrefab : vfxCfg.ReleaseVfxPrefab, stageRoot.transform)
                 : null;
             GameObject impactVfxInst = vfxCfg.ImpactVfxPrefab != null ? (GameObject)PrefabUtility.InstantiatePrefab(vfxCfg.ImpactVfxPrefab, stageRoot.transform) : null;
 
-            if (castVfxInst != null) castVfxInst.transform.position = stageOrigin + Vector3.up * 1f;
             if (slashVfxInst != null) slashVfxInst.transform.position = stageOrigin + Vector3.right * 0.8f + Vector3.up * 1.1f;
             if (impactVfxInst != null) impactVfxInst.transform.position = stageOrigin + Vector3.right * 4f + Vector3.up * 1f;
 
@@ -2416,12 +2412,6 @@ public class VfxParticleController : IUCPScript
                     slashVfxInst.transform.rotation = Quaternion.LookRotation(Vector3.right, Vector3.up);
 
                     var psList = slashVfxInst.GetComponentsInChildren<ParticleSystem>(true);
-                    foreach (var ps in psList) ps.Simulate(t, true, true, true);
-                }
-
-                if (castVfxInst != null)
-                {
-                    var psList = castVfxInst.GetComponentsInChildren<ParticleSystem>(true);
                     foreach (var ps in psList) ps.Simulate(t, true, true, true);
                 }
 

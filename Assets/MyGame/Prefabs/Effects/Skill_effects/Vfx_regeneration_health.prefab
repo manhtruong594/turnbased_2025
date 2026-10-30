@@ -4926,6 +4926,7 @@ GameObject:
   - component: {fileID: 1579388174144194259}
   - component: {fileID: 5816283791057523571}
   - component: {fileID: 8329394249360495759}
+  - component: {fileID: -9079866436050799139}
   m_Layer: 0
   m_Name: Vfx_regeneration_health
   m_TagString: Untagged
@@ -9770,6 +9771,18 @@ ParticleSystemRenderer:
   m_MeshWeighting1: 1
   m_MeshWeighting2: 1
   m_MeshWeighting3: 1
+--- !u!114 &-9079866436050799139
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1917425252371570480}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 48e50b14446777c4ba9beb866bedc31f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TurnBasedGame.ObjectPool.PooledObject
 --- !u!1 &2665250956056606392
 GameObject:
   m_ObjectHideFlags: 0
