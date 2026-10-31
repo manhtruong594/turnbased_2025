@@ -306,14 +306,14 @@ namespace TurnBasedGame.Unit
             UpdateGridPosition(newGridPos);
         }
 
-        public void SyncVisualPosition(bool smooth = false)
+        public void SyncVisualPosition(Action onSyncComplete, float time = 0.2f, bool smooth = true)
         {
             var map = runtimeStats.MapEntity ?? MapManager.Instance?.MapEntity;
             if (map == null || map.Tile(currentGridPosition) == null)
                 return;
 
             var targetPoint = map.WorldPosition(currentGridPosition);
-            if (!smooth || !gameObject.activeInHierarchy)
+            if (time <= 0 || !gameObject.activeInHierarchy)
             {
                 if (_displacementCoroutine != null)
                 {
@@ -321,6 +321,7 @@ namespace TurnBasedGame.Unit
                     _displacementCoroutine = null;
                 }
                 _myTrans.position = targetPoint;
+                onSyncComplete?.Invoke();
                 return;
             }
 
@@ -328,10 +329,10 @@ namespace TurnBasedGame.Unit
             {
                 StopCoroutine(_displacementCoroutine);
             }
-            _displacementCoroutine = StartCoroutine(SmoothDisplacement(targetPoint, 0.15f));
+            _displacementCoroutine = StartCoroutine(smooth? SmoothDisplacement(targetPoint, time, onSyncComplete): TeleportDelay(targetPoint, time, onSyncComplete));
         }
 
-        private IEnumerator SmoothDisplacement(Vector3 targetPoint, float duration)
+        private IEnumerator SmoothDisplacement(Vector3 targetPoint, float duration, Action onComplete = null)
         {
             Vector3 startPos = _myTrans.position;
             float elapsed = 0f;
@@ -344,7 +345,18 @@ namespace TurnBasedGame.Unit
             }
             _myTrans.position = targetPoint;
             _displacementCoroutine = null;
+            onComplete?.Invoke();
         }
+
+        private IEnumerator TeleportDelay(Vector3 targetPoint, float delay, Action onComplete = null)
+        {
+            _myTrans.position = new Vector3(0, 1000, 0);
+            yield return new WaitForSeconds(delay);
+            _displacementCoroutine = null;
+            _myTrans.position = targetPoint;
+            onComplete?.Invoke();
+        }
+
         #endregion
 
         #region  Support Methods
@@ -352,8 +364,13 @@ namespace TurnBasedGame.Unit
         public void PerformSkill(SkillBase skill, Vector3Int targetPos)
         {
             var targetPoint = runtimeStats.MapEntity.WorldPosition(targetPos);
-            RotationNode.LookAt(targetPoint);
+            SetRotationLookAt(targetPoint);
             _unitAnimator.PlayAttack(skill);
+        }
+
+        public void SetRotationLookAt(Vector3 targetPoint)
+        {
+            RotationNode.LookAt(targetPoint);
         }
 
         public void OnTurnBegin()
@@ -547,6 +564,11 @@ namespace TurnBasedGame.Unit
             _attackComponent.ExitAttackMode();
             ChangeSelected(false);
             AreaPathManager.Instance.ResetAll(this);
+        }
+
+        public Vector3 GetBodyPosition()
+        {
+            return _unitAnimator.GetRealBodyPosition();
         }
 
         #endregion

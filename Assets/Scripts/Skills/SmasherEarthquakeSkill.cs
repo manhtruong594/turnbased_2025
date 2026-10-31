@@ -31,12 +31,12 @@ namespace TurnBasedGame.Skills
             TryKnockbackOrCollide(caster, target, targetPos);
         }
 
-        public override void ApplyEffect()
+        public override void ApplyVisualEffect()
         {
-            base.ApplyEffect();
+            base.ApplyVisualEffect();
             if (_pendingDisplacedTarget != null)
             {
-                _pendingDisplacedTarget.SyncVisualPosition(true);
+                _pendingDisplacedTarget.SyncVisualPosition(null);
                 _pendingDisplacedTarget = null;
             }
         }

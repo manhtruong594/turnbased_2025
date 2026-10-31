@@ -1,4 +1,4 @@
-﻿// Made with Amplify Shader Editor
+// Made with Amplify Shader Editor
 // Available at the Unity Asset Store - http://u3d.as/y3X 
 Shader "SH_Vefects_VFX_Dissolve"
 {
@@ -33,6 +33,10 @@ Shader "SH_Vefects_VFX_Dissolve"
 		_Global_Speed("Global_Speed", Float) = 1
 		_Mask_Speed("Mask_Speed", Float) = 0
 		_Dissolve("Dissolve", Float) = 0
+		[Enum(UnityEngine.Rendering.BlendMode)] _SrcBlend ("Src Blend", Float) = 5
+		[Enum(UnityEngine.Rendering.BlendMode)] _DstBlend ("Dst Blend", Float) = 10
+		[Enum(Off, 0, On, 1)] _ZWrite ("ZWrite", Float) = 0
+		[Enum(UnityEngine.Rendering.CullMode)] _Cull ("Cull", Float) = 0
 		[HideInInspector] _texcoord( "", 2D ) = "white" {}
 		[HideInInspector] _texcoord2( "", 2D ) = "white" {}
 		[HideInInspector] __dirty( "", Int ) = 1
@@ -48,7 +52,9 @@ Shader "SH_Vefects_VFX_Dissolve"
 	SubShader
 	{
 		Tags{ "RenderType" = "Transparent" "Queue" = "Transparent+0" "IgnoreProjector" = "True" "IsEmissive" = "true" "RenderPipeline" = "UniversalPipeline" }
-		Cull Back
+		Cull [_Cull]
+		Blend [_SrcBlend] [_DstBlend]
+		ZWrite [_ZWrite]
 		Pass
 		{
 			Name "UniversalForward"

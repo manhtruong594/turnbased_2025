@@ -79,6 +79,11 @@ namespace TurnBasedGame.Unit
             animator.CrossFadeInFixedTime(stateHash, _transitionDuration);
         }
 
+        public Vector3 GetRealBodyPosition()
+        {
+            return _skillEffectRunner.GetCasterPosition();
+        }
+
         #endregion
 
         #region Animation Events

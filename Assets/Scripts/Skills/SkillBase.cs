@@ -113,6 +113,9 @@ namespace TurnBasedGame.Skills
         public static SkillBase ActiveExecutingSkill { get; private set; }
         private readonly Queue<VisualHitStep> _pendingHitSteps = new();
         private VisualHitStep _currentStep;
+        protected bool _isExecuting = false;
+        protected virtual bool CanDirectTargetUntargetableUnit => false;
+        private Vector3 _targetWorldPos;
 
         public void RecordDamageHit(UnitController target, int damage, int healthAfterHit, int maxHealth, bool isLethal)
         {
@@ -138,12 +141,13 @@ namespace TurnBasedGame.Skills
             _currentStep.Buffs.Add(new SkillVisualBuffData(handler, effect, action));
         }
 
+        // đưa _currentStep vào trong queue _pendingHitSteps, rồi sau đó reset _currentStep để sử dụng tiếp cho lần tính dmg;
         public void AdvanceHitStep()
         {
             if (_currentStep != null && (_currentStep.Hits.Count > 0 || _currentStep.Buffs.Count > 0))
             {
                 _pendingHitSteps.Enqueue(_currentStep);
-                _currentStep = new VisualHitStep();
+                _currentStep = null;
             }
         }
 
@@ -151,13 +155,9 @@ namespace TurnBasedGame.Skills
         {
             while (_pendingHitSteps.Count > 0)
             {
-                ApplyEffect();
+                ApplyVisualEffect();
             }
         }
-
-        protected bool _isExecuting = false;
-        protected virtual bool CanDirectTargetUntargetableUnit => false;
-        ValueTuple<UnitController, Vector3Int> _currentExecutionContext;
 
         #region Template Method - Validation Pipeline
         public virtual bool CanUse(UnitController caster, Vector3Int targetPos)
@@ -256,8 +256,8 @@ namespace TurnBasedGame.Skills
         #endregion
 
         #region Template Method - Execution Pipeline
-        
-        public void Execute(UnitController caster, Vector3Int targetPos)
+
+        public virtual void Execute(UnitController caster, Vector3Int targetPos)
         {
             var result = TurnBasedGame.Command.LocalMatchAuthority.SubmitHumanSkill(caster, this, targetPos,
                 completed => { if (!completed.Succeeded) SkillEventBus.Instance?.TriggerSkillFailed(this, caster, completed.FailureReason); });
@@ -267,27 +267,15 @@ namespace TurnBasedGame.Skills
 
         internal bool ExecuteAuthorized(UnitController caster, Vector3Int targetPos)
         {
-            if (_isExecuting) return false;
-            if (!TrySpendMP(caster))
-            {
-                Debug.LogWarning($"Not enough MP to use {skillName}. Required MP: {MPCost}.");
-                SkillEventBus.Instance?.TriggerSkillFailed(this, caster, "Not enough MP.");
-                return false;
-            }
-
-            _currentExecutionContext = (caster, targetPos);
+            if (_isExecuting || !TrySpendMP(caster)) return false;
+            _targetWorldPos = ResolveTargetWorldPosition(targetPos);
             _isExecuting = true;
             _pendingHitSteps.Clear();
-            _currentStep = new VisualHitStep();
             ActiveExecutingSkill = this;
             try
             {
                 ExecuteEffect(caster, targetPos);
-                if (_currentStep != null && (_currentStep.Hits.Count > 0 || _currentStep.Buffs.Count > 0))
-                {
-                    _pendingHitSteps.Enqueue(_currentStep);
-                    _currentStep = null;
-                }
+                AdvanceHitStep();
                 StartCooldown();
             }
             finally
@@ -296,12 +284,13 @@ namespace TurnBasedGame.Skills
                 ActiveExecutingSkill = null;
                 _currentStep = null;
             }
-
-            if (caster != null) caster.FinishTurnActionsAuthorized();
-            // Animation cues are presentation only; gameplay has already resolved once.
+            caster?.FinishTurnActionsAuthorized();
             TurnBasedGame.Command.LocalMatchAuthority.PublishAfterCommit(() =>
             {
-                if (caster != null && !caster.IsDead()) caster.PerformSkill(this, targetPos);
+                if (caster != null && !caster.IsDead())
+                    caster.PerformSkill(this, targetPos);
+                else
+                    FlushRemainingVisualHits();
                 OnExecuteComplete(caster, targetPos);
             });
             return true;
@@ -327,7 +316,7 @@ namespace TurnBasedGame.Skills
             }
         }
 
-        public virtual void ApplyEffect()
+        public virtual void ApplyVisualEffect()
         {
             if (_pendingHitSteps.Count > 0)
             {
@@ -409,22 +398,18 @@ namespace TurnBasedGame.Skills
 
         private SkillVfxConfig GetVfxConfig()
         {
-            if (vfxConfig == null)
-                vfxConfig = new SkillVfxConfig();
+            vfxConfig ??= new SkillVfxConfig();
 
             return vfxConfig;
         }
 
-        public Vector3 GetCurrentTargetWorldPosition()
+        private Vector3 ResolveTargetWorldPosition(Vector3Int targetPos)
         {
-            var targetPos = _currentExecutionContext.Item2;
-            return GetMap().WorldPosition(targetPos);
+            var unit = MapManager.Instance?.GetUnitAtTile(targetPos);
+            return unit != null ? unit.GetBodyPosition() : GetMap().WorldPosition(targetPos);
         }
 
-        public virtual Vector3 GetVisualTargetWorldPosition(UnitController caster)
-        {
-            return GetCurrentTargetWorldPosition();
-        }
+        public Vector3 GetCurrentTargetWorldPosition() => _targetWorldPos;
 
         #endregion
     }

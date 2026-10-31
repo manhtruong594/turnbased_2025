@@ -14556,7 +14556,7 @@ GameObject:
   - component: {fileID: 1737387875744588963}
   - component: {fileID: 9165417329294180666}
   m_Layer: 0
-  m_Name: Slash_magic_once 1
+  m_Name: vfx_Slash_magic
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

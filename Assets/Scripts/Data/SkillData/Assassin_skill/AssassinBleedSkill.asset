@@ -22,15 +22,14 @@ MonoBehaviour:
   mpCost: 0
   range: 1
   vfxConfig:
-    castVfxPrefab: {fileID: 0}
     releaseVfxPrefab: {fileID: 0}
     projectilePrefab: {fileID: 0}
     impactVfxPrefab: {fileID: 4748681987041982144, guid: 99eaf10595e77924491901a4e9209077, type: 3}
     effectApplyTiming: 1
-    castSpawnPoint: 0
+    afterReleaseDelay: 0.5
     releaseSpawnPoint: 1
     impactSpawnPoint: 2
-  targetTypes: 10
+  targetTypes: 2
   damageMultiplier: 1
   bleedDamagePerTurn: 10
   bleedDuration: 3

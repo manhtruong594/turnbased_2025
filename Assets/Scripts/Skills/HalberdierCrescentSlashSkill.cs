@@ -20,7 +20,7 @@ namespace TurnBasedGame.Skills
         [Header("Shield Settings")]
         [SerializeField, Min(0f)] private float shieldValueMultiplier = 1f;
         [SerializeField, Min(1)] private int shieldDuration = 2;
-
+         
         protected override void ExecuteEffect(UnitController caster, Vector3Int targetPos)
         {
             Vector3Int direction = SkillAreaUtility.NormalizeDirection(targetPos - caster.currentGridPosition);
@@ -30,22 +30,6 @@ namespace TurnBasedGame.Skills
                 ApplyHealBan(caster, hitTargets[0]);
 
             ApplyShield(caster);
-        }
-
-        public override Vector3 GetVisualTargetWorldPosition(UnitController caster)
-        {
-            if (caster == null) return GetCurrentTargetWorldPosition();
-            Vector3 targetWorld = GetCurrentTargetWorldPosition();
-            var map = GetMap();
-            if (map == null) return targetWorld;
-
-            var targetTile = map.Tile(targetWorld);
-            Vector3Int targetPos = targetTile != null ? targetTile.Position : caster.currentGridPosition;
-            Vector3Int direction = SkillAreaUtility.NormalizeDirection(targetPos - caster.currentGridPosition);
-            if (direction == Vector3Int.zero) return targetWorld;
-
-            Vector3Int endTilePos = caster.currentGridPosition + direction * lineLength;
-            return map.WorldPosition(endTilePos);
         }
 
         protected override bool ValidateCustomConditions(UnitController caster, Vector3Int targetPos)

@@ -53,8 +53,8 @@ namespace TurnBasedGame.Unit
 
         private void HandleReleaseCue(SkillBase skill)
         {
-            var releaseVfxPrefab = skill.GetReleaseVfxPrefab();
-            var projectilePrefab = ResolveProjectilePrefab(skill, releaseVfxPrefab);
+            GameObject releaseVfxPrefab = skill.GetReleaseVfxPrefab();
+            GameObject projectilePrefab = ResolveProjectilePrefab(skill, releaseVfxPrefab);
             bool hasProjectile = projectilePrefab != null;
             var timing = skill.ResolveEffectApplyTiming(hasProjectile);
 
@@ -66,7 +66,7 @@ namespace TurnBasedGame.Unit
 
             if (timing == SkillEffectApplyTiming.OnRelease)
             {
-                skill.ApplyEffect();
+                skill.ApplyVisualEffect();
             }
             else if (timing == SkillEffectApplyTiming.AfterRelease)
             {
@@ -85,7 +85,7 @@ namespace TurnBasedGame.Unit
             SpawnImpactVfx(skill);
 
             if (timing == SkillEffectApplyTiming.OnAnimationImpact)
-                skill.ApplyEffect();
+                skill.ApplyVisualEffect();
         }
 
         private GameObject ResolveProjectilePrefab(SkillBase skill, GameObject releaseVfxPrefab)
@@ -107,10 +107,8 @@ namespace TurnBasedGame.Unit
                 return;
 
             var startPosition = spawnPoint.position;
-            var casterUnit = GetComponentInParent<UnitController>() ?? GetComponent<UnitController>();
-            Vector3 targetWorld = skill.GetVisualTargetWorldPosition(casterUnit);
+            Vector3 targetWorld = skill.GetCurrentTargetWorldPosition();
             Vector3 toTarget = targetWorld - startPosition;
-            toTarget.y = 0f;
             Quaternion initialRotation = toTarget.sqrMagnitude > 0.001f
                 ? Quaternion.LookRotation(toTarget.normalized, Vector3.up)
                 : GetCasterFacingRotation();
@@ -121,7 +119,7 @@ namespace TurnBasedGame.Unit
                 SpawnImpactVfx(skill);
 
                 if (timing == SkillEffectApplyTiming.OnProjectileImpact)
-                    skill.ApplyEffect();
+                    skill.ApplyVisualEffect();
             };
             projectile.Launch(startPosition, targetWorld);
         }
@@ -191,15 +189,6 @@ namespace TurnBasedGame.Unit
 
         private Quaternion GetCasterFacingRotation()
         {
-            var unit = GetComponentInParent<UnitController>() ?? GetComponent<UnitController>();
-            if (unit != null && unit.RotationNode != null)
-            {
-                Vector3 forward = unit.RotationNode.forward;
-                forward.y = 0f;
-                if (forward.sqrMagnitude > 0.001f)
-                    return Quaternion.LookRotation(forward.normalized, Vector3.up);
-            }
-
             Vector3 rootFwd = _casterRoot != null ? _casterRoot.forward : Vector3.forward;
             rootFwd.y = 0f;
             return rootFwd.sqrMagnitude > 0.001f ? Quaternion.LookRotation(rootFwd.normalized, Vector3.up) : Quaternion.identity;
@@ -217,7 +206,7 @@ namespace TurnBasedGame.Unit
             };
         }
 
-        private Vector3 GetCasterPosition()
+        public Vector3 GetCasterPosition()
         {
             return _casterRoot.position + _casterOffset;
         }
@@ -247,7 +236,7 @@ namespace TurnBasedGame.Unit
             if (skill == null) yield break;
 
             SpawnImpactVfx(skill);
-            skill.ApplyEffect();
+            skill.ApplyVisualEffect();
         }
 
         private void OnDisable()

@@ -1,3 +1,4 @@
+using TurnBasedGame.ObjectPool;
 using TurnBasedGame.SpellCard;
 using TurnBasedGame.Unit;
 using UnityEngine;
@@ -7,6 +8,7 @@ namespace TurnBasedGame.Skills
     [CreateAssetMenu(fileName = "AssassinShadowDualStrikeSkill", menuName = "Skills/Assassin Shadow Dual Strike", order = 10)]
     public class AssassinShadowDualStrikeSkill : SkillBase
     {
+        [SerializeField] private float teleportDelay = 0.3f;
         [Header("Damage Settings")]
         [SerializeField, Min(0f)] private float firstHitMultiplier = 0.9f;
         [SerializeField, Min(0f)] private float secondHitMultiplier = 0.9f;
@@ -24,11 +26,14 @@ namespace TurnBasedGame.Skills
 
             if (!TeleportUtility.TryFindAdjacentTileAroundTarget(caster, target, out var teleportTile))
                 return;
-
-            bool targetWasAlive = !target.IsDead();
-            caster.TeleportTo(teleportTile);
+            var instance = ObjectPoolManager.Instance.Spawn(GetReleaseVfxPrefab(), caster.GetBodyPosition(), Quaternion.identity);
+            caster.TeleportTo(teleportTile, false);
+            caster.SyncVisualPosition(() => { 
+                if (caster != null) 
+                    caster.SetRotationLookAt(GetMap().WorldPosition(targetPos));
+              },teleportDelay, smooth: false);
             ApplyStrike(caster, target, firstHitMultiplier);
-            if (targetWasAlive && target.IsDead())
+            if (target.IsDead())
             {
                 ApplyShadowStep(caster);
             }
@@ -37,7 +42,7 @@ namespace TurnBasedGame.Skills
             if (!target.IsDead())
             {
                 ApplyStrike(caster, target, ResolveSecondHitMultiplier(target));
-                if (targetWasAlive && target.IsDead())
+                if (target.IsDead())
                 {
                     ApplyShadowStep(caster);
                 }

@@ -26,11 +26,14 @@ namespace TurnBasedGame.Skills
 
             // Gây sát thương trực tiếp
             int baseDamage = Mathf.RoundToInt(caster.GetCurrentDamage() * damageMultiplier);
-            target.TakeDamage(baseDamage);
-            Debug.Log($"[AssassinBleed] {caster.name} gây {baseDamage} sát thương lên {target.name}");
-
+            target.TakeDamage(baseDamage * 0.5f);
+            AdvanceHitStep();
+            target.TakeDamage(baseDamage * 0.5f);
+            
             // Áp dụng hiệu ứng chảy máu
+            if (target.IsDead()) return; 
             ApplyBleedEffect(caster.GetOwner(), target);
+            AdvanceHitStep();
         }
 
         private void ApplyBleedEffect(PlayerID caster, UnitController target)

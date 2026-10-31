@@ -45,22 +45,6 @@ namespace TurnBasedGame.Skills
             ApplyStanceGuard(caster);
         }
 
-        public override Vector3 GetVisualTargetWorldPosition(UnitController caster)
-        {
-            if (caster == null) return GetCurrentTargetWorldPosition();
-            Vector3 targetWorld = GetCurrentTargetWorldPosition();
-            var map = GetMap();
-            if (map == null) return targetWorld;
-
-            var targetTile = map.Tile(targetWorld);
-            Vector3Int targetPos = targetTile != null ? targetTile.Position : caster.currentGridPosition;
-            Vector3Int direction = GetDirection(caster.currentGridPosition, targetPos);
-            if (direction == Vector3Int.zero) return targetWorld;
-
-            Vector3Int endTilePos = caster.currentGridPosition + direction * lineLength;
-            return map.WorldPosition(endTilePos);
-        }
-
         protected override bool ValidateCustomConditions(UnitController caster, Vector3Int targetPos)
         {
             return GetDirection(caster.currentGridPosition, targetPos) != Vector3Int.zero;
